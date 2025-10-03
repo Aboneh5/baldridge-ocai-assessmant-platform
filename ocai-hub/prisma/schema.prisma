@@ -1,0 +1,294 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  industry  String?
+  size      String?
+  country   String?
+  logoUrl   String?
+  settings  Json?
+  primaryColor String? @default("#3B82F6") // Brand primary color
+  dataRetentionDays Int @default(2555) // 7 years default
+  privacyPolicyUrl String?
+  consentVersion String @default("1.0")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  users     User[]
+  surveys   Survey[]
+  reports   Report[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  role           Role     @default(EMPLOYEE)
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  responses    Response[]
+  comments     Comment[]
+  workshops    Workshop[]
+
+  @@map("users")
+}
+
+model Survey {
+  id                     String    @id @default(cuid())
+  organizationId         String
+  title                  String
+  status                 SurveyStatus @default(DRAFT)
+  openAt                 DateTime?
+  closeAt                DateTime?
+  allowAnonymous         Boolean   @default(false)
+  requireOrgEmailDomain  Boolean   @default(true)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitations  Invitation[]
+  responses    Response[]
+  comments     Comment[]
+  aggregates   Aggregate[]
+  reports      Report[]
+  workshops    Workshop[]
+
+  @@map("surveys")
+}
+
+model Invitation {
+  id        String    @id @default(cuid())
+  surveyId  String
+  email     String
+  token     String    @unique
+  claimedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  // Relations
+  survey Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@map("invitations")
+}
+
+model Response {
+  id              String    @id @default(cuid())
+  surveyId        String
+  userId          String?
+  demographics    Json?
+  nowScores       Json
+  preferredScores Json
+  submittedAt     DateTime  @default(now())
+  ipHash          String
+  consentGiven    Boolean   @default(false)
+  consentTimestamp DateTime?
+  consentVersion  String?   // Track consent version for legal compliance
+  anonymousMode   Boolean   @default(false) // User chose anonymous participation
+
+  // Relations
+  survey  Survey  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  comments Comment[]
+
+  @@map("responses")
+}
+
+model Aggregate {
+  id                    String  @id @default(cuid())
+  surveyId              String
+  sliceKey              String
+  sliceLabel            String
+  currentClan           Float
+  currentAdhocracy      Float
+  currentMarket         Float
+  currentHierarchy      Float
+  preferredClan         Float
+  preferredAdhocracy    Float
+  preferredMarket       Float
+  preferredHierarchy    Float
+  delta                 Json
+  n                     Int
+  createdAt             DateTime @default(now())
+
+  // Relations
+  survey Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@map("aggregates")
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  surveyId   String
+  responseId String?
+  text       String
+  createdAt  DateTime @default(now())
+
+  // Relations
+  survey   Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  response Response? @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  userId   String?
+
+  @@map("comments")
+}
+
+model Report {
+  id             String      @id @default(cuid())
+  surveyId       String
+  kind           ReportKind
+  payload        Json
+  createdAt      DateTime    @default(now())
+
+  // Relations
+  survey       Survey       @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  organizationId String
+
+  @@map("reports")
+}
+
+enum Role {
+  ORG_ADMIN
+  FACILITATOR
+  EMPLOYEE
+}
+
+enum SurveyStatus {
+  DRAFT
+  OPEN
+  CLOSED
+}
+
+enum ReportKind {
+  ORG
+  TEAM
+  CUSTOM_SLICE
+}
+
+model Workshop {
+  id            String   @id @default(cuid())
+  surveyId      String
+  survey        Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  status        String   @default("draft") // "draft", "active", "completed"
+  facilitatorId String?
+  facilitator   User?    @relation(fields: [facilitatorId], references: [id])
+  scheduledAt   DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  sessions      WorkshopSession[]
+  actions       Action[]
+
+  @@map("workshops")
+}
+
+model WorkshopSession {
+  id          String    @id @default(cuid())
+  workshopId  String
+  workshop    Workshop  @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  status      String    @default("planned") // "planned", "active", "completed"
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  pinnedCharts PinnedChart[]
+  themes      Theme[]
+  actions     Action[]
+
+  @@map("workshop_sessions")
+}
+
+model PinnedChart {
+  id        String          @id @default(cuid())
+  sessionId String
+  session   WorkshopSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  chartType String          // "radar", "bar", "heatmap", "delta"
+  title     String
+  data      Json            // Chart configuration and data
+  position  Int             // Order in the session
+  createdAt DateTime        @default(now())
+
+  @@map("pinned_charts")
+}
+
+model Theme {
+  id          String          @id @default(cuid())
+  sessionId   String
+  session     WorkshopSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  category    String?         // "strength", "challenge", "opportunity", "risk"
+  priority    String          @default("medium") // "low", "medium", "high", "critical"
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  
+  actions     Action[]
+
+  @@map("themes")
+}
+
+model Action {
+  id          String    @id @default(cuid())
+  workshopId  String
+  workshop    Workshop  @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  sessionId   String?
+  session     WorkshopSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  themeId     String?
+  theme       Theme?    @relation(fields: [themeId], references: [id], onDelete: SetNull)
+  title       String
+  description String?
+  owner       String?   // Owner name/email
+  status      String    @default("planned") // "planned", "in_progress", "completed", "cancelled"
+  priority    String    @default("medium") // "low", "medium", "high", "critical"
+  dueDate     DateTime?
+  completedAt DateTime?
+  successMetrics Json?  // Success criteria and metrics
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("actions")
+}
+
+model Intervention {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  category    String   // "collaborate", "create", "compete", "control"
+  quadrant    String   // "clan", "adhocracy", "market", "hierarchy"
+  direction   String   // "increase", "decrease"
+  effort      String   @default("medium") // "low", "medium", "high"
+  impact      String   @default("medium") // "low", "medium", "high"
+  duration    String?  // "1-2 weeks", "1-3 months", "3-6 months", "6+ months"
+  resources   String?  // Resource requirements
+  examples    Json?    // Example implementations
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("interventions")
+}
