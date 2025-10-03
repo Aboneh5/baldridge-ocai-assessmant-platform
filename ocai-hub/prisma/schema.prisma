@@ -22,6 +22,14 @@ model Organization {
   dataRetentionDays Int @default(2555) // 7 years default
   privacyPolicyUrl String?
   consentVersion String @default("1.0")
+
+  // Subscription & Access
+  subscribedAssessments String @default("OCAI,BALDRIGE") // Comma-separated: "OCAI,BALDRIGE"
+  isActive  Boolean  @default(true)
+
+  // Creation tracking
+  createdById String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -29,6 +37,8 @@ model Organization {
   users     User[]
   surveys   Survey[]
   reports   Report[]
+  accessKeys AccessKey[]
+  createdBy User? @relation("CreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@map("organizations")
 }
@@ -36,17 +46,24 @@ model Organization {
 model User {
   id             String   @id @default(cuid())
   name           String
-  email          String   @unique
+  email          String?  @unique // Optional for employees using access keys
+  password       String?  // Hashed password for Admin and Facilitator
   role           Role     @default(EMPLOYEE)
-  organizationId String
+  organizationId String?  // Null for SYSTEM_ADMIN
+
+  // Employee access tracking
+  accessKeyUsed  String?  // Track which access key was used by employee
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  lastLoginAt    DateTime?
 
   // Relations
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   responses    Response[]
   comments     Comment[]
   workshops    Workshop[]
+  createdOrganizations Organization[] @relation("CreatedBy")
 
   @@map("users")
 }
@@ -55,6 +72,7 @@ model Survey {
   id                     String    @id @default(cuid())
   organizationId         String
   title                  String
+  assessmentType         AssessmentType @default(OCAI) // "OCAI" or "BALDRIGE"
   status                 SurveyStatus @default(DRAFT)
   openAt                 DateTime?
   closeAt                DateTime?
@@ -168,9 +186,9 @@ model Report {
 }
 
 enum Role {
-  ORG_ADMIN
-  FACILITATOR
-  EMPLOYEE
+  SYSTEM_ADMIN  // Tenadam admin - full system access
+  FACILITATOR   // Client company admin - organization-scoped access
+  EMPLOYEE      // Assessment taker - access via access key
 }
 
 enum SurveyStatus {
@@ -183,6 +201,38 @@ enum ReportKind {
   ORG
   TEAM
   CUSTOM_SLICE
+}
+
+enum AssessmentType {
+  OCAI
+  BALDRIGE
+}
+
+model AccessKey {
+  id             String   @id @default(cuid())
+  key            String   @unique // 6-8 character access code
+  organizationId String
+
+  // Access control
+  assessmentTypes String @default("OCAI,BALDRIGE") // Comma-separated: "OCAI,BALDRIGE"
+  maxUses        Int?     // Maximum number of uses (null = unlimited)
+  usageCount     Int      @default(0)
+
+  // Validity
+  isActive       Boolean  @default(true)
+  expiresAt      DateTime?
+
+  // Metadata
+  description    String?  // e.g., "Q1 2024 Survey", "Leadership Team"
+  createdBy      String?  // User ID who created this key
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("access_keys")
 }
 
 model Workshop {
