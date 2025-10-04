@@ -7,24 +7,34 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    
     const survey = await prisma.survey.findUnique({
       where: { id },
       include: {
         organization: true,
-        _count: {
-          select: { responses: true },
-        },
       },
     })
 
     if (!survey) {
-      return NextResponse.json({ error: 'Survey not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: 'Survey not found' },
+        { status: 404 }
+      )
+    }
+
+    // Check if survey is open
+    if (survey.status !== 'OPEN') {
+      return NextResponse.json(
+        { error: 'Survey is not currently open' },
+        { status: 403 }
+      )
     }
 
     return NextResponse.json(survey)
   } catch (error) {
     console.error('Error fetching survey:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }

@@ -46,6 +46,9 @@ export default function BaldrigeAssessmentPage() {
   const [showOrgProfile, setShowOrgProfile] = useState(true);
   const [hasAccessKey, setHasAccessKey] = useState(false);
   const [accessKeyUser, setAccessKeyUser] = useState<any>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [submissionData, setSubmissionData] = useState<any>(null);
 
   useEffect(() => {
     // Check for access key authentication first
@@ -148,16 +151,14 @@ export default function BaldrigeAssessmentPage() {
   const handleResponseChange = (questionId: string, value: string) => {
     setResponses(prev => ({ ...prev, [questionId]: value }));
 
-    // Debounce auto-save
-    const timeoutId = setTimeout(() => {
-      saveResponse(questionId, value);
-    }, 1000);
-
-    return () => clearTimeout(timeoutId);
+    // Save immediately for reliability
+    saveResponse(questionId, value);
   };
 
   const handleSubcategoryComplete = async () => {
-    const currentCategory = categories[currentCategoryIndex];
+    // Get main categories (excluding organizational profile)
+    const mainCategories = categories.filter(c => c.displayOrder > 0);
+    const currentCategory = mainCategories[currentCategoryIndex];
     const currentSubcategory = currentCategory?.subcategories[currentSubcategoryIndex];
 
     if (!currentSubcategory) return;
@@ -171,30 +172,57 @@ export default function BaldrigeAssessmentPage() {
       return;
     }
 
+    // Save all responses for this subcategory before proceeding
+    setSaving(true);
+    await Promise.all(
+      currentSubcategory.questions.map(q =>
+        fetch('/api/baldrige/response', {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({
+            questionId: q.id,
+            responseText: responses[q.id] || '',
+          }),
+        })
+      )
+    );
+    setSaving(false);
+
+    // Start transition
+    setIsTransitioning(true);
+
     // Mark questions as completed
     const newCompleted = new Set(completedQuestions);
     currentSubcategory.questions.forEach(q => newCompleted.add(q.id));
     setCompletedQuestions(newCompleted);
 
-    // Save progress
-    await fetch('/api/baldrige/progress', {
+    // Check if this is the last subcategory of the last category
+    const isLastSubcategory = currentSubcategoryIndex === currentCategory.subcategories.length - 1;
+    const isLastCategory = currentCategoryIndex === mainCategories.length - 1;
+
+    if (isLastSubcategory && isLastCategory) {
+      // Assessment complete - submit it
+      submitAssessment();
+    } else if (currentSubcategoryIndex < currentCategory.subcategories.length - 1) {
+      // Move to next subcategory in same category
+      setCurrentSubcategoryIndex(currentSubcategoryIndex + 1);
+    } else {
+      // Move to next category, first subcategory
+      setCurrentCategoryIndex(currentCategoryIndex + 1);
+      setCurrentSubcategoryIndex(0);
+    }
+
+    // End transition after animation
+    setTimeout(() => setIsTransitioning(false), 300);
+
+    // Save progress in background (non-blocking)
+    fetch('/api/baldrige/progress', {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify({
         completedQuestions: Array.from(newCompleted),
       }),
-    });
-
-    // Move to next subcategory or category
-    if (currentSubcategoryIndex < currentCategory.subcategories.length - 1) {
-      setCurrentSubcategoryIndex(currentSubcategoryIndex + 1);
-    } else if (currentCategoryIndex < categories.length - 1) {
-      setCurrentCategoryIndex(currentCategoryIndex + 1);
-      setCurrentSubcategoryIndex(0);
-    } else {
-      // Assessment complete
-      await submitAssessment();
-    }
+    }).catch(err => console.error('Progress save failed:', err));
   };
 
   const submitAssessment = async () => {
@@ -208,8 +236,8 @@ export default function BaldrigeAssessmentPage() {
       const data = await res.json();
 
       if (data.success) {
-        alert('Congratulations! You have completed the Baldrige Excellence Framework Assessment.');
-        router.push('/dashboard');
+        setSubmissionData(data.data);
+        setShowResults(true);
       } else {
         alert(data.message || 'Please complete all questions before submitting.');
       }
@@ -220,6 +248,8 @@ export default function BaldrigeAssessmentPage() {
   };
 
   const handlePrevious = () => {
+    setIsTransitioning(true);
+
     if (currentSubcategoryIndex > 0) {
       setCurrentSubcategoryIndex(currentSubcategoryIndex - 1);
     } else if (currentCategoryIndex > 0) {
@@ -227,6 +257,8 @@ export default function BaldrigeAssessmentPage() {
       const prevCategory = categories[currentCategoryIndex - 1];
       setCurrentSubcategoryIndex(prevCategory.subcategories.length - 1);
     }
+
+    setTimeout(() => setIsTransitioning(false), 300);
   };
 
   const getTotalPoints = () => {
@@ -257,12 +289,155 @@ export default function BaldrigeAssessmentPage() {
     );
   }
 
+  // Results Display
+  if (showResults && submissionData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-blue-50 py-12 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            {/* Success Header */}
+            <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-8 py-12 text-center">
+              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <svg className="w-12 h-12 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h1 className="text-4xl font-bold text-white mb-4">
+                Assessment Complete!
+              </h1>
+              <p className="text-xl text-emerald-50">
+                Thank you for completing the Baldrige Excellence Framework Assessment
+              </p>
+            </div>
+
+            {/* Results Content */}
+            <div className="px-8 py-10 space-y-8">
+              {/* Summary Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border-2 border-blue-200">
+                  <p className="text-sm font-medium text-blue-700 mb-2">Questions Answered</p>
+                  <p className="text-4xl font-bold text-blue-900">{submissionData.totalQuestions}</p>
+                </div>
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-6 border-2 border-emerald-200">
+                  <p className="text-sm font-medium text-emerald-700 mb-2">Completion Rate</p>
+                  <p className="text-4xl font-bold text-emerald-900">{submissionData.completionRate}%</p>
+                </div>
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border-2 border-purple-200">
+                  <p className="text-sm font-medium text-purple-700 mb-2">Submitted On</p>
+                  <p className="text-lg font-bold text-purple-900">
+                    {new Date(submissionData.submittedAt).toLocaleDateString()}
+                  </p>
+                  <p className="text-sm text-purple-700">
+                    {new Date(submissionData.submittedAt).toLocaleTimeString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* User Info */}
+              <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Assessment Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Participant Name</p>
+                    <p className="text-base font-medium text-gray-900">{submissionData.user.name}</p>
+                  </div>
+                  {submissionData.user.email && (
+                    <div>
+                      <p className="text-sm text-gray-600">Email</p>
+                      <p className="text-base font-medium text-gray-900">{submissionData.user.email}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm text-gray-600">Submission ID</p>
+                    <p className="text-base font-mono text-gray-900">{submissionData.submissionId}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Next Steps */}
+              <div className="bg-emerald-50 rounded-xl p-6 border-2 border-emerald-200">
+                <h3 className="text-lg font-semibold text-emerald-900 mb-3 flex items-center">
+                  <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  What Happens Next?
+                </h3>
+                <ul className="space-y-3 text-emerald-800">
+                  <li className="flex items-start">
+                    <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span>Your responses have been securely saved and submitted to your organization's administrator</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span>Your organization will review your assessment and use it to drive excellence improvements</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span>You may be contacted for follow-up discussions or collaborative workshops based on your insights</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
+                <button
+                  onClick={() => router.push('/employee/assessments')}
+                  className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+                >
+                  Return to Dashboard
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="px-8 py-4 bg-white text-emerald-600 border-2 border-emerald-600 rounded-xl hover:bg-emerald-50 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+                >
+                  Print Summary
+                </button>
+              </div>
+
+              {/* Footer Note */}
+              <div className="text-center pt-6 border-t border-gray-200">
+                <p className="text-sm text-gray-600">
+                  For questions about this assessment, please contact your organization's administrator
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Organizational Profile
   const orgProfileCategory = categories.find(c => c.displayOrder === 0);
   if (showOrgProfile && orgProfileCategory) {
     return (
       <div className="min-h-screen bg-gray-50 py-8 px-4">
         <div className="max-w-4xl mx-auto">
+          {/* Warning Banner */}
+          <div className="mb-6 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-semibold text-amber-800">Important Notice</h3>
+                <div className="mt-1 text-sm text-amber-700">
+                  <p>• Your responses are automatically saved as you type, so you can return later if needed.</p>
+                  <p>• Please review your answers carefully before proceeding to the next section.</p>
+                  <p>• Once submitted, you cannot modify your responses.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="bg-white rounded-lg shadow-lg p-8">
             <div className="mb-6">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -282,41 +457,71 @@ export default function BaldrigeAssessmentPage() {
                 This helps contextualize your responses.
               </p>
 
-              {orgProfileCategory.subcategories.map((subcategory) => (
-                <div key={subcategory.id} className="mb-8 border-l-4 border-emerald-500 pl-6">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                    {subcategory.name}
-                  </h3>
+              <div className="max-h-[600px] overflow-y-auto pr-2 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                {orgProfileCategory.subcategories.map((subcategory) => (
+                  <div key={subcategory.id} className="mb-8 border-l-4 border-emerald-500 pl-6 bg-white p-4 rounded-lg">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-4">
+                      {subcategory.name}
+                    </h3>
 
-                  {subcategory.questions.map((question) => (
-                    <div key={question.id} className="mb-6">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {question.itemCode}
-                      </label>
-                      <p className="text-gray-600 mb-3 text-sm">{question.questionText}</p>
-                      <textarea
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
-                        rows={4}
-                        value={responses[question.id] || ''}
-                        onChange={(e) => handleResponseChange(question.id, e.target.value)}
-                        placeholder="Enter your response..."
-                      />
-                    </div>
-                  ))}
-                </div>
-              ))}
+                    {subcategory.questions.map((question) => (
+                      <div key={question.id} className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          {question.itemCode}
+                        </label>
+                        <p className="text-gray-600 mb-3 text-sm">{question.questionText}</p>
+                        <textarea
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                          rows={4}
+                          value={responses[question.id] || ''}
+                          onChange={(e) => handleResponseChange(question.id, e.target.value)}
+                          placeholder="Enter your response..."
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="flex justify-between items-center">
+            <div className="flex justify-end items-center">
               <button
-                onClick={() => router.push('/dashboard')}
-                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-              >
-                Back to Dashboard
-              </button>
-              <button
-                onClick={() => setShowOrgProfile(false)}
-                className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                onClick={async () => {
+                  // Check if all organizational profile questions are answered
+                  const allAnswered = orgProfileCategory.subcategories.every(sub =>
+                    sub.questions.every(q => responses[q.id]?.trim())
+                  );
+
+                  if (!allAnswered) {
+                    alert('Please answer all organizational profile questions before continuing.');
+                    return;
+                  }
+
+                  // Save all organizational profile responses
+                  setSaving(true);
+                  const allQuestions = orgProfileCategory.subcategories.flatMap(sub => sub.questions);
+                  await Promise.all(
+                    allQuestions.map(q =>
+                      fetch('/api/baldrige/response', {
+                        method: 'POST',
+                        headers: getHeaders(),
+                        body: JSON.stringify({
+                          questionId: q.id,
+                          responseText: responses[q.id] || '',
+                        }),
+                      })
+                    )
+                  );
+                  setSaving(false);
+
+                  setShowOrgProfile(false);
+                }}
+                disabled={
+                  !orgProfileCategory.subcategories.every(sub =>
+                    sub.questions.every(q => responses[q.id]?.trim())
+                  )
+                }
+                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
               >
                 Continue to Assessment
               </button>
@@ -335,6 +540,25 @@ export default function BaldrigeAssessmentPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
+        {/* Warning Banner */}
+        <div className="mb-6 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-semibold text-amber-800">Important Notice</h3>
+              <div className="mt-1 text-sm text-amber-700">
+                <p>• Your responses are automatically saved as you type, so you can return later if needed.</p>
+                <p>• Please review your answers carefully before proceeding to the next section.</p>
+                <p>• Once submitted, you cannot modify your responses.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Progress Header */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
@@ -370,38 +594,42 @@ export default function BaldrigeAssessmentPage() {
           </div>
 
           {/* Progress Bar */}
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
             <div
-              className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 h-3 rounded-full transition-all duration-500 ease-out relative overflow-hidden"
               style={{ width: `${(getCompletedPoints() / getTotalPoints()) * 100}%` }}
-            />
+            >
+              <div className="absolute inset-0 bg-white opacity-20 animate-pulse"></div>
+            </div>
           </div>
         </div>
 
         {/* Current Subcategory Assessment */}
         {currentSubcategory && (
-          <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className={`bg-white rounded-lg shadow-lg p-8 transition-all duration-300 ease-in-out ${
+            isTransitioning ? 'opacity-0 transform translate-x-4' : 'opacity-100 transform translate-x-0'
+          }`}>
             <div className="mb-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
                     {currentSubcategory.name}
                   </h2>
                   <p className="text-sm text-gray-600">
                     Category {currentCategory.displayOrder}: {currentCategory.name}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-600">Points</p>
-                  <p className="text-xl font-bold text-emerald-600">{currentSubcategory.points}</p>
+                <div className="text-right bg-emerald-50 px-4 py-2 rounded-lg">
+                  <p className="text-sm text-emerald-700 font-medium">Points</p>
+                  <p className="text-2xl font-bold text-emerald-600">{currentSubcategory.points}</p>
                 </div>
               </div>
             </div>
 
             {/* Questions */}
-            <div className="space-y-6 mb-8">
+            <div className="max-h-[600px] overflow-y-auto space-y-6 mb-8 pr-2 border-2 border-emerald-100 rounded-lg p-4 bg-gradient-to-br from-gray-50 to-emerald-50 shadow-inner">
               {currentSubcategory.questions.map((question) => (
-                <div key={question.id} className="border-l-4 border-emerald-500 pl-6">
+                <div key={question.id} className="border-l-4 border-emerald-500 pl-6 bg-white p-4 rounded-lg">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     {question.itemCode}
                   </label>
@@ -419,31 +647,33 @@ export default function BaldrigeAssessmentPage() {
 
             {/* Navigation Buttons */}
             <div className="flex justify-between items-center pt-6 border-t">
-              <button
-                onClick={handlePrevious}
-                disabled={currentCategoryIndex === 0 && currentSubcategoryIndex === 0}
-                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
+              <div className="w-32"></div>
 
               <div className="text-center">
-                <p className="text-sm text-gray-600">
-                  Subcategory {currentSubcategoryIndex + 1} of {currentCategory.subcategories.length} in Category {currentCategory.displayOrder}
+                <p className="text-sm text-gray-600 font-medium">
+                  Subcategory {currentSubcategoryIndex + 1} of {currentCategory.subcategories.length}
                 </p>
+                <p className="text-xs text-gray-500">Category {currentCategory.displayOrder}: {currentCategory.name}</p>
               </div>
 
               <button
                 onClick={handleSubcategoryComplete}
-                disabled={saving}
-                className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium disabled:opacity-50"
+                disabled={
+                  saving ||
+                  isTransitioning ||
+                  !currentSubcategory.questions.every(q => responses[q.id]?.trim())
+                }
+                className="group px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-medium hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center space-x-2"
               >
-                {saving ? 'Saving...' :
+                <span>{saving ? 'Saving...' :
                   currentSubcategoryIndex < currentCategory.subcategories.length - 1
                     ? 'Next Subcategory'
                     : currentCategoryIndex < mainCategories.length - 1
                     ? 'Next Category'
-                    : 'Complete Assessment'}
+                    : 'Complete Assessment'}</span>
+                <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             </div>
           </div>

@@ -1,14 +1,15 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Mail, Lock, Key, AlertCircle, Loader2 } from 'lucide-react'
 
 type LoginMode = 'credentials' | 'accesskey'
 
 export default function SignInPage() {
-  const [mode, setMode] = useState<LoginMode>('credentials')
+  const searchParams = useSearchParams()
+  const [mode, setMode] = useState<LoginMode>('accesskey')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [accessKey, setAccessKey] = useState('')
@@ -16,6 +17,14 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+
+  useEffect(() => {
+    // Set mode based on URL parameter
+    const modeParam = searchParams.get('mode')
+    if (modeParam === 'credentials' || modeParam === 'accesskey') {
+      setMode(modeParam)
+    }
+  }, [searchParams])
 
   const handleCredentialLogin = async (e: React.FormEvent) => {
     e.preventDefault()

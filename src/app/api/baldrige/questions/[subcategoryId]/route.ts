@@ -7,11 +7,11 @@ import { authOptions } from '@/lib/auth';
 // Get all questions for a specific subcategory with user responses
 export async function GET(
   request: NextRequest,
-  { params }: { params: { subcategoryId: string } }
+  { params }: { params: Promise<{ subcategoryId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
-    const subcategoryId = params.subcategoryId;
+    const { subcategoryId } = await params;
 
     const subcategory = await prisma.baldrigeSubcategory.findUnique({
       where: { id: subcategoryId },

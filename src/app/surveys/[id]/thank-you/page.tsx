@@ -18,23 +18,23 @@ export default function ThankYouPage() {
           
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Thank You!</h1>
           <p className="text-gray-600 mb-6">
-            Your OCAI culture assessment has been submitted successfully. 
+            Your OCAI culture assessment has been submitted successfully.
             Your responses will help us understand and improve our organizational culture.
           </p>
-          
+
           <div className="space-y-3">
             <button
-              onClick={() => router.push('/surveys')}
+              onClick={() => router.push('/employee/assessments')}
               className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
-              View All Surveys
+              Back to Assessments
             </button>
-            
+
             <button
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push('/')}
               className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
             >
-              Return to Dashboard
+              Return to Home
             </button>
           </div>
           

@@ -7,8 +7,39 @@ import { checkRateLimit, getClientIP, hashIP } from '@/lib/security'
 
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const organizationId = searchParams.get('organizationId')
+    const type = searchParams.get('type')
+    const status = searchParams.get('status')
+
+    // If query params provided, use them (for employee access)
+    if (organizationId) {
+      const where: any = { organizationId }
+
+      if (type) {
+        where.assessmentType = type
+      }
+
+      if (status) {
+        where.status = status
+      }
+
+      const surveys = await prisma.survey.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          _count: {
+            select: { responses: true },
+          },
+        },
+      })
+
+      return NextResponse.json({ surveys })
+    }
+
+    // Otherwise, require session (for admin access)
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.organizationId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

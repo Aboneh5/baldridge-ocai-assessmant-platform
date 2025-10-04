@@ -7,12 +7,12 @@ import { OCAIBarChart } from '@/components/charts/ocai-bar-chart'
 import { notFound } from 'next/navigation'
 
 interface SurveyPageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export default async function SurveyPage({ params }: SurveyPageProps) {
   const session = await getServerSession(authOptions)
-  const surveyId = params.id
+  const { id: surveyId } = await params
 
   const survey = await prisma.survey.findUnique({
     where: { id: surveyId },

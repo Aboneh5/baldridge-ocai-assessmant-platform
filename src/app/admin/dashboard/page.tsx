@@ -99,20 +99,20 @@ export default function AdminDashboardPage() {
       hoverColor: 'hover:bg-green-600',
     },
     {
-      title: 'Create Facilitator',
-      description: 'Add organization admin',
-      icon: <Users className="w-6 h-6" />,
-      href: '/admin/users/new',
-      color: 'bg-purple-500',
-      hoverColor: 'hover:bg-purple-600',
+      title: 'OCAI Responses',
+      description: 'View culture assessments',
+      icon: <BarChart3 className="w-6 h-6" />,
+      href: '/admin/ocai',
+      color: 'bg-blue-500',
+      hoverColor: 'hover:bg-blue-600',
     },
     {
-      title: 'View Reports',
-      description: 'System-wide analytics',
+      title: 'Baldrige Responses',
+      description: 'View excellence assessments',
       icon: <FileText className="w-6 h-6" />,
-      href: '/admin/reports',
-      color: 'bg-orange-500',
-      hoverColor: 'hover:bg-orange-600',
+      href: '/admin/baldrige',
+      color: 'bg-emerald-500',
+      hoverColor: 'hover:bg-emerald-600',
     },
   ]
 
@@ -174,6 +174,18 @@ export default function AdminDashboardPage() {
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
               Users
+            </Link>
+            <Link
+              href="/admin/ocai"
+              className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            >
+              OCAI
+            </Link>
+            <Link
+              href="/admin/baldrige"
+              className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            >
+              Baldrige
             </Link>
             <Link
               href="/admin/surveys"

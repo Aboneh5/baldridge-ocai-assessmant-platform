@@ -28,10 +28,20 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
   const [demographics, setDemographics] = useState<Demographics>({})
   const [scores, setScores] = useState<OCAIScores | null>(null)
   const [showHelp, setShowHelp] = useState(false)
+  const [isTransitioning, setIsTransitioning] = useState(false)
 
-  // Initialize responses
+  // Initialize responses and load from localStorage
   useEffect(() => {
-    if (responses.length === 0) {
+    const storageKey = `ocai_progress_${surveyId}`
+    const savedProgress = localStorage.getItem(storageKey)
+
+    if (savedProgress) {
+      const parsed = JSON.parse(savedProgress)
+      setResponses(parsed.responses || [])
+      setCurrentPhase(parsed.currentPhase || 'now')
+      setCurrentDimension(parsed.currentDimension || 0)
+      setDemographics(parsed.demographics || {})
+    } else if (responses.length === 0) {
       const initialResponses = OCAI_DIMENSIONS.map(dimension => ({
         dimensionId: dimension.id,
         now: { A: 25, B: 25, C: 25, D: 25 },
@@ -39,7 +49,22 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
       }))
       setResponses(initialResponses)
     }
-  }, [responses.length])
+  }, [surveyId])
+
+  // Save progress to localStorage whenever state changes
+  useEffect(() => {
+    if (responses.length > 0 && currentPhase !== 'results') {
+      const storageKey = `ocai_progress_${surveyId}`
+      const progressData = {
+        responses,
+        currentPhase,
+        currentDimension,
+        demographics,
+        lastSaved: new Date().toISOString()
+      }
+      localStorage.setItem(storageKey, JSON.stringify(progressData))
+    }
+  }, [responses, currentPhase, currentDimension, demographics, surveyId])
 
   const handleDimensionChange = (dimensionId: string, phase: 'now' | 'preferred', values: { A: number; B: number; C: number; D: number }) => {
     setResponses(prev => prev.map(response => 
@@ -50,6 +75,8 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
   }
 
   const handleNext = () => {
+    setIsTransitioning(true)
+
     if (currentPhase === 'now') {
       if (currentDimension < OCAI_DIMENSIONS.length - 1) {
         setCurrentDimension(prev => prev + 1)
@@ -68,14 +95,22 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
       const calculatedScores = calculateOCAIScores(responses)
       setScores(calculatedScores)
       setCurrentPhase('results')
-      
+
+      // Clear saved progress since assessment is complete
+      const storageKey = `ocai_progress_${surveyId}`
+      localStorage.removeItem(storageKey)
+
       if (onComplete) {
         onComplete(calculatedScores, demographics)
       }
     }
+
+    setTimeout(() => setIsTransitioning(false), 300)
   }
 
   const handlePrevious = () => {
+    setIsTransitioning(true)
+
     if (currentPhase === 'preferred') {
       if (currentDimension > 0) {
         setCurrentDimension(prev => prev - 1)
@@ -89,6 +124,8 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
     } else if (currentPhase === 'results') {
       setCurrentPhase('demographics')
     }
+
+    setTimeout(() => setIsTransitioning(false), 300)
   }
 
   const getCurrentResponse = () => {
@@ -129,24 +166,50 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+      {/* Warning Banner */}
+      <div className="mb-6 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
+        <div className="flex items-start">
+          <div className="flex-shrink-0">
+            <svg className="h-5 w-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-semibold text-amber-800">Important Notice</h3>
+            <div className="mt-1 text-sm text-amber-700">
+              <p>• Your progress is automatically saved as you go, so you can return later if needed.</p>
+              <p>• Please review your answers carefully before proceeding to the next question.</p>
+              <p>• Once submitted, you cannot modify your responses.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-3xl font-bold text-gray-900">OCAI Culture Assessment</h1>
+          <h1 className="text-3xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            OCAI Culture Assessment
+          </h1>
           <button
             onClick={() => setShowHelp(!showHelp)}
-            className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+            className="group px-5 py-2.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all duration-200 font-medium transform hover:scale-105 active:scale-95 flex items-center space-x-2 shadow-sm hover:shadow-md"
           >
-            {showHelp ? 'Hide Help' : 'Show Help'}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{showHelp ? 'Hide Help' : 'Show Help'}</span>
           </button>
         </div>
         
         {/* Progress Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-          <div 
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+        <div className="w-full bg-gray-200 rounded-full h-3 mb-4 overflow-hidden shadow-inner">
+          <div
+            className="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 h-3 rounded-full transition-all duration-500 ease-out relative overflow-hidden"
             style={{ width: `${getProgress()}%` }}
-          />
+          >
+            <div className="absolute inset-0 bg-white opacity-20 animate-pulse"></div>
+          </div>
         </div>
         
         <div className="flex justify-between text-sm text-gray-600">
@@ -161,9 +224,11 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
-        <div className="lg:col-span-2">
+        <div className={`lg:col-span-2 transition-all duration-300 ease-in-out ${
+          isTransitioning ? 'opacity-0 transform translate-x-4' : 'opacity-100 transform translate-x-0'
+        }`}>
           {currentPhase === 'demographics' ? (
-            <div className="space-y-6">
+            <div className="space-y-6 animate-fadeIn">
               <h2 className="text-2xl font-semibold text-gray-900">Demographics (Optional)</h2>
               <p className="text-gray-600">This information is used only for aggregated reporting and analysis.</p>
               
@@ -275,7 +340,7 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
 
         {/* Help Panel */}
         {showHelp && (
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 animate-slideInRight">
             <OCAIHelpPanel />
           </div>
         )}
@@ -286,17 +351,23 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
         <button
           onClick={handlePrevious}
           disabled={currentPhase === 'now' && currentDimension === 0}
-          className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="group px-6 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center space-x-2"
         >
-          Previous
+          <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          <span>Previous</span>
         </button>
-        
+
         <button
           onClick={handleNext}
-          disabled={!canProceed()}
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!canProceed() || isTransitioning}
+          className="group px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center space-x-2"
         >
-          {currentPhase === 'demographics' ? 'View Results' : 'Next'}
+          <span>{currentPhase === 'demographics' ? 'View Results' : 'Next'}</span>
+          <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
         </button>
       </div>
     </div>

@@ -128,7 +128,7 @@ async function seedDemoData() {
       data: {
         name: 'Sarah Johnson',
         email: 'sarah.johnson@techcorp.com',
-        role: 'ORG_ADMIN',
+        role: 'FACILITATOR',
         organizationId: organization.id
       }
     }),

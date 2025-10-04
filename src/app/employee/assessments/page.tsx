@@ -30,6 +30,7 @@ export default function EmployeeAssessmentsPage() {
   const [assessmentTypes, setAssessmentTypes] = useState<string[]>([])
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [ocaiSurveyId, setOcaiSurveyId] = useState<string | null>(null)
 
   useEffect(() => {
     // Load from localStorage
@@ -42,11 +43,31 @@ export default function EmployeeAssessmentsPage() {
       return
     }
 
-    setUser(JSON.parse(storedUser))
-    setOrganization(JSON.parse(storedOrg))
+    const parsedUser = JSON.parse(storedUser)
+    const parsedOrg = JSON.parse(storedOrg)
+
+    setUser(parsedUser)
+    setOrganization(parsedOrg)
     setAssessmentTypes(JSON.parse(storedTypes))
-    setLoading(false)
+
+    // Fetch OCAI survey for this organization
+    fetchOcaiSurvey(parsedOrg.id)
   }, [router])
+
+  const fetchOcaiSurvey = async (orgId: string) => {
+    try {
+      const response = await fetch(`/api/surveys?organizationId=${orgId}&type=OCAI&status=OPEN`)
+      const data = await response.json()
+
+      if (data.surveys && data.surveys.length > 0) {
+        setOcaiSurveyId(data.surveys[0].id)
+      }
+    } catch (error) {
+      console.error('Error fetching survey:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSignOut = () => {
     localStorage.removeItem('user')
@@ -150,19 +171,31 @@ export default function EmployeeAssessmentsPage() {
         {/* Assessment Cards */}
         {availableAssessments.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {availableAssessments.map((assessment) => (
-              <div
+            {availableAssessments.map((assessment) => {
+              const getAssessmentLink = () => {
+                if (assessment.type === 'OCAI') {
+                  return ocaiSurveyId ? `/assessments/ocai?surveyId=${ocaiSurveyId}` : '#'
+                } else if (assessment.type === 'BALDRIGE') {
+                  return '/assessments/baldrige'
+                }
+                return '#'
+              }
+
+              const handleClick = (e: React.MouseEvent) => {
+                if (assessment.type === 'OCAI' && ocaiSurveyId) {
+                  localStorage.setItem('currentSurveyId', ocaiSurveyId)
+                } else if (assessment.type === 'OCAI' && !ocaiSurveyId) {
+                  e.preventDefault()
+                  alert('No OCAI survey available. Please contact your administrator.')
+                }
+              }
+
+              return (
+              <Link
                 key={assessment.type}
-                className={`${assessment.bgColor} border-2 ${assessment.borderColor} rounded-xl p-6 hover:shadow-lg transition-shadow cursor-pointer group`}
-                onClick={() => {
-                  // Redirect to the appropriate assessment
-                  if (assessment.type === 'OCAI') {
-                    router.push(`/surveys/1/respond`) // Demo survey ID
-                  } else {
-                    // Baldrige would go to Baldrige app
-                    router.push('/baldrige')
-                  }
-                }}
+                href={getAssessmentLink()}
+                onClick={handleClick}
+                className={`${assessment.bgColor} border-2 ${assessment.borderColor} rounded-xl p-6 hover:shadow-lg transition-shadow cursor-pointer group block`}
               >
                 <div className={`${assessment.color} mb-4`}>
                   {assessment.icon}
@@ -177,13 +210,13 @@ export default function EmployeeAssessmentsPage() {
                   <span className="text-sm text-gray-600">
                     ⏱ {assessment.duration}
                   </span>
-                  <button className="flex items-center space-x-2 text-blue-600 font-medium group-hover:text-blue-700">
-                    <span>Start</span>
+                  <span className="flex items-center space-x-2 text-blue-600 font-medium group-hover:text-blue-700">
+                    <span>Learn More</span>
                     <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </span>
                 </div>
-              </div>
-            ))}
+              </Link>
+            )})}
           </div>
         ) : (
           <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">

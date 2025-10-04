@@ -78,12 +78,19 @@ export async function POST(request: NextRequest) {
         updatedAt: response.updatedAt,
       },
     });
-  } catch (error) {
-    console.error('Error saving response:', error);
+  } catch (error: any) {
+    console.error('Error saving Baldrige response:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack
+    });
     return NextResponse.json(
       {
         success: false,
         message: 'Failed to save response',
+        error: error.message || 'Unknown error'
       },
       { status: 500 }
     );

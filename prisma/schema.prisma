@@ -427,3 +427,25 @@ model BaldrigeProgress {
   @@unique([userId, surveyId])
   @@map("baldrige_progress")
 }
+
+model BaldrigeSubmission {
+  id                String   @id @default(cuid())
+  assessmentId      String   @unique // Human-readable ID like "BLD-2024-001"
+  userId            String
+  organizationId    String?
+  surveyId          String?
+  accessKey         String?  // Track which access key was used
+  startedAt         DateTime @default(now())
+  submittedAt       DateTime?
+  isCompleted       Boolean  @default(false)
+  totalQuestions    Int      @default(0)
+  answeredQuestions Int      @default(0)
+  metadata          Json?    // Store additional metadata
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([assessmentId])
+  @@map("baldrige_submissions")
+}
