@@ -1,17 +1,31 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
 # Dependencies
 node_modules/
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
 # Production builds
 .next/
 out/
 build/
 dist/
+/.next/
+/out/
+/build
 
 # Environment variables
 .env
+.env*
 .env.local
 .env.development.local
 .env.test.local
@@ -22,6 +36,12 @@ dist/
 *.sqlite
 *.sqlite3
 
+# Testing
+/coverage
+coverage/
+*.lcov
+.nyc_output
+
 # Logs
 logs
 *.log
@@ -31,13 +51,6 @@ pids
 *.pid
 *.seed
 *.pid.lock
-
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
-
-# nyc test coverage
-.nyc_output
 
 # Dependency directories
 jspm_packages/
@@ -67,15 +80,6 @@ jspm_packages/
 .cache
 .parcel-cache
 
-# next.js build output
-.next
-
-# nuxt.js build output
-.nuxt
-
-# vuepress build output
-.vuepress/dist
-
 # Serverless directories
 .serverless/
 
@@ -88,6 +92,9 @@ jspm_packages/
 # TernJS port file
 .tern-port
 
+# Vercel
+.vercel
+
 # IDE
 .vscode/
 .idea/
@@ -97,6 +104,7 @@ jspm_packages/
 # OS
 .DS_Store
 Thumbs.db
+*.pem
 
 # System files
 AppData/
@@ -108,9 +116,6 @@ Pictures/
 Videos/
 *.tmp
 *.temp
-
-# VS Code extensions
-.vscode/
 
 # Python
 __pycache__/
@@ -124,5 +129,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
 # Prisma
 prisma/migrations/
+/src/generated/prisma
