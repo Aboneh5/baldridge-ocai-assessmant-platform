@@ -3,9 +3,26 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Clock, Users, BarChart3, CheckCircle, Info } from 'lucide-react'
+import { useState, useEffect } from 'react'
 
 export default function OCAIIntroPage() {
   const router = useRouter()
+  const [creatingAssessment, setCreatingAssessment] = useState(false)
+  const [surveyId, setSurveyId] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Check for survey ID from URL or localStorage
+    const urlParams = new URLSearchParams(window.location.search)
+    const urlSurveyId = urlParams.get('surveyId')
+    const storedSurveyId = localStorage.getItem('currentSurveyId')
+
+    if (urlSurveyId) {
+      setSurveyId(urlSurveyId)
+      localStorage.setItem('currentSurveyId', urlSurveyId)
+    } else if (storedSurveyId) {
+      setSurveyId(storedSurveyId)
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -241,22 +258,95 @@ export default function OCAIIntroPage() {
             Back to Assessments
           </Link>
           <button
-            onClick={() => {
-              // Get survey ID from URL params or localStorage
-              const urlParams = new URLSearchParams(window.location.search)
-              const surveyId = urlParams.get('surveyId') || localStorage.getItem('currentSurveyId')
-
+            onClick={async () => {
               if (surveyId) {
+                // Survey exists, proceed to it
                 router.push(`/surveys/${surveyId}/respond`)
-              } else {
-                // Fallback - redirect to assessments page
-                router.push('/employee/assessments')
+                return
+              }
+
+              // No survey in state - check if one exists or create one
+              setCreatingAssessment(true)
+
+              try {
+                const storedOrg = localStorage.getItem('organization')
+                const storedUser = localStorage.getItem('user')
+
+                if (!storedOrg) {
+                  alert('Organization information not found. Please sign in again.')
+                  router.push('/auth/signin')
+                  return
+                }
+
+                const org = JSON.parse(storedOrg)
+                const user = storedUser ? JSON.parse(storedUser) : null
+
+                // First, check if an OCAI survey already exists for this organization
+                const checkResponse = await fetch(`/api/surveys?organizationId=${org.id}&type=OCAI&status=OPEN`)
+
+                if (checkResponse.ok) {
+                  const checkData = await checkResponse.json()
+
+                  if (checkData.surveys && checkData.surveys.length > 0) {
+                    // Use existing survey
+                    const existingSurvey = checkData.surveys[0]
+                    localStorage.setItem('currentSurveyId', existingSurvey.id)
+                    setSurveyId(existingSurvey.id)
+                    router.push(`/surveys/${existingSurvey.id}/respond`)
+                    return
+                  }
+                }
+
+                // No existing survey - create one for this organization
+                const response = await fetch('/api/surveys', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    title: `${org.name} - OCAI Culture Assessment`,
+                    description: 'Organizational Culture Assessment Instrument',
+                    assessmentType: 'OCAI',
+                    status: 'OPEN',
+                    organizationId: org.id,
+                    allowAnonymous: true,
+                    requireOrgEmailDomain: false,
+                  }),
+                })
+
+                if (response.ok) {
+                  const data = await response.json()
+                  const newSurveyId = data.id
+
+                  // Store survey ID
+                  localStorage.setItem('currentSurveyId', newSurveyId)
+                  setSurveyId(newSurveyId)
+
+                  // Navigate to survey
+                  router.push(`/surveys/${newSurveyId}/respond`)
+                } else {
+                  const error = await response.json()
+                  alert(error.message || 'Failed to create assessment. Please contact your administrator.')
+                }
+              } catch (error) {
+                console.error('Error with OCAI survey:', error)
+                alert('An error occurred. Please try again or contact your administrator.')
+              } finally {
+                setCreatingAssessment(false)
               }
             }}
-            className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl font-medium text-lg"
+            disabled={creatingAssessment}
+            className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Start OCAI Assessment
-            <ArrowRight className="ml-2 w-5 h-5" />
+            {creatingAssessment ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                Preparing Assessment...
+              </>
+            ) : (
+              <>
+                Start OCAI Assessment
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </>
+            )}
           </button>
         </div>
       </main>

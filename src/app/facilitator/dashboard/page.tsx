@@ -55,7 +55,8 @@ export default function FacilitatorDashboardPage() {
 
     setUser(parsedUser)
     loadDashboardData(parsedUser.organizationId)
-  }, [router])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Run only once on mount
 
   const loadDashboardData = async (orgId: string) => {
     try {
@@ -322,6 +323,21 @@ export default function FacilitatorDashboardPage() {
                 </Link>
 
                 <Link
+                  href="/ocai/results"
+                  className="block p-4 border-2 border-gray-200 rounded-lg hover:border-gray-300 transition-colors group"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-blue-50 rounded-lg">
+                      <BarChart3 className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 group-hover:text-gray-700">OCAI Results</p>
+                      <p className="text-sm text-gray-600">View culture assessment results</p>
+                    </div>
+                  </div>
+                </Link>
+
+                <Link
                   href="/facilitator/reports"
                   className="block p-4 border-2 border-gray-200 rounded-lg hover:border-gray-300 transition-colors group"
                 >
@@ -330,7 +346,7 @@ export default function FacilitatorDashboardPage() {
                       <BarChart3 className="w-5 h-5 text-green-600" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 group-hover:text-gray-700">View Reports</p>
+                      <p className="font-medium text-gray-900 group-hover:text-gray-700">All Reports</p>
                       <p className="text-sm text-gray-600">Aggregate results & analytics</p>
                     </div>
                   </div>

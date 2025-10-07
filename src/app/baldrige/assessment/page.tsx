@@ -3,6 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import {
+  loadAssessmentProgress,
+  saveAssessmentProgress,
+  markAssessmentCompleted,
+  isAssessmentCompleted,
+  calculateProgressPercentage,
+} from '@/lib/assessment-progress';
 
 interface BaldrigeQuestion {
   id: string;
@@ -59,8 +66,18 @@ export default function BaldrigeAssessmentPage() {
     if (storedUser && storedOrg && storedTypes) {
       const types = JSON.parse(storedTypes);
       if (types.includes('BALDRIGE')) {
+        const user = JSON.parse(storedUser);
+        const org = JSON.parse(storedOrg);
+
+        // Check if already completed
+        if (isAssessmentCompleted('BALDRIGE', org.id, user.id)) {
+          // Redirect to answers page
+          router.push('/baldrige/answers');
+          return;
+        }
+
         setHasAccessKey(true);
-        setAccessKeyUser(JSON.parse(storedUser));
+        setAccessKeyUser(user);
         fetchCategories();
         fetchProgress();
         return;
@@ -77,7 +94,7 @@ export default function BaldrigeAssessmentPage() {
       fetchCategories();
       fetchProgress();
     }
-  }, [status]);
+  }, [status, router]);
 
   const getHeaders = () => {
     const headers: HeadersInit = { 'Content-Type': 'application/json' };
@@ -153,6 +170,43 @@ export default function BaldrigeAssessmentPage() {
 
     // Save immediately for reliability
     saveResponse(questionId, value);
+
+    // Update progress tracking in localStorage
+    const storedUser = localStorage.getItem('user');
+    const storedOrg = localStorage.getItem('organization');
+    const storedAccessKey = localStorage.getItem('accessKey');
+
+    if (storedUser && storedOrg) {
+      const user = JSON.parse(storedUser);
+      const org = JSON.parse(storedOrg);
+
+      // Calculate total questions and answered questions
+      const totalQuestions = categories.reduce((total, cat) => {
+        return total + cat.subcategories.reduce((subTotal, sub) => {
+          return subTotal + sub.questions.length;
+        }, 0);
+      }, 0);
+
+      const answeredQuestions = Object.keys(responses).filter(key => responses[key]?.trim()).length + 1; // +1 for current answer
+      const percentage = calculateProgressPercentage(answeredQuestions, totalQuestions);
+
+      saveAssessmentProgress({
+        assessmentType: 'BALDRIGE',
+        organizationId: org.id,
+        accessKey: storedAccessKey || '',
+        userId: user.id,
+        status: 'in_progress',
+        progress: {
+          currentStep: answeredQuestions,
+          totalSteps: totalQuestions,
+          percentage,
+          data: { currentCategoryIndex, currentSubcategoryIndex },
+        },
+        timestamps: {
+          startedAt: new Date().toISOString(),
+        },
+      });
+    }
   };
 
   const handleSubcategoryComplete = async () => {
@@ -236,6 +290,17 @@ export default function BaldrigeAssessmentPage() {
       const data = await res.json();
 
       if (data.success) {
+        // Mark assessment as permanently completed
+        const storedUser = localStorage.getItem('user');
+        const storedOrg = localStorage.getItem('organization');
+        const storedAccessKey = localStorage.getItem('accessKey');
+
+        if (storedUser && storedOrg) {
+          const user = JSON.parse(storedUser);
+          const org = JSON.parse(storedOrg);
+          markAssessmentCompleted('BALDRIGE', org.id, user.id, storedAccessKey || '');
+        }
+
         setSubmissionData(data.data);
         setShowResults(true);
       } else {

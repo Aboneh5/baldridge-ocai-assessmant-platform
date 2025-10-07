@@ -68,7 +68,8 @@ export default function AdminOCAIPage() {
 
     setUser(parsedUser);
     loadOCAIData();
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   const loadOCAIData = async () => {
     try {
@@ -286,6 +287,13 @@ export default function AdminOCAIPage() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <Link
+                href="/ocai/results"
+                className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                <BarChart3 className="w-4 h-4" />
+                <span className="text-sm font-medium">View Results</span>
+              </Link>
               <button
                 onClick={exportAllToCSV}
                 className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"

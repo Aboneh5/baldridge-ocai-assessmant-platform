@@ -49,7 +49,8 @@ export default function AdminDashboardPage() {
 
     setUser(parsedUser)
     loadStats()
-  }, [router])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Run only once on mount
 
   const loadStats = async () => {
     try {
@@ -99,12 +100,12 @@ export default function AdminDashboardPage() {
       hoverColor: 'hover:bg-green-600',
     },
     {
-      title: 'OCAI Responses',
-      description: 'View culture assessments',
+      title: 'OCAI Results',
+      description: 'View org-wide culture analysis',
       icon: <BarChart3 className="w-6 h-6" />,
-      href: '/admin/ocai',
-      color: 'bg-blue-500',
-      hoverColor: 'hover:bg-blue-600',
+      href: '/ocai/results',
+      color: 'bg-purple-500',
+      hoverColor: 'hover:bg-purple-600',
     },
     {
       title: 'Baldrige Responses',

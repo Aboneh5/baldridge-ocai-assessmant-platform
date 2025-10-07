@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { BarChart3, Target, Award, CheckCircle, ArrowRight, LogOut } from 'lucide-react'
+import { BarChart3, Target, Award, CheckCircle, ArrowRight, LogOut, Eye, PlayCircle } from 'lucide-react'
+import { getAllAssessmentStatuses, AssessmentProgress } from '@/lib/assessment-progress'
 
 interface Organization {
   id: string
@@ -31,6 +32,10 @@ export default function EmployeeAssessmentsPage() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [ocaiSurveyId, setOcaiSurveyId] = useState<string | null>(null)
+  const [assessmentStatuses, setAssessmentStatuses] = useState<{
+    OCAI?: AssessmentProgress;
+    BALDRIGE?: AssessmentProgress;
+  }>({})
 
   useEffect(() => {
     // Load from localStorage
@@ -49,6 +54,10 @@ export default function EmployeeAssessmentsPage() {
     setUser(parsedUser)
     setOrganization(parsedOrg)
     setAssessmentTypes(JSON.parse(storedTypes))
+
+    // Load assessment progress statuses
+    const statuses = getAllAssessmentStatuses(parsedOrg.id, parsedUser.id)
+    setAssessmentStatuses(statuses)
 
     // Fetch OCAI survey for this organization
     fetchOcaiSurvey(parsedOrg.id)
@@ -172,9 +181,25 @@ export default function EmployeeAssessmentsPage() {
         {availableAssessments.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {availableAssessments.map((assessment) => {
+              const status = assessmentStatuses[assessment.type]
+              const isCompleted = status?.status === 'completed'
+              const isInProgress = status?.status === 'in_progress'
+              const progressPercent = status?.progress?.percentage || 0
+
               const getAssessmentLink = () => {
+                if (isCompleted) {
+                  // Redirect to results/answers page
+                  if (assessment.type === 'OCAI') {
+                    return '/ocai/my-results'
+                  } else if (assessment.type === 'BALDRIGE') {
+                    return '/baldrige/answers'
+                  }
+                }
+
+                // Normal assessment link
                 if (assessment.type === 'OCAI') {
-                  return ocaiSurveyId ? `/assessments/ocai?surveyId=${ocaiSurveyId}` : '#'
+                  // If there's a survey, use it; otherwise go to intro page
+                  return ocaiSurveyId ? `/assessments/ocai?surveyId=${ocaiSurveyId}` : '/assessments/ocai'
                 } else if (assessment.type === 'BALDRIGE') {
                   return '/assessments/baldrige'
                 }
@@ -184,9 +209,32 @@ export default function EmployeeAssessmentsPage() {
               const handleClick = (e: React.MouseEvent) => {
                 if (assessment.type === 'OCAI' && ocaiSurveyId) {
                   localStorage.setItem('currentSurveyId', ocaiSurveyId)
-                } else if (assessment.type === 'OCAI' && !ocaiSurveyId) {
-                  e.preventDefault()
-                  alert('No OCAI survey available. Please contact your administrator.')
+                }
+                // Allow OCAI access even without survey - will create one dynamically
+              }
+
+              const getButtonContent = () => {
+                if (isCompleted) {
+                  return (
+                    <span className="flex items-center space-x-2 text-green-600 font-medium group-hover:text-green-700">
+                      <Eye className="w-4 h-4" />
+                      <span>{assessment.type === 'OCAI' ? 'View Results' : 'View Answers'}</span>
+                    </span>
+                  )
+                } else if (isInProgress) {
+                  return (
+                    <span className="flex items-center space-x-2 text-blue-600 font-medium group-hover:text-blue-700">
+                      <PlayCircle className="w-4 h-4" />
+                      <span>Continue ({progressPercent}%)</span>
+                    </span>
+                  )
+                } else {
+                  return (
+                    <span className="flex items-center space-x-2 text-blue-600 font-medium group-hover:text-blue-700">
+                      <span>Start Assessment</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </span>
+                  )
                 }
               }
 
@@ -195,8 +243,17 @@ export default function EmployeeAssessmentsPage() {
                 key={assessment.type}
                 href={getAssessmentLink()}
                 onClick={handleClick}
-                className={`${assessment.bgColor} border-2 ${assessment.borderColor} rounded-xl p-6 hover:shadow-lg transition-shadow cursor-pointer group block`}
+                className={`${assessment.bgColor} border-2 ${assessment.borderColor} rounded-xl p-6 hover:shadow-lg transition-shadow cursor-pointer group block relative`}
               >
+                {isCompleted && (
+                  <div className="absolute top-4 right-4">
+                    <div className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center space-x-1">
+                      <CheckCircle className="w-3 h-3" />
+                      <span>Completed</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className={`${assessment.color} mb-4`}>
                   {assessment.icon}
                 </div>
@@ -206,14 +263,27 @@ export default function EmployeeAssessmentsPage() {
                 <p className="text-gray-700 mb-4 text-sm">
                   {assessment.description}
                 </p>
+
+                {isInProgress && (
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                      <span>Progress</span>
+                      <span>{progressPercent}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full transition-all"
+                        style={{ width: `${progressPercent}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">
                     ⏱ {assessment.duration}
                   </span>
-                  <span className="flex items-center space-x-2 text-blue-600 font-medium group-hover:text-blue-700">
-                    <span>Learn More</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </span>
+                  {getButtonContent()}
                 </div>
               </Link>
             )})}

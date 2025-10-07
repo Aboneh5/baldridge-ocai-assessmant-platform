@@ -54,12 +54,25 @@ export async function GET(request: NextRequest) {
         };
       }
 
+      // Parse scores if they're JSON strings
+      const nowScores = typeof response.nowScores === 'string'
+        ? JSON.parse(response.nowScores)
+        : response.nowScores;
+
+      const preferredScores = typeof response.preferredScores === 'string'
+        ? JSON.parse(response.preferredScores)
+        : response.preferredScores;
+
+      const demographics = typeof response.demographics === 'string'
+        ? JSON.parse(response.demographics)
+        : response.demographics;
+
       // Add response
       organizationData[orgId].users[userId].responses.push({
         id: response.id,
-        demographics: response.demographics,
-        nowScores: response.nowScores,
-        preferredScores: response.preferredScores,
+        demographics: demographics,
+        nowScores: nowScores,
+        preferredScores: preferredScores,
         submittedAt: response.submittedAt,
         userId: response.userId,
         surveyId: response.surveyId,

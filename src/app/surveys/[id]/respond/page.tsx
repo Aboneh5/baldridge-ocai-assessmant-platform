@@ -4,6 +4,11 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { OCAIQuestionnaire } from '@/components/ocai/ocai-questionnaire'
 import { OCAIScores } from '@/lib/ocai-data'
+import {
+  loadAssessmentProgress,
+  markAssessmentCompleted,
+  isAssessmentCompleted,
+} from '@/lib/assessment-progress'
 
 interface Survey {
   id: string
@@ -24,6 +29,21 @@ export default function SurveyRespondPage() {
   useEffect(() => {
     const fetchSurvey = async () => {
       try {
+        // Check if assessment already completed
+        const storedUser = localStorage.getItem('user')
+        const storedOrg = localStorage.getItem('organization')
+
+        if (storedUser && storedOrg) {
+          const user = JSON.parse(storedUser)
+          const org = JSON.parse(storedOrg)
+
+          if (isAssessmentCompleted('OCAI', org.id, user.id)) {
+            // Already completed - redirect to results
+            router.push('/ocai/results')
+            return
+          }
+        }
+
         const response = await fetch(`/api/surveys/${params.id}`)
         if (response.ok) {
           const surveyData = await response.json()
@@ -40,20 +60,32 @@ export default function SurveyRespondPage() {
     }
 
     fetchSurvey()
-  }, [params.id])
+  }, [params.id, router])
 
   const handleComplete = async (scores: OCAIScores, demographics: any) => {
     setSubmitting(true)
     setError('')
 
     try {
-      // Submit to the API with the correct data structure
+      // Get user data from localStorage
+      const storedUser = localStorage.getItem('user')
+      const storedOrg = localStorage.getItem('organization')
+      const storedAccessKey = localStorage.getItem('accessKey')
+
+      let userId = null
+      if (storedUser) {
+        const user = JSON.parse(storedUser)
+        userId = user.id
+      }
+
+      // Submit to the API with the correct data structure including userId
       const response = await fetch(`/api/surveys/${params.id}/respond`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          userId,  // Include userId in submission
           demographics,
           nowScores: {
             clan: scores.now.Clan,
@@ -66,13 +98,21 @@ export default function SurveyRespondPage() {
             adhocracy: scores.preferred.Adhocracy,
             market: scores.preferred.Market,
             hierarchy: scores.preferred.Hierarchy
-          }
+          },
+          consentGiven: true,  // Add consent flag
         })
       })
 
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to submit response')
+      }
+
+      // Mark assessment as completed (permanent)
+      if (storedUser && storedOrg) {
+        const user = JSON.parse(storedUser)
+        const org = JSON.parse(storedOrg)
+        markAssessmentCompleted('OCAI', org.id, user.id, storedAccessKey || '')
       }
 
       // Redirect to thank you page or results

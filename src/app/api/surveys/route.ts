@@ -64,15 +64,41 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.organizationId) {
+    const body = await request.json()
+
+    let organizationId: string | null = null
+    let isEmployeeRequest = false
+
+    // Check for session-based auth (admin/facilitator)
+    if (session?.user?.organizationId) {
+      // Check permissions for session users
+      if (!['ORG_ADMIN', 'FACILITATOR', 'SYSTEM_ADMIN'].includes(session.user.role)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+      organizationId = session.user.organizationId
+    }
+    // Check for employee access (via organizationId in request body)
+    else if (body.organizationId) {
+      // Validate the organizationId exists
+      const org = await prisma.organization.findUnique({
+        where: { id: body.organizationId }
+      })
+
+      if (!org) {
+        return NextResponse.json({ error: 'Invalid organization' }, { status: 400 })
+      }
+
+      organizationId = body.organizationId
+      isEmployeeRequest = true
+    }
+    else {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Check rate limiting
     const clientIP = getClientIP(request)
     const rateLimit = checkRateLimit(clientIP)
-    
+
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { error: 'Rate limit exceeded' },
@@ -80,18 +106,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check permissions
-    if (!['ORG_ADMIN', 'FACILITATOR'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-
-    const body = await request.json()
     const validatedData = surveyCreateSchema.parse(body)
 
     const survey = await prisma.survey.create({
       data: {
         ...validatedData,
-        organizationId: session.user.organizationId,
+        organizationId: organizationId,
       },
       include: {
         _count: {
@@ -103,11 +123,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(survey, { status: 201 })
   } catch (error) {
     console.error('Error creating survey:', error)
-    
+
     if (error instanceof Error && error.name === 'ZodError') {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
     }
-    
+
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
