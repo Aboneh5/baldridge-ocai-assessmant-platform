@@ -6,6 +6,9 @@ import { AggregateData } from './aggregation'
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => jsPDF
+    lastAutoTable: {
+      finalY: number
+    }
   }
 }
 
@@ -295,8 +298,8 @@ rather than determinative, especially for smaller sample sizes.
         .sort(([,a], [,b]) => Math.abs(b) - Math.abs(a))
         .map(([culture, delta]) => [
           culture,
-          orgData[`current${culture}` as keyof AggregateData].toFixed(1) + '%',
-          orgData[`preferred${culture}` as keyof AggregateData].toFixed(1) + '%',
+          (orgData[`current${culture}` as keyof AggregateData] as number).toFixed(1) + '%',
+          (orgData[`preferred${culture}` as keyof AggregateData] as number).toFixed(1) + '%',
           (delta > 0 ? '+' : '') + delta.toFixed(1) + '%',
           Math.abs(delta) >= 10 ? 'High' : Math.abs(delta) >= 5 ? 'Medium' : 'Low'
         ]),

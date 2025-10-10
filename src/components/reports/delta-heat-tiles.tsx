@@ -75,8 +75,8 @@ export function DeltaHeatTiles({ data }: DeltaHeatTilesProps) {
               
               <div className="mt-2 text-xs">
                 <div className="flex justify-between">
-                  <span>Current: {data[`current${culture.key}` as keyof AggregateData]}%</span>
-                  <span>Preferred: {data[`preferred${culture.key}` as keyof AggregateData]}%</span>
+                  <span>Current: {data[`current${culture.key}` as keyof AggregateData] as number}%</span>
+                  <span>Preferred: {data[`preferred${culture.key}` as keyof AggregateData] as number}%</span>
                 </div>
               </div>
             </div>

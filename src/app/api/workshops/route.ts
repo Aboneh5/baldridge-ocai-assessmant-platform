@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { WorkshopService } from '@/lib/workshop'
+import { getUserId } from '@/lib/get-user-id'
+import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,6 +29,27 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication - only SYSTEM_ADMIN can create workshops
+    const userId = await getUserId(request)
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    })
+
+    if (!user || user.role !== 'SYSTEM_ADMIN') {
+      return NextResponse.json(
+        { error: 'Forbidden - Only admins can create workshops' },
+        { status: 403 }
+      )
+    }
+
     const body = await request.json()
     const { surveyId, title, description, facilitatorId, scheduledAt } = body
 

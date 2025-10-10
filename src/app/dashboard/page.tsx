@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { DashboardHeader } from '@/components/dashboard/dashboard-header'
 import { DashboardStats } from '@/components/dashboard/dashboard-stats'
 import { RecentSurveys } from '@/components/dashboard/recent-surveys'
@@ -21,7 +21,7 @@ interface Organization {
   country?: string
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const searchParams = useSearchParams()
   const [user, setUser] = useState<User | null>(null)
   const [organization, setOrganization] = useState<Organization | null>(null)
@@ -139,5 +139,20 @@ export default function DashboardPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-700 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   )
 }

@@ -59,9 +59,9 @@ export function NarrativeSummary({ data }: NarrativeSummaryProps) {
       <div>
         <h3 className="font-medium text-gray-900 mb-2">Current Organizational Culture</h3>
         <p className="text-gray-700">
-          Your organization currently exhibits a <strong>{getCultureDescription(currentDominant)}</strong> culture, 
-          with {currentDominant} scoring {data[`current${currentDominant}` as keyof AggregateData]}%. 
-          This suggests a focus on {getCultureDescription(currentDominant).toLowerCase()} approaches 
+          Your organization currently exhibits a <strong>{getCultureDescription(currentDominant)}</strong> culture,
+          with {currentDominant} scoring {data[`current${currentDominant}` as keyof AggregateData] as number}%.
+          This suggests a focus on {getCultureDescription(currentDominant).toLowerCase()} approaches
           to leadership, management, and organizational processes.
         </p>
       </div>
@@ -70,9 +70,9 @@ export function NarrativeSummary({ data }: NarrativeSummaryProps) {
       <div>
         <h3 className="font-medium text-gray-900 mb-2">Preferred Organizational Culture</h3>
         <p className="text-gray-700">
-          The preferred culture is <strong>{getCultureDescription(preferredDominant)}</strong>, 
-          with {preferredDominant} scoring {data[`preferred${preferredDominant}` as keyof AggregateData]}%. 
-          This indicates a desire to shift toward more {getCultureDescription(preferredDominant).toLowerCase()} 
+          The preferred culture is <strong>{getCultureDescription(preferredDominant)}</strong>,
+          with {preferredDominant} scoring {data[`preferred${preferredDominant}` as keyof AggregateData] as number}%.
+          This indicates a desire to shift toward more {getCultureDescription(preferredDominant).toLowerCase()}
           approaches across the organization.
         </p>
       </div>
@@ -84,8 +84,8 @@ export function NarrativeSummary({ data }: NarrativeSummaryProps) {
           <ul className="list-disc list-inside space-y-1 text-gray-700">
             {significantChanges.map(([culture, delta]) => (
               <li key={culture}>
-                <strong>{culture}:</strong> {getChangeDirection(delta)} by {Math.abs(delta)}% 
-                (from {data[`current${culture}` as keyof AggregateData]}% to {data[`preferred${culture}` as keyof AggregateData]}%)
+                <strong>{culture}:</strong> {getChangeDirection(delta)} by {Math.abs(delta)}%
+                (from {data[`current${culture}` as keyof AggregateData] as number}% to {data[`preferred${culture}` as keyof AggregateData] as number}%)
               </li>
             ))}
           </ul>

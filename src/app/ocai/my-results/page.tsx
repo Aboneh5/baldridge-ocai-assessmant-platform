@@ -279,9 +279,173 @@ export default function MyOCAIResultsPage() {
 
         {/* Culture Profile Chart */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Your Culture Profile</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-gray-900">Your Culture Profile</h3>
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <span>Current</span>
+              <div className="w-3 h-3 bg-emerald-500 rounded-full ml-4"></div>
+              <span>Preferred</span>
+            </div>
+          </div>
           <div className="max-w-2xl mx-auto">
             {chartData && <Radar ref={radarChartRef} data={chartData} options={radarOptions} />}
+          </div>
+        </div>
+
+        {/* Culture Type Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {[
+            { 
+              name: 'Clan', 
+              subtitle: 'Collaborate', 
+              key: 'clan' as keyof OCAIScores, 
+              color: 'blue',
+              description: 'Friendly, family-like environment focused on teamwork and employee development'
+            },
+            { 
+              name: 'Adhocracy', 
+              subtitle: 'Create', 
+              key: 'adhocracy' as keyof OCAIScores, 
+              color: 'green',
+              description: 'Dynamic, entrepreneurial environment focused on innovation and growth'
+            },
+            { 
+              name: 'Market', 
+              subtitle: 'Compete', 
+              key: 'market' as keyof OCAIScores, 
+              color: 'orange',
+              description: 'Results-oriented environment focused on competition and achievement'
+            },
+            { 
+              name: 'Hierarchy', 
+              subtitle: 'Control', 
+              key: 'hierarchy' as keyof OCAIScores, 
+              color: 'red',
+              description: 'Structured, controlled environment focused on efficiency and stability'
+            },
+          ].map((culture) => {
+            const current = myResult.nowScores[culture.key];
+            const preferred = myResult.preferredScores[culture.key];
+            const delta = myResult.delta[culture.key];
+            const isHighest = current === Math.max(...Object.values(myResult.nowScores));
+            const isPreferredHighest = preferred === Math.max(...Object.values(myResult.preferredScores));
+            
+            return (
+              <div key={culture.key} className={`bg-white rounded-lg shadow-sm border-2 p-4 ${
+                isHighest ? 'border-blue-300 bg-blue-50' : 'border-gray-200'
+              }`}>
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className={`font-bold text-lg ${isHighest ? 'text-blue-900' : 'text-gray-900'}`}>
+                      {culture.name}
+                    </h4>
+                    <p className={`text-sm ${isHighest ? 'text-blue-700' : 'text-gray-600'}`}>
+                      {culture.subtitle}
+                    </p>
+                  </div>
+                  {isHighest && (
+                    <div className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+                      Current Leader
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Current:</span>
+                    <span className="font-semibold text-gray-900">{current.toFixed(1)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Preferred:</span>
+                    <span className="font-semibold text-gray-900">{preferred.toFixed(1)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Change:</span>
+                    <div className={`flex items-center space-x-1 ${getDeltaColor(delta)}`}>
+                      {getDeltaIcon(delta)}
+                      <span className="font-semibold">
+                        {delta > 0 ? '+' : ''}{delta.toFixed(1)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    {culture.description}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Culture Change Visualization */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+          <h3 className="text-lg font-bold text-gray-900 mb-6">Culture Change Required</h3>
+          <div className="space-y-6">
+            {[
+              { name: 'Clan', subtitle: 'Collaborate', key: 'clan' as keyof OCAIScores, color: 'bg-blue-500' },
+              { name: 'Adhocracy', subtitle: 'Create', key: 'adhocracy' as keyof OCAIScores, color: 'bg-green-500' },
+              { name: 'Market', subtitle: 'Compete', key: 'market' as keyof OCAIScores, color: 'bg-orange-500' },
+              { name: 'Hierarchy', subtitle: 'Control', key: 'hierarchy' as keyof OCAIScores, color: 'bg-red-500' },
+            ].map((culture) => {
+              const delta = myResult.delta[culture.key];
+              const maxDelta = 50; // Scale bars to +/- 50 range
+              const barWidth = Math.min(Math.abs(delta), maxDelta) / maxDelta * 100;
+              const isPositive = delta > 0;
+              const isNegative = delta < 0;
+
+              return (
+                <div key={culture.key}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <span className="font-semibold text-gray-900">{culture.name}</span>
+                      <span className="text-sm text-gray-600 ml-2">({culture.subtitle})</span>
+                    </div>
+                    <div className={`flex items-center space-x-1 font-semibold ${getDeltaColor(delta)}`}>
+                      {getDeltaIcon(delta)}
+                      <span>
+                        {delta > 0 ? '+' : ''}{delta.toFixed(1)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {/* Negative side */}
+                    <div className="flex-1 flex justify-end">
+                      {isNegative && (
+                        <div
+                          className="h-6 bg-red-400 rounded-l"
+                          style={{ width: `${barWidth}%` }}
+                        ></div>
+                      )}
+                    </div>
+                    {/* Center line */}
+                    <div className="w-0.5 h-8 bg-gray-400"></div>
+                    {/* Positive side */}
+                    <div className="flex-1">
+                      {isPositive && (
+                        <div
+                          className="h-6 bg-green-400 rounded-r"
+                          style={{ width: `${barWidth}%` }}
+                        ></div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-6 flex justify-center items-center space-x-8 text-sm text-gray-600">
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-red-400 rounded"></div>
+              <span>Decrease</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-green-400 rounded"></div>
+              <span>Increase</span>
+            </div>
           </div>
         </div>
 

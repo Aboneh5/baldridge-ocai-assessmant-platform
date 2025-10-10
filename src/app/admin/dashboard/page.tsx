@@ -92,6 +92,14 @@ export default function AdminDashboardPage() {
       hoverColor: 'hover:bg-blue-600',
     },
     {
+      title: 'Upload Credentials',
+      description: 'Bulk email/password upload',
+      icon: <Users className="w-6 h-6" />,
+      href: '/admin/assessment-credentials',
+      color: 'bg-indigo-500',
+      hoverColor: 'hover:bg-indigo-600',
+    },
+    {
       title: 'Generate Access Key',
       description: 'Create new access codes',
       icon: <Key className="w-6 h-6" />,
@@ -169,6 +177,12 @@ export default function AdminDashboardPage() {
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
               Access Keys
+            </Link>
+            <Link
+              href="/admin/assessment-credentials"
+              className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            >
+              Credentials
             </Link>
             <Link
               href="/admin/users"

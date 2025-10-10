@@ -5,6 +5,13 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Download, Building2, Users, FileText, LogOut, Shield, ChevronDown, ChevronRight, FileSpreadsheet } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { 
+  generateAllBaldrigeQuestions, 
+  generateBaldrigeExcelHeaders, 
+  generateBaldrigeExcelColumnWidths,
+  convertToExcelRow,
+  validateQuestionCount
+} from '@/lib/baldrige-export';
 
 interface BaldrigeResponse {
   questionId: string;
@@ -25,6 +32,7 @@ interface UserAssessment {
   userName: string;
   userEmail: string;
   accessKey: string;
+  loginMethod: 'Access Key' | 'Email Credentials';
   assessmentId: string;
   completedAt: string;
   surveyId: string | null;
@@ -77,11 +85,31 @@ export default function AdminBaldrigePage() {
 
   const loadBaldrigeData = async () => {
     try {
-      const response = await fetch('/api/admin/baldrige/responses');
+      // Get user from localStorage to send in header
+      const storedUser = localStorage.getItem('user');
+      const headers: HeadersInit = {};
+
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser.id) {
+          headers['x-user-id'] = parsedUser.id;
+        }
+      }
+
+      const response = await fetch('/api/admin/baldrige/responses', {
+        headers,
+      });
+
+      console.log('Baldrige API response status:', response.status);
+
       if (response.ok) {
         const result: ResponseData = await response.json();
+        console.log('Baldrige API data:', result);
         setData(result.data);
         setSummary(result.summary);
+      } else {
+        const errorData = await response.json();
+        console.error('Baldrige API error:', errorData);
       }
     } catch (error) {
       console.error('Failed to load Baldrige data:', error);
@@ -116,154 +144,62 @@ export default function AdminBaldrigePage() {
   };
 
   const exportToCSV = (org: OrganizationData) => {
-    // Create CSV header with all questions horizontally
-    const allQuestions: string[] = [];
-    const questionMap: Record<string, string> = {};
-
-    // Collect all unique questions
-    org.users.forEach(user => {
-      user.responses.forEach(response => {
-        const key = `${response.categoryOrder}.${response.subcategoryOrder}_${response.itemCode}`;
-        if (!questionMap[key]) {
-          questionMap[key] = response.questionText;
-          allQuestions.push(key);
-        }
-      });
-    });
-
-    // Sort questions by category and subcategory order
-    allQuestions.sort((a, b) => {
-      const [aOrder] = a.split('_');
-      const [bOrder] = b.split('_');
-      return aOrder.localeCompare(bOrder);
-    });
-
-    // Build CSV header
-    const header = [
-      'Assessment ID',
-      'Organization',
-      'User Name',
-      'User Email',
-      'Access Key',
-      'Completed At',
-      'Survey',
-      ...allQuestions.map(key => {
-        const itemCode = key.split('_')[1];
-        return `"${itemCode}"`;
-      }),
-    ].join(',');
-
-    // Build CSV rows
-    const rows = org.users.map(user => {
-      const responseMap: Record<string, string> = {};
-      user.responses.forEach(response => {
-        const key = `${response.categoryOrder}.${response.subcategoryOrder}_${response.itemCode}`;
-        // Escape quotes and wrap in quotes
-        responseMap[key] = `"${response.responseText.replace(/"/g, '""')}"`;
-      });
-
-      return [
-        `"${user.assessmentId}"`,
-        `"${org.organizationName}"`,
-        `"${user.userName}"`,
-        `"${user.userEmail}"`,
-        `"${user.accessKey}"`,
-        `"${new Date(user.completedAt).toLocaleString()}"`,
-        `"${user.surveyTitle}"`,
-        ...allQuestions.map(key => responseMap[key] || '""'),
-      ].join(',');
-    });
-
-    const csv = [header, ...rows].join('\n');
-
-    // Download CSV
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `baldrige_${org.organizationName.replace(/\s+/g, '_')}_${Date.now()}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Use the new standardized export function
+    exportToExcel(org, 'csv');
   };
 
-  const exportToExcel = (org: OrganizationData) => {
-    // Collect all unique questions
-    const allQuestions: string[] = [];
-    const questionMap: Record<string, string> = {};
+  const exportToExcel = (org: OrganizationData, format: 'excel' | 'csv' = 'excel') => {
+    // Validate that we have all 97 questions
+    const validation = validateQuestionCount();
+    if (!validation.isValid) {
+      console.error(`Expected ${validation.expected} questions, found ${validation.count}`);
+      alert(`Error: Expected ${validation.expected} questions, found ${validation.count}. Please contact support.`);
+      return;
+    }
 
-    org.users.forEach(user => {
-      user.responses.forEach(response => {
-        const key = `${response.categoryOrder}.${response.subcategoryOrder}_${response.itemCode}`;
-        if (!questionMap[key]) {
-          questionMap[key] = response.questionText;
-          allQuestions.push(key);
-        }
-      });
-    });
+    // Generate all 97 questions in standard order
+    const allQuestions = generateAllBaldrigeQuestions();
+    
+    // Generate headers with all 97 questions
+    const headers = generateBaldrigeExcelHeaders();
+    
+    // Convert each user to Excel row format
+    const rows = org.users.map(user => 
+      convertToExcelRow(user, org.organizationName, allQuestions)
+    );
 
-    // Sort questions by category and subcategory order
-    allQuestions.sort((a, b) => {
-      const [aOrder] = a.split('_');
-      const [bOrder] = b.split('_');
-      return aOrder.localeCompare(bOrder);
-    });
+    if (format === 'csv') {
+      // Export as CSV
+      const csvContent = [
+        headers.map(h => `"${h}"`).join(','), // Header row
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(',')) // Data rows
+      ].join('\n');
 
-    // Build Excel headers
-    const headers = [
-      'Assessment ID',
-      'Organization',
-      'User Name',
-      'User Email',
-      'Access Key',
-      'Completed At',
-      'Survey',
-      ...allQuestions.map(key => key.split('_')[1]), // Item codes
-    ];
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `baldrige_${org.organizationName.replace(/\s+/g, '_')}_${Date.now()}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } else {
+      // Export as Excel
+      const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      
+      // Set column widths
+      const colWidths = generateBaldrigeExcelColumnWidths();
+      worksheet['!cols'] = colWidths;
 
-    // Build Excel data rows
-    const rows = org.users.map(user => {
-      const responseMap: Record<string, string> = {};
-      user.responses.forEach(response => {
-        const key = `${response.categoryOrder}.${response.subcategoryOrder}_${response.itemCode}`;
-        responseMap[key] = response.responseText;
-      });
+      // Create workbook
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Baldrige Responses');
 
-      return [
-        user.assessmentId,
-        org.organizationName,
-        user.userName,
-        user.userEmail,
-        user.accessKey,
-        new Date(user.completedAt).toLocaleString(),
-        user.surveyTitle,
-        ...allQuestions.map(key => responseMap[key] || ''),
-      ];
-    });
-
-    // Create worksheet
-    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-
-    // Set column widths
-    const colWidths = [
-      { wch: 20 }, // Assessment ID
-      { wch: 25 }, // Organization
-      { wch: 20 }, // User Name
-      { wch: 25 }, // User Email
-      { wch: 15 }, // Access Key
-      { wch: 20 }, // Completed At
-      { wch: 25 }, // Survey
-      ...allQuestions.map(() => ({ wch: 50 })), // Question columns
-    ];
-    worksheet['!cols'] = colWidths;
-
-    // Create workbook
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Baldrige Responses');
-
-    // Download Excel file
-    XLSX.writeFile(workbook, `baldrige_${org.organizationName.replace(/\s+/g, '_')}_${Date.now()}.xlsx`);
+      // Download Excel file
+      XLSX.writeFile(workbook, `baldrige_${org.organizationName.replace(/\s+/g, '_')}_${Date.now()}.xlsx`);
+    }
   };
 
   const exportAllToCSV = () => {
@@ -274,10 +210,47 @@ export default function AdminBaldrigePage() {
   };
 
   const exportAllToExcel = () => {
-    // Export all organizations combined
+    // Export all organizations in a single Excel file
+    exportAllOrganizationsToExcel();
+  };
+
+  const exportAllOrganizationsToExcel = () => {
+    // Validate that we have all 97 questions
+    const validation = validateQuestionCount();
+    if (!validation.isValid) {
+      console.error(`Expected ${validation.expected} questions, found ${validation.count}`);
+      alert(`Error: Expected ${validation.expected} questions, found ${validation.count}. Please contact support.`);
+      return;
+    }
+
+    // Generate all 97 questions in standard order
+    const allQuestions = generateAllBaldrigeQuestions();
+    
+    // Generate headers with all 97 questions
+    const headers = generateBaldrigeExcelHeaders();
+    
+    // Convert all users from all organizations to Excel row format
+    const allRows: string[][] = [];
     data.forEach(org => {
-      exportToExcel(org);
+      const orgRows = org.users.map(user => 
+        convertToExcelRow(user, org.organizationName, allQuestions)
+      );
+      allRows.push(...orgRows);
     });
+
+    // Create worksheet
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...allRows]);
+    
+    // Set column widths
+    const colWidths = generateBaldrigeExcelColumnWidths();
+    worksheet['!cols'] = colWidths;
+
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'All Baldrige Responses');
+
+    // Download Excel file
+    XLSX.writeFile(workbook, `baldrige_all_organizations_${Date.now()}.xlsx`);
   };
 
   if (loading) {
@@ -312,14 +285,14 @@ export default function AdminBaldrigePage() {
                 className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
               >
                 <Download className="w-4 h-4" />
-                <span className="text-sm font-medium">Export All CSV</span>
+                <span className="text-sm font-medium">Export All CSV (97 Q)</span>
               </button>
               <button
                 onClick={exportAllToExcel}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <FileSpreadsheet className="w-4 h-4" />
-                <span className="text-sm font-medium">Export All Excel</span>
+                <span className="text-sm font-medium">Export All (97 Questions)</span>
               </button>
               <span className="text-sm text-gray-600">{user?.name}</span>
               <button
@@ -457,7 +430,7 @@ export default function AdminBaldrigePage() {
                         className="flex items-center space-x-2 px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
                       >
                         <Download className="w-4 h-4" />
-                        <span className="text-sm font-medium">CSV</span>
+                        <span className="text-sm font-medium">CSV (97 Q)</span>
                       </button>
                       <button
                         onClick={(e) => {
@@ -467,7 +440,7 @@ export default function AdminBaldrigePage() {
                         className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                       >
                         <FileSpreadsheet className="w-4 h-4" />
-                        <span className="text-sm font-medium">Excel</span>
+                        <span className="text-sm font-medium">Excel (97 Q)</span>
                       </button>
                     </div>
                   </div>
@@ -494,7 +467,7 @@ export default function AdminBaldrigePage() {
                               <div>
                                 <p className="font-medium text-gray-900">{user.userName}</p>
                                 <p className="text-sm text-gray-600">
-                                  {user.userEmail} • Access Key: {user.accessKey}
+                                  {user.userEmail} • Access Key: {user.accessKey} • Login: {user.loginMethod}
                                 </p>
                                 <p className="text-xs text-blue-600 font-mono">
                                   Assessment ID: {user.assessmentId}

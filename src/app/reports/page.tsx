@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { BarChart3, Users, TrendingUp, Shield } from 'lucide-react'
 
-export default function ReportsPage() {
+function ReportsContent() {
   const searchParams = useSearchParams()
   const surveyId = searchParams.get('surveyId') || '1'
   
@@ -220,5 +220,20 @@ export default function ReportsPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ReportsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-700 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading reports...</p>
+        </div>
+      </div>
+    }>
+      <ReportsContent />
+    </Suspense>
   )
 }

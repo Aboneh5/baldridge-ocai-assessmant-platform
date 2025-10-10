@@ -56,31 +56,55 @@ export default function BaldrigeAssessmentPage() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [submissionData, setSubmissionData] = useState<any>(null);
+  const [isResuming, setIsResuming] = useState(false);
+  const [resumedCount, setResumedCount] = useState(0);
 
   useEffect(() => {
-    // Check for access key authentication first
+    // Check for localStorage authentication first (both access key and credential users)
     const storedUser = localStorage.getItem('user');
     const storedOrg = localStorage.getItem('organization');
     const storedTypes = localStorage.getItem('assessmentTypes');
 
-    if (storedUser && storedOrg && storedTypes) {
-      const types = JSON.parse(storedTypes);
-      if (types.includes('BALDRIGE')) {
-        const user = JSON.parse(storedUser);
-        const org = JSON.parse(storedOrg);
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      
+      // Handle credential users
+      if (user.role === 'CREDENTIAL_USER') {
+        if (storedTypes && user.assessmentTypes) {
+          const types = JSON.parse(storedTypes);
+          if (types.includes('BALDRIGE') || user.assessmentTypes.includes('BALDRIGE')) {
+            // Check if already completed
+            if (isAssessmentCompleted('BALDRIGE', user.organizationId, user.id)) {
+              router.push('/baldrige/answers');
+              return;
+            }
 
-        // Check if already completed
-        if (isAssessmentCompleted('BALDRIGE', org.id, user.id)) {
-          // Redirect to answers page
-          router.push('/baldrige/answers');
+            setHasAccessKey(true);
+            setAccessKeyUser(user);
+            fetchCategories();
+            fetchProgress();
+            return;
+          }
+        }
+      }
+      // Handle access key users
+      else if (storedOrg && storedTypes) {
+        const types = JSON.parse(storedTypes);
+        if (types.includes('BALDRIGE')) {
+          const org = JSON.parse(storedOrg);
+
+          // Check if already completed
+          if (isAssessmentCompleted('BALDRIGE', org.id, user.id)) {
+            router.push('/baldrige/answers');
+            return;
+          }
+
+          setHasAccessKey(true);
+          setAccessKeyUser(user);
+          fetchCategories();
+          fetchProgress();
           return;
         }
-
-        setHasAccessKey(true);
-        setAccessKeyUser(user);
-        fetchCategories();
-        fetchProgress();
-        return;
       }
     }
 
@@ -99,9 +123,18 @@ export default function BaldrigeAssessmentPage() {
   const getHeaders = () => {
     const headers: HeadersInit = { 'Content-Type': 'application/json' };
 
-    // Add user ID header if using access key auth
+    // Add user ID header for both access key and credential users
     if (hasAccessKey && accessKeyUser?.id) {
       headers['x-user-id'] = accessKeyUser.id;
+    } else {
+      // For credential users, get user ID from localStorage
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        if (user.id) {
+          headers['x-user-id'] = user.id;
+        }
+      }
     }
 
     return headers;
@@ -109,6 +142,20 @@ export default function BaldrigeAssessmentPage() {
 
   const fetchCategories = async () => {
     try {
+      // First check if user already completed this assessment
+      const completionCheck = await fetch('/api/baldrige/check-completion', {
+        headers: getHeaders(),
+      });
+
+      if (completionCheck.ok) {
+        const completionData = await completionCheck.json();
+        if (completionData.isCompleted) {
+          alert('You have already completed this assessment. Redirecting to your submitted answers...');
+          router.push('/baldrige/answers');
+          return;
+        }
+      }
+
       const res = await fetch('/api/baldrige/categories', {
         headers: getHeaders(),
       });
@@ -116,7 +163,7 @@ export default function BaldrigeAssessmentPage() {
       if (data.success) {
         setCategories(data.data);
 
-        // Load existing responses
+        // Load existing responses (for resuming)
         const initialResponses: Record<string, string> = {};
         data.data.forEach((cat: BaldrigeCategory) => {
           cat.subcategories.forEach((sub) => {
@@ -128,6 +175,19 @@ export default function BaldrigeAssessmentPage() {
           });
         });
         setResponses(initialResponses);
+
+        // If user has responses, show a message that they're resuming
+        const responseCount = Object.keys(initialResponses).length;
+        if (responseCount > 0) {
+          setIsResuming(true);
+          setResumedCount(responseCount);
+          console.log(`Resuming assessment: ${responseCount} questions already answered`);
+
+          // Auto-hide the resume banner after 5 seconds
+          setTimeout(() => {
+            setIsResuming(false);
+          }, 5000);
+        }
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -484,6 +544,26 @@ export default function BaldrigeAssessmentPage() {
     return (
       <div className="min-h-screen bg-gray-50 py-8 px-4">
         <div className="max-w-4xl mx-auto">
+          {/* Resume Banner */}
+          {isResuming && (
+            <div className="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg animate-pulse">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-semibold text-blue-800">Welcome Back!</h3>
+                  <div className="mt-1 text-sm text-blue-700">
+                    <p>You're resuming your assessment. We've saved your progress: <strong>{resumedCount} questions already answered</strong>.</p>
+                    <p className="mt-1">You can continue from where you left off on any device.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Warning Banner */}
           <div className="mb-6 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
             <div className="flex items-start">
@@ -536,7 +616,7 @@ export default function BaldrigeAssessmentPage() {
                         </label>
                         <p className="text-gray-600 mb-3 text-sm">{question.questionText}</p>
                         <textarea
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none text-gray-900 placeholder:text-gray-400"
                           rows={4}
                           value={responses[question.id] || ''}
                           onChange={(e) => handleResponseChange(question.id, e.target.value)}
@@ -605,6 +685,26 @@ export default function BaldrigeAssessmentPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
+        {/* Resume Banner */}
+        {isResuming && (
+          <div className="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg animate-pulse">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-semibold text-blue-800">Welcome Back!</h3>
+                <div className="mt-1 text-sm text-blue-700">
+                  <p>You're resuming your assessment. We've saved your progress: <strong>{resumedCount} questions already answered</strong>.</p>
+                  <p className="mt-1">You can continue from where you left off on any device.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Warning Banner */}
         <div className="mb-6 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
           <div className="flex items-start">
@@ -653,7 +753,7 @@ export default function BaldrigeAssessmentPage() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {cat.displayOrder}. {cat.name}
+                {cat.name} - {cat.description}
               </button>
             ))}
           </div>
@@ -700,7 +800,7 @@ export default function BaldrigeAssessmentPage() {
                   </label>
                   <p className="text-gray-700 mb-4">{question.questionText}</p>
                   <textarea
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none text-gray-900 placeholder:text-gray-400"
                     rows={6}
                     value={responses[question.id] || ''}
                     onChange={(e) => handleResponseChange(question.id, e.target.value)}

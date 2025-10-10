@@ -2,14 +2,16 @@
 
 import { useState } from 'react'
 
+interface FilterState {
+  demographicType: string
+  minSampleSize: number
+  sortBy: string
+}
+
 interface SliceFiltersProps {
   demographicTypes: string[]
-  filters: {
-    demographicType: string
-    minSampleSize: number
-    sortBy: string
-  }
-  onFilterChange: (filters: typeof filters) => void
+  filters: FilterState
+  onFilterChange: (filters: FilterState) => void
   totalSlices: number
 }
 

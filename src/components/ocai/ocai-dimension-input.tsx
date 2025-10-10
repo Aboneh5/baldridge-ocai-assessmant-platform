@@ -90,7 +90,7 @@ export function OCAIDimensionInput({ dimension, phase, response, onChange }: OCA
                       value={values[key as keyof typeof values]}
                       onChange={(e) => updateValue(key as 'A' | 'B' | 'C' | 'D', parseInt(e.target.value) || 0)}
                       onKeyDown={(e) => handleKeyDown(key as 'A' | 'B' | 'C' | 'D', e)}
-                      className="w-20 px-2 py-1 border border-gray-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-20 px-2 py-1 border border-gray-300 rounded text-center text-gray-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-500">%</span>
                   </div>

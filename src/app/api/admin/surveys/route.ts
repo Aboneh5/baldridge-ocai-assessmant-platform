@@ -11,11 +11,6 @@ export async function GET(request: NextRequest) {
             name: true,
           },
         },
-        creator: {
-          select: {
-            name: true,
-          },
-        },
         _count: {
           select: {
             responses: true,

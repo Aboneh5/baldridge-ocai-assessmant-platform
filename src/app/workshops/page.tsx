@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, Users, Calendar, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import { WorkshopData } from '@/lib/workshop'
 
-export default function WorkshopsPage() {
+function WorkshopsContent() {
   const searchParams = useSearchParams()
   const surveyId = searchParams.get('surveyId') || '1'
   
@@ -238,5 +238,20 @@ export default function WorkshopsPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function WorkshopsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading workshops...</p>
+        </div>
+      </div>
+    }>
+      <WorkshopsContent />
+    </Suspense>
   )
 }

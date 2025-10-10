@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -38,6 +38,7 @@ model Organization {
   surveys   Survey[]
   reports   Report[]
   accessKeys AccessKey[]
+  assessmentCredentials AssessmentCredential[]
   createdBy User? @relation("CreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@map("organizations")
@@ -124,12 +125,19 @@ model Response {
   consentTimestamp DateTime?
   consentVersion  String?   // Track consent version for legal compliance
   anonymousMode   Boolean   @default(false) // User chose anonymous participation
+  
+  // Progress tracking for assessment credentials
+  credentialEmail String?   // Email if using credential auth (for admin view only)
+  isComplete      Boolean   @default(false) // Assessment completed
+  progressData    Json?     // Saved progress for incomplete assessments
+  lastSavedAt     DateTime?  // Last time progress was saved
 
   // Relations
   survey  Survey  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
   comments Comment[]
 
+  @@index([credentialEmail])
   @@map("responses")
 }
 
@@ -237,6 +245,42 @@ model AccessKey {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@map("access_keys")
+}
+
+model AssessmentCredential {
+  id              String    @id @default(cuid())
+  email           String    // Email for login
+  password        String    // Hashed password
+  organizationId  String
+  
+  // Access control
+  assessmentTypes String    @default("OCAI,BALDRIGE") // Comma-separated: "OCAI,BALDRIGE"
+  
+  // Validity
+  isActive        Boolean   @default(true)
+  expiresAt       DateTime
+  
+  // Batch tracking
+  batchId         String    // Groups credentials from same upload
+  batchName       String?   // Optional batch name
+  
+  // Usage tracking
+  lastUsedAt      DateTime?
+  loginCount      Int       @default(0)
+  
+  // Metadata
+  createdBy       String?   // User ID who created this credential
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  @@unique([email, batchId]) // Email unique per batch
+  @@index([email])
+  @@index([batchId])
+  @@index([organizationId])
+  @@map("assessment_credentials")
 }
 
 model Workshop {

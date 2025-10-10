@@ -268,7 +268,7 @@ export default function ContactPage() {
                     onChange={handleInputChange}
                     required
                     disabled={isSubmitting}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
                     placeholder="Enter your first name"
                   />
                 </div>
@@ -284,7 +284,7 @@ export default function ContactPage() {
                     onChange={handleInputChange}
                     required
                     disabled={isSubmitting}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
                     placeholder="Enter your last name"
                   />
                 </div>
@@ -303,7 +303,7 @@ export default function ContactPage() {
                     onChange={handleInputChange}
                     required
                     disabled={isSubmitting}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
                     placeholder="Enter your email address"
                   />
                 </div>
@@ -318,7 +318,7 @@ export default function ContactPage() {
                     value={formData.phone}
                     onChange={handleInputChange}
                     disabled={isSubmitting}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
                     placeholder="Enter your phone number"
                   />
                 </div>
@@ -335,7 +335,7 @@ export default function ContactPage() {
                   value={formData.organization}
                   onChange={handleInputChange}
                   disabled={isSubmitting}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
                   placeholder="Enter your organization name"
                 />
               </div>
@@ -350,7 +350,7 @@ export default function ContactPage() {
                   value={formData.service}
                   onChange={handleInputChange}
                   disabled={isSubmitting}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
                 >
                   <option value="">Select a service</option>
                   <option value="training">Training Services</option>
@@ -375,7 +375,7 @@ export default function ContactPage() {
                   onChange={handleInputChange}
                   required
                   disabled={isSubmitting}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-vertical disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-vertical disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
                   placeholder="Tell us about your needs, challenges, or questions..."
                 ></textarea>
               </div>

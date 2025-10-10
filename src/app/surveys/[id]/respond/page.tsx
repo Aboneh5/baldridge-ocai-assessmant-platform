@@ -29,18 +29,29 @@ export default function SurveyRespondPage() {
   useEffect(() => {
     const fetchSurvey = async () => {
       try {
-        // Check if assessment already completed
+        // Check if assessment already completed (server-side check)
         const storedUser = localStorage.getItem('user')
-        const storedOrg = localStorage.getItem('organization')
 
-        if (storedUser && storedOrg) {
+        if (storedUser) {
           const user = JSON.parse(storedUser)
-          const org = JSON.parse(storedOrg)
 
-          if (isAssessmentCompleted('OCAI', org.id, user.id)) {
-            // Already completed - redirect to results
-            router.push('/ocai/results')
-            return
+          // Server-side completion check for credential users
+          if (user.id) {
+            const completionCheck = await fetch(`/api/ocai/check-completion?surveyId=${params.id}`, {
+              headers: {
+                'x-user-id': user.id
+              }
+            })
+
+            if (completionCheck.ok) {
+              const completionData = await completionCheck.json()
+              if (completionData.isCompleted) {
+                // Already completed - redirect to results page
+                alert('You have already completed this assessment. Redirecting to your results...')
+                router.push('/ocai/my-results')
+                return
+              }
+            }
           }
         }
 
@@ -115,7 +126,10 @@ export default function SurveyRespondPage() {
         markAssessmentCompleted('OCAI', org.id, user.id, storedAccessKey || '')
       }
 
-      // Redirect to thank you page or results
+      // Save scores to sessionStorage for the thank you page to display
+      sessionStorage.setItem('ocai_submission_scores', JSON.stringify(scores))
+
+      // Redirect to thank you page with results
       router.push(`/surveys/${params.id}/thank-you`)
     } catch (err) {
       setError('Failed to submit your response. Please try again.')

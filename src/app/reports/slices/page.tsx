@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { AggregateData } from '@/lib/aggregation'
 import { SliceCard } from '@/components/reports/slice-card'
 import { SliceFilters } from '@/components/reports/slice-filters'
 import { LeadershipComparison } from '@/components/reports/leadership-comparison'
 
-export default function SlicesPage() {
+function SlicesContent() {
   const searchParams = useSearchParams()
   const surveyId = searchParams.get('surveyId') || '1'
   
@@ -215,5 +215,20 @@ export default function SlicesPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function SlicesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading demographic slices...</p>
+        </div>
+      </div>
+    }>
+      <SlicesContent />
+    </Suspense>
   )
 }

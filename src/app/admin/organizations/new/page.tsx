@@ -84,7 +84,10 @@ export default function NewOrganizationPage() {
     try {
       const response = await fetch('/api/admin/organizations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': user?.id || ''
+        },
         body: JSON.stringify({
           ...formData,
           subscribedAssessments: formData.subscribedAssessments.join(','),
@@ -203,7 +206,7 @@ export default function NewOrganizationPage() {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                   placeholder="e.g., Acme Corporation"
                 />
               </div>
@@ -215,7 +218,7 @@ export default function NewOrganizationPage() {
                 <select
                   value={formData.industry}
                   onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 >
                   <option value="">Select industry</option>
                   <option value="Technology">Technology</option>
@@ -238,7 +241,7 @@ export default function NewOrganizationPage() {
                 <select
                   value={formData.size}
                   onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 >
                   <option value="">Select size</option>
                   <option value="1-10">1-10 employees</option>
@@ -258,7 +261,7 @@ export default function NewOrganizationPage() {
                   type="text"
                   value={formData.country}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                   placeholder="e.g., Ethiopia"
                 />
               </div>
@@ -361,7 +364,7 @@ export default function NewOrganizationPage() {
                         type="text"
                         value={formData.primaryColor}
                         onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                        className="w-32 px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
+                        className="w-32 px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm text-gray-900"
                         placeholder="#3B82F6"
                       />
                       <p className="text-xs text-gray-500 mt-1">Used for assessment UI</p>

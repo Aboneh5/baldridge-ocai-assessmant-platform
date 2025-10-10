@@ -70,11 +70,11 @@ export function SliceCard({ data }: SliceCardProps) {
         <div className="mb-4">
           <div className="flex items-center justify-between text-sm mb-2">
             <span className="text-gray-600">Current:</span>
-            <span className="font-medium">{currentDominant} ({data[`current${currentDominant}` as keyof AggregateData]}%)</span>
+            <span className="font-medium">{currentDominant} ({data[`current${currentDominant}` as keyof AggregateData] as number}%)</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Preferred:</span>
-            <span className="font-medium">{preferredDominant} ({data[`preferred${preferredDominant}` as keyof AggregateData]}%)</span>
+            <span className="font-medium">{preferredDominant} ({data[`preferred${preferredDominant}` as keyof AggregateData] as number}%)</span>
           </div>
         </div>
 
@@ -140,11 +140,11 @@ export function SliceCard({ data }: SliceCardProps) {
                     <div className="font-medium text-gray-900">{culture}</div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Now:</span>
-                      <span>{data[`current${culture}` as keyof AggregateData]}%</span>
+                      <span>{data[`current${culture}` as keyof AggregateData] as number}%</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Pref:</span>
-                      <span>{data[`preferred${culture}` as keyof AggregateData]}%</span>
+                      <span>{data[`preferred${culture}` as keyof AggregateData] as number}%</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Δ:</span>

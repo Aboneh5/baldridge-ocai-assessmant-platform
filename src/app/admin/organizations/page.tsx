@@ -60,7 +60,17 @@ export default function OrganizationsPage() {
 
   const loadOrganizations = async () => {
     try {
-      const response = await fetch('/api/admin/organizations')
+      const storedUser = localStorage.getItem('user')
+      if (!storedUser) return
+      
+      const parsedUser = JSON.parse(storedUser)
+      
+      const response = await fetch('/api/admin/organizations', {
+        headers: {
+          'x-user-id': parsedUser.id
+        }
+      })
+      
       if (response.ok) {
         const data = await response.json()
         setOrganizations(data.organizations)

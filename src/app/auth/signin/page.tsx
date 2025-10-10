@@ -1,15 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Mail, Lock, Key, AlertCircle, Loader2 } from 'lucide-react'
 
 type LoginMode = 'credentials' | 'accesskey'
 
-export default function SignInPage() {
+function SignInContent() {
   const searchParams = useSearchParams()
-  const [mode, setMode] = useState<LoginMode>('accesskey')
+  const [mode, setMode] = useState<LoginMode>('credentials')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [accessKey, setAccessKey] = useState('')
@@ -32,25 +32,53 @@ export default function SignInPage() {
     setError('')
 
     try {
-      const response = await fetch('/api/auth/login', {
+      // First, try admin/facilitator login
+      let response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       })
 
-      const data = await response.json()
+      let data = await response.json()
 
+      // If admin login failed, try credential login (employee assessment access)
       if (!response.ok) {
-        setError(data.error || 'Invalid email or password')
-        setIsLoading(false)
-        return
+        response = await fetch('/api/auth/credential-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        })
+
+        data = await response.json()
+
+        if (!response.ok) {
+          setError(data.error || 'Invalid email or password')
+          setIsLoading(false)
+          return
+        }
       }
 
       // Store user session
       localStorage.setItem('user', JSON.stringify(data.user))
 
-      // Redirect based on role
-      router.push(data.redirectUrl)
+      // Store additional data if credential login
+      if (data.user.role === 'CREDENTIAL_USER') {
+        localStorage.setItem('assessmentTypes', JSON.stringify(data.user.assessmentTypes))
+
+        // Also store organization data for credential users
+        localStorage.setItem('organization', JSON.stringify({
+          id: data.user.organizationId,
+          name: data.user.organizationName,
+          logoUrl: undefined,
+          primaryColor: undefined
+        }))
+      }
+
+      // Redirect based on response
+      // Use a small delay to ensure localStorage is written before navigation
+      setTimeout(() => {
+        router.push(data.redirectUrl)
+      }, 100)
     } catch (err) {
       setError('An error occurred. Please try again.')
       setIsLoading(false)
@@ -318,5 +346,20 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-700 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading sign in...</p>
+        </div>
+      </div>
+    }>
+      <SignInContent />
+    </Suspense>
   )
 }

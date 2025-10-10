@@ -46,28 +46,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Save or update response
-    const response = await prisma.baldrigeResponse.upsert({
+    // Normalize surveyId to null if undefined or empty string
+    const normalizedSurveyId = surveyId || null;
+
+    // Find existing response
+    const existingResponse = await prisma.baldrigeResponse.findFirst({
       where: {
-        userId_questionId_surveyId: {
-          userId: userId,
-          questionId: questionId,
-          surveyId: surveyId || null,
-        },
-      },
-      update: {
-        responseText: responseText?.trim() || '',
-        timeSpent: timeSpent || 0,
-        updatedAt: new Date(),
-      },
-      create: {
         userId: userId,
-        questionId,
-        surveyId: surveyId || null,
-        responseText: responseText?.trim() || '',
-        timeSpent: timeSpent || 0,
+        questionId: questionId,
+        surveyId: normalizedSurveyId,
       },
     });
+
+    let response;
+    if (existingResponse) {
+      // Update existing response
+      response = await prisma.baldrigeResponse.update({
+        where: { id: existingResponse.id },
+        data: {
+          responseText: responseText?.trim() || '',
+          timeSpent: timeSpent || 0,
+          updatedAt: new Date(),
+        },
+      });
+    } else {
+      // Create new response
+      response = await prisma.baldrigeResponse.create({
+        data: {
+          userId: userId,
+          questionId: questionId,
+          surveyId: normalizedSurveyId,
+          responseText: responseText?.trim() || '',
+          timeSpent: timeSpent || 0,
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,

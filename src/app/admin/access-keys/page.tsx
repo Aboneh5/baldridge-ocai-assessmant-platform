@@ -59,15 +59,37 @@ export default function AccessKeysPage() {
     }
 
     setUser(parsedUser)
-    loadAccessKeys()
   }, [router])
 
+  // Load access keys when user is set
+  useEffect(() => {
+    if (user?.id) {
+      loadAccessKeys()
+    }
+  }, [user])
+
   const loadAccessKeys = async () => {
+    if (!user?.id) {
+      console.error('No user ID available for loading access keys')
+      setLoading(false)
+      return
+    }
+
     try {
-      const response = await fetch('/api/admin/access-keys')
+      console.log('Loading access keys with user ID:', user.id)
+      const response = await fetch('/api/admin/access-keys', {
+        headers: {
+          'x-user-id': user.id
+        }
+      })
       if (response.ok) {
         const data = await response.json()
+        console.log('Access keys loaded:', data.accessKeys)
         setAccessKeys(data.accessKeys)
+      } else {
+        console.error('Failed to load access keys:', response.status, response.statusText)
+        const errorData = await response.json()
+        console.error('Error details:', errorData)
       }
     } catch (error) {
       console.error('Failed to load access keys:', error)

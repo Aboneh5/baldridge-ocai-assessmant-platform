@@ -69,11 +69,11 @@ export async function POST(request: NextRequest) {
     let organizationId: string | null = null
     let isEmployeeRequest = false
 
-    // Check for session-based auth (admin/facilitator)
+    // Check for session-based auth (admin only - facilitators cannot create surveys)
     if (session?.user?.organizationId) {
-      // Check permissions for session users
-      if (!['ORG_ADMIN', 'FACILITATOR', 'SYSTEM_ADMIN'].includes(session.user.role)) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      // Only SYSTEM_ADMIN can create surveys
+      if (!['SYSTEM_ADMIN'].includes(session.user.role)) {
+        return NextResponse.json({ error: 'Forbidden - Only admins can create surveys' }, { status: 403 })
       }
       organizationId = session.user.organizationId
     }
@@ -107,6 +107,10 @@ export async function POST(request: NextRequest) {
     }
 
     const validatedData = surveyCreateSchema.parse(body)
+
+    if (!organizationId) {
+      return NextResponse.json({ error: 'Organization ID is required' }, { status: 400 })
+    }
 
     const survey = await prisma.survey.create({
       data: {

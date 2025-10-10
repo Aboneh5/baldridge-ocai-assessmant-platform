@@ -1,10 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getUserId } from '@/lib/get-user-id';
 
 // GET /api/admin/baldrige/responses
 // Fetch all Baldrige responses organized by company/organization
 export async function GET(request: NextRequest) {
   try {
+    // Check authentication
+    const userId = await getUserId(request);
+    
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, message: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Get user role
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!currentUser) {
+      return NextResponse.json(
+        { success: false, message: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check role - only SYSTEM_ADMIN and FACILITATOR can view responses
+    if (currentUser.role !== 'SYSTEM_ADMIN' && currentUser.role !== 'FACILITATOR') {
+      return NextResponse.json(
+        { success: false, message: 'Forbidden' },
+        { status: 403 }
+      );
+    }
+
     // Get all completed submissions with assessment IDs
     const submissions = await prisma.baldrigeSubmission.findMany({
       where: {
@@ -72,8 +103,14 @@ export async function GET(request: NextRequest) {
       const orgName = response.user.organization?.name || 'No Organization';
       const userId = response.userId;
       const userName = response.user.name;
-      const userEmail = response.user.email || 'N/A';
-      const accessKey = response.user.accessKeyUsed || 'N/A';
+      
+      // PRIVACY: Hide emails/credentials for facilitators
+      const userEmail = currentUser.role === 'SYSTEM_ADMIN' 
+        ? (response.user.email || 'N/A')
+        : '***HIDDEN***';
+      const accessKey = currentUser.role === 'SYSTEM_ADMIN'
+        ? (response.user.accessKeyUsed || 'N/A')
+        : '***HIDDEN***';
 
       // Find submission for this user
       const userSubmission = submissions.find(
@@ -92,11 +129,16 @@ export async function GET(request: NextRequest) {
       // Initialize user if not exists
       if (!organizationData[orgId].users[userId]) {
         const userProgress = completedAssessments.find(a => a.userId === userId);
+        
+        // Determine login method
+        const loginMethod = response.user.accessKeyUsed ? 'Access Key' : 'Email Credentials';
+        
         organizationData[orgId].users[userId] = {
           userId,
           userName,
           userEmail,
           accessKey,
+          loginMethod,
           assessmentId: userSubmission?.assessmentId || 'N/A',
           completedAt: userProgress?.completedAt,
           surveyId: response.surveyId,

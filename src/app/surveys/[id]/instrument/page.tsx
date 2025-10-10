@@ -120,7 +120,7 @@ export default function InstrumentPage() {
     }
 
     // Create a downloadable text file
-    const content = this.generateInstrumentText(instrumentData)
+    const content = generateInstrumentText(instrumentData)
     const blob = new Blob([content], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')

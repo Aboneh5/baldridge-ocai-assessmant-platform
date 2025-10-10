@@ -259,7 +259,7 @@ export default function EditOrganizationPage() {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                   placeholder="e.g., Acme Corporation"
                 />
               </div>
@@ -273,7 +273,7 @@ export default function EditOrganizationPage() {
                   type="text"
                   value={formData.industry}
                   onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                   placeholder="e.g., Technology"
                 />
               </div>
@@ -286,7 +286,7 @@ export default function EditOrganizationPage() {
                 <select
                   value={formData.size}
                   onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 >
                   <option value="">Select size</option>
                   <option value="1-10">1-10 employees</option>
@@ -307,7 +307,7 @@ export default function EditOrganizationPage() {
                   type="text"
                   value={formData.country}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                   placeholder="e.g., United States"
                 />
               </div>
@@ -328,7 +328,7 @@ export default function EditOrganizationPage() {
                     type="text"
                     value={formData.primaryColor}
                     onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                     placeholder="#3B82F6"
                   />
                 </div>
@@ -343,7 +343,7 @@ export default function EditOrganizationPage() {
                   type="url"
                   value={formData.logoUrl}
                   onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                   placeholder="https://example.com/logo.png"
                 />
               </div>

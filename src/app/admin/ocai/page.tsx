@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Download, Building2, Users, FileText, LogOut, Shield, ChevronDown, ChevronRight, FileSpreadsheet, BarChart3 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { OCAIRadarChart } from '@/components/ocai/ocai-radar-chart';
+import { OCAIBarChart } from '@/components/ocai/ocai-bar-chart';
+import type { OCAIScores } from '@/lib/ocai-data';
 
 interface OCAIResponse {
   id: string;
@@ -67,17 +70,32 @@ export default function AdminOCAIPage() {
     }
 
     setUser(parsedUser);
-    loadOCAIData();
+    loadOCAIData(parsedUser);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only once on mount
 
-  const loadOCAIData = async () => {
+  const loadOCAIData = async (currentUser: any) => {
+    const userToUse = currentUser || user;
+    
+    if (!userToUse?.id) {
+      console.error('[OCAI Admin] No user ID available');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch('/api/admin/ocai/responses');
+      const response = await fetch('/api/admin/ocai/responses', {
+        headers: {
+          'x-user-id': userToUse.id
+        }
+      });
+      
       if (response.ok) {
         const result: ResponseData = await response.json();
         setData(result.data);
         setSummary(result.summary);
+      } else {
+        console.error('[OCAI Admin] Failed to load responses');
       }
     } catch (error) {
       console.error('Failed to load OCAI data:', error);
@@ -462,7 +480,192 @@ export default function AdminOCAIPage() {
 
                 {/* Organization Users */}
                 {expandedOrgs.has(org.organizationId) && (
-                  <div className="p-6 space-y-4">
+                  <div className="p-6 space-y-6">
+                    {/* Organization Aggregate Section */}
+                    {org.users.length > 1 && (
+                      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border-2 border-purple-200 p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
+                              <BarChart3 className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-bold text-purple-900">Organization Aggregate</h3>
+                              <p className="text-sm text-purple-700">Average of {org.users.length} assessment(s)</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {(() => {
+                          // Calculate organization aggregate
+                          const totals = {
+                            now: { clan: 0, adhocracy: 0, market: 0, hierarchy: 0 },
+                            pref: { clan: 0, adhocracy: 0, market: 0, hierarchy: 0 }
+                          };
+
+                          let validResponses = 0;
+                          org.users.forEach(user => {
+                            if (user.responses[0]?.nowScores && user.responses[0]?.preferredScores) {
+                              const now = user.responses[0].nowScores;
+                              const pref = user.responses[0].preferredScores;
+                              
+                              if (typeof now.clan === 'number' && typeof pref.clan === 'number') {
+                                totals.now.clan += now.clan;
+                                totals.now.adhocracy += now.adhocracy;
+                                totals.now.market += now.market;
+                                totals.now.hierarchy += now.hierarchy;
+
+                                totals.pref.clan += pref.clan;
+                                totals.pref.adhocracy += pref.adhocracy;
+                                totals.pref.market += pref.market;
+                                totals.pref.hierarchy += pref.hierarchy;
+
+                                validResponses++;
+                              }
+                            }
+                          });
+
+                          const avg = {
+                            now: {
+                              clan: (totals.now.clan / validResponses).toFixed(2),
+                              adhocracy: (totals.now.adhocracy / validResponses).toFixed(2),
+                              market: (totals.now.market / validResponses).toFixed(2),
+                              hierarchy: (totals.now.hierarchy / validResponses).toFixed(2)
+                            },
+                            pref: {
+                              clan: (totals.pref.clan / validResponses).toFixed(2),
+                              adhocracy: (totals.pref.adhocracy / validResponses).toFixed(2),
+                              market: (totals.pref.market / validResponses).toFixed(2),
+                              hierarchy: (totals.pref.hierarchy / validResponses).toFixed(2)
+                            }
+                          };
+
+                          return (
+                            <>
+                              {/* Aggregate Scores */}
+                              <div className="grid grid-cols-2 gap-4 mb-6">
+                                <div className="bg-white/80 rounded-lg p-4 border border-purple-200">
+                                  <h4 className="font-semibold text-purple-900 mb-3">Current Culture (Average)</h4>
+                                  <div className="space-y-2">
+                                    <div className="flex justify-between">
+                                      <span className="text-sm text-gray-700">Clan:</span>
+                                      <span className="text-sm font-bold text-gray-900">{avg.now.clan}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-sm text-gray-700">Adhocracy:</span>
+                                      <span className="text-sm font-bold text-gray-900">{avg.now.adhocracy}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-sm text-gray-700">Market:</span>
+                                      <span className="text-sm font-bold text-gray-900">{avg.now.market}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-sm text-gray-700">Hierarchy:</span>
+                                      <span className="text-sm font-bold text-gray-900">{avg.now.hierarchy}</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="bg-white/80 rounded-lg p-4 border border-purple-200">
+                                  <h4 className="font-semibold text-purple-900 mb-3">Preferred Culture (Average)</h4>
+                                  <div className="space-y-2">
+                                    <div className="flex justify-between">
+                                      <span className="text-sm text-gray-700">Clan:</span>
+                                      <span className="text-sm font-bold text-gray-900">{avg.pref.clan}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-sm text-gray-700">Adhocracy:</span>
+                                      <span className="text-sm font-bold text-gray-900">{avg.pref.adhocracy}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-sm text-gray-700">Market:</span>
+                                      <span className="text-sm font-bold text-gray-900">{avg.pref.market}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-sm text-gray-700">Hierarchy:</span>
+                                      <span className="text-sm font-bold text-gray-900">{avg.pref.hierarchy}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Aggregate Charts */}
+                              <div className="grid grid-cols-1 gap-6">
+                                {/* Radar Chart */}
+                                <div className="bg-white rounded-lg border border-purple-200 p-8">
+                                  <h4 className="font-semibold text-purple-900 mb-6 text-center text-xl">Culture Profile (Radar)</h4>
+                                  <div className="h-[500px]">
+                                    <OCAIRadarChart
+                                    scores={{
+                                      now: {
+                                        Clan: parseFloat(avg.now.clan),
+                                        Adhocracy: parseFloat(avg.now.adhocracy),
+                                        Market: parseFloat(avg.now.market),
+                                        Hierarchy: parseFloat(avg.now.hierarchy)
+                                      },
+                                      preferred: {
+                                        Clan: parseFloat(avg.pref.clan),
+                                        Adhocracy: parseFloat(avg.pref.adhocracy),
+                                        Market: parseFloat(avg.pref.market),
+                                        Hierarchy: parseFloat(avg.pref.hierarchy)
+                                      },
+                                      delta: {
+                                        Clan: parseFloat(avg.pref.clan) - parseFloat(avg.now.clan),
+                                        Adhocracy: parseFloat(avg.pref.adhocracy) - parseFloat(avg.now.adhocracy),
+                                        Market: parseFloat(avg.pref.market) - parseFloat(avg.now.market),
+                                        Hierarchy: parseFloat(avg.pref.hierarchy) - parseFloat(avg.now.hierarchy)
+                                      }
+                                    }}
+                                  />
+                                  </div>
+                                </div>
+
+                                {/* Bar Chart */}
+                                <div className="bg-white rounded-lg border border-purple-200 p-8">
+                                  <h4 className="font-semibold text-purple-900 mb-6 text-center text-xl">Culture Change (Bar)</h4>
+                                  <div className="h-[500px]">
+                                    <OCAIBarChart
+                                    scores={{
+                                      now: {
+                                        Clan: parseFloat(avg.now.clan),
+                                        Adhocracy: parseFloat(avg.now.adhocracy),
+                                        Market: parseFloat(avg.now.market),
+                                        Hierarchy: parseFloat(avg.now.hierarchy)
+                                      },
+                                      preferred: {
+                                        Clan: parseFloat(avg.pref.clan),
+                                        Adhocracy: parseFloat(avg.pref.adhocracy),
+                                        Market: parseFloat(avg.pref.market),
+                                        Hierarchy: parseFloat(avg.pref.hierarchy)
+                                      },
+                                      delta: {
+                                        Clan: parseFloat(avg.pref.clan) - parseFloat(avg.now.clan),
+                                        Adhocracy: parseFloat(avg.pref.adhocracy) - parseFloat(avg.now.adhocracy),
+                                        Market: parseFloat(avg.pref.market) - parseFloat(avg.now.market),
+                                        Hierarchy: parseFloat(avg.pref.hierarchy) - parseFloat(avg.now.hierarchy)
+                                      }
+                                    }}
+                                  />
+                                  </div>
+                                </div>
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
+
+                    {/* Divider */}
+                    {org.users.length > 1 && (
+                      <div className="border-t-2 border-purple-200 my-6">
+                        <div className="text-center -mt-3">
+                          <span className="bg-gray-50 px-4 py-1 text-sm font-medium text-purple-700">
+                            Individual Assessments
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
                     {org.users.map(user => (
                       <div key={user.userId} className="border border-gray-200 rounded-lg">
                         {/* User Header */}
@@ -503,19 +706,19 @@ export default function AdminOCAIPage() {
                                 <div className="space-y-2">
                                   <div className="flex justify-between">
                                     <span className="text-sm text-gray-700">Clan:</span>
-                                    <span className="text-sm font-medium">{user.responses[0].nowScores?.clan || 0}</span>
+                                    <span className="text-sm font-bold text-gray-900">{user.responses[0].nowScores?.clan || 0}</span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span className="text-sm text-gray-700">Adhocracy:</span>
-                                    <span className="text-sm font-medium">{user.responses[0].nowScores?.adhocracy || 0}</span>
+                                    <span className="text-sm font-bold text-gray-900">{user.responses[0].nowScores?.adhocracy || 0}</span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span className="text-sm text-gray-700">Market:</span>
-                                    <span className="text-sm font-medium">{user.responses[0].nowScores?.market || 0}</span>
+                                    <span className="text-sm font-bold text-gray-900">{user.responses[0].nowScores?.market || 0}</span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span className="text-sm text-gray-700">Hierarchy:</span>
-                                    <span className="text-sm font-medium">{user.responses[0].nowScores?.hierarchy || 0}</span>
+                                    <span className="text-sm font-bold text-gray-900">{user.responses[0].nowScores?.hierarchy || 0}</span>
                                   </div>
                                 </div>
                               </div>
@@ -526,33 +729,140 @@ export default function AdminOCAIPage() {
                                 <div className="space-y-2">
                                   <div className="flex justify-between">
                                     <span className="text-sm text-gray-700">Clan:</span>
-                                    <span className="text-sm font-medium">{user.responses[0].preferredScores?.clan || 0}</span>
+                                    <span className="text-sm font-bold text-gray-900">{user.responses[0].preferredScores?.clan || 0}</span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span className="text-sm text-gray-700">Adhocracy:</span>
-                                    <span className="text-sm font-medium">{user.responses[0].preferredScores?.adhocracy || 0}</span>
+                                    <span className="text-sm font-bold text-gray-900">{user.responses[0].preferredScores?.adhocracy || 0}</span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span className="text-sm text-gray-700">Market:</span>
-                                    <span className="text-sm font-medium">{user.responses[0].preferredScores?.market || 0}</span>
+                                    <span className="text-sm font-bold text-gray-900">{user.responses[0].preferredScores?.market || 0}</span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span className="text-sm text-gray-700">Hierarchy:</span>
-                                    <span className="text-sm font-medium">{user.responses[0].preferredScores?.hierarchy || 0}</span>
+                                    <span className="text-sm font-bold text-gray-900">{user.responses[0].preferredScores?.hierarchy || 0}</span>
                                   </div>
                                 </div>
                               </div>
                             </div>
 
                             {/* Demographics */}
-                            {user.responses[0].demographics && (
+                            {user.responses[0].demographics && Object.keys(user.responses[0].demographics).length > 0 ? (
                               <div className="bg-gray-50 rounded-lg p-4">
-                                <h4 className="font-semibold text-gray-900 mb-2">Demographics</h4>
-                                <pre className="text-sm text-gray-700 whitespace-pre-wrap">
-                                  {JSON.stringify(user.responses[0].demographics, null, 2)}
-                                </pre>
+                                <h4 className="font-semibold text-gray-900 mb-3">Demographics</h4>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                  {user.responses[0].demographics.department && (
+                                    <div>
+                                      <p className="text-xs text-gray-500">Department</p>
+                                      <p className="text-sm font-medium text-gray-900">{user.responses[0].demographics.department}</p>
+                                    </div>
+                                  )}
+                                  {user.responses[0].demographics.team && (
+                                    <div>
+                                      <p className="text-xs text-gray-500">Team</p>
+                                      <p className="text-sm font-medium text-gray-900">{user.responses[0].demographics.team}</p>
+                                    </div>
+                                  )}
+                                  {user.responses[0].demographics.tenure && (
+                                    <div>
+                                      <p className="text-xs text-gray-500">Tenure</p>
+                                      <p className="text-sm font-medium text-gray-900">{user.responses[0].demographics.tenure}</p>
+                                    </div>
+                                  )}
+                                  {user.responses[0].demographics.location && (
+                                    <div>
+                                      <p className="text-xs text-gray-500">Location</p>
+                                      <p className="text-sm font-medium text-gray-900">{user.responses[0].demographics.location}</p>
+                                    </div>
+                                  )}
+                                  {user.responses[0].demographics.gender && (
+                                    <div>
+                                      <p className="text-xs text-gray-500">Gender</p>
+                                      <p className="text-sm font-medium text-gray-900">{user.responses[0].demographics.gender}</p>
+                                    </div>
+                                  )}
+                                  {user.responses[0].demographics.laborUnit && (
+                                    <div>
+                                      <p className="text-xs text-gray-500">Labor Unit</p>
+                                      <p className="text-sm font-medium text-gray-900">{user.responses[0].demographics.laborUnit}</p>
+                                    </div>
+                                  )}
+                                  {user.responses[0].demographics.raceEthnicity && (
+                                    <div>
+                                      <p className="text-xs text-gray-500">Race/Ethnicity</p>
+                                      <p className="text-sm font-medium text-gray-900">{user.responses[0].demographics.raceEthnicity}</p>
                               </div>
                             )}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="bg-gray-50 rounded-lg p-4">
+                                <h4 className="font-semibold text-gray-900 mb-2">Demographics</h4>
+                                <p className="text-sm text-gray-500 italic">No demographic data provided</p>
+                              </div>
+                            )}
+
+                            {/* Individual Charts */}
+                            <div className="grid grid-cols-1 gap-6">
+                              {/* Radar Chart */}
+                              <div className="bg-white rounded-lg border border-gray-200 p-8">
+                                <h4 className="font-semibold text-gray-900 mb-6 text-center text-lg">Culture Profile (Radar)</h4>
+                                <div className="h-[450px]">
+                                  <OCAIRadarChart
+                                    scores={{
+                                      now: {
+                                        Clan: user.responses[0].nowScores?.clan || 0,
+                                        Adhocracy: user.responses[0].nowScores?.adhocracy || 0,
+                                        Market: user.responses[0].nowScores?.market || 0,
+                                        Hierarchy: user.responses[0].nowScores?.hierarchy || 0
+                                      },
+                                      preferred: {
+                                        Clan: user.responses[0].preferredScores?.clan || 0,
+                                        Adhocracy: user.responses[0].preferredScores?.adhocracy || 0,
+                                        Market: user.responses[0].preferredScores?.market || 0,
+                                        Hierarchy: user.responses[0].preferredScores?.hierarchy || 0
+                                      },
+                                      delta: {
+                                        Clan: (user.responses[0].preferredScores?.clan || 0) - (user.responses[0].nowScores?.clan || 0),
+                                        Adhocracy: (user.responses[0].preferredScores?.adhocracy || 0) - (user.responses[0].nowScores?.adhocracy || 0),
+                                        Market: (user.responses[0].preferredScores?.market || 0) - (user.responses[0].nowScores?.market || 0),
+                                        Hierarchy: (user.responses[0].preferredScores?.hierarchy || 0) - (user.responses[0].nowScores?.hierarchy || 0)
+                                      }
+                                    }}
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Bar Chart */}
+                              <div className="bg-white rounded-lg border border-gray-200 p-8">
+                                <h4 className="font-semibold text-gray-900 mb-6 text-center text-lg">Culture Change (Bar)</h4>
+                                <div className="h-[450px]">
+                                  <OCAIBarChart
+                                    scores={{
+                                      now: {
+                                        Clan: user.responses[0].nowScores?.clan || 0,
+                                        Adhocracy: user.responses[0].nowScores?.adhocracy || 0,
+                                        Market: user.responses[0].nowScores?.market || 0,
+                                        Hierarchy: user.responses[0].nowScores?.hierarchy || 0
+                                      },
+                                      preferred: {
+                                        Clan: user.responses[0].preferredScores?.clan || 0,
+                                        Adhocracy: user.responses[0].preferredScores?.adhocracy || 0,
+                                        Market: user.responses[0].preferredScores?.market || 0,
+                                        Hierarchy: user.responses[0].preferredScores?.hierarchy || 0
+                                      },
+                                      delta: {
+                                        Clan: (user.responses[0].preferredScores?.clan || 0) - (user.responses[0].nowScores?.clan || 0),
+                                        Adhocracy: (user.responses[0].preferredScores?.adhocracy || 0) - (user.responses[0].nowScores?.adhocracy || 0),
+                                        Market: (user.responses[0].preferredScores?.market || 0) - (user.responses[0].nowScores?.market || 0),
+                                        Hierarchy: (user.responses[0].preferredScores?.hierarchy || 0) - (user.responses[0].nowScores?.hierarchy || 0)
+                                      }
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>

@@ -54,16 +54,37 @@ export default function NewAccessKeyPage() {
     }
 
     setUser(parsedUser)
-    loadOrganizations()
     generateKey()
   }, [router])
 
+  // Load organizations when user is set
+  useEffect(() => {
+    if (user?.id) {
+      loadOrganizations()
+    }
+  }, [user])
+
   const loadOrganizations = async () => {
+    if (!user?.id) {
+      console.error('No user ID available for loading organizations')
+      return
+    }
+
     try {
-      const response = await fetch('/api/admin/organizations')
+      console.log('Loading organizations with user ID:', user.id)
+      const response = await fetch('/api/admin/organizations', {
+        headers: {
+          'x-user-id': user.id
+        }
+      })
       if (response.ok) {
         const data = await response.json()
+        console.log('Organizations loaded:', data.organizations)
         setOrganizations(data.organizations.filter((org: any) => org.isActive))
+      } else {
+        console.error('Failed to load organizations:', response.status, response.statusText)
+        const errorData = await response.json()
+        console.error('Error details:', errorData)
       }
     } catch (error) {
       console.error('Failed to load organizations:', error)
@@ -125,9 +146,13 @@ export default function NewAccessKeyPage() {
     setLoading(true)
 
     try {
+      console.log('Creating access key with user ID:', user?.id)
       const response = await fetch('/api/admin/access-keys', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': user?.id || ''
+        },
         body: JSON.stringify({
           key: formData.key,
           organizationId: formData.organizationId,
@@ -298,7 +323,7 @@ export default function NewAccessKeyPage() {
                 required
                 value={formData.organizationId}
                 onChange={(e) => handleOrganizationChange(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               >
                 <option value="">Select organization</option>
                 {organizations.map((org) => (
@@ -352,7 +377,7 @@ export default function NewAccessKeyPage() {
                     min="1"
                     value={formData.maxUses}
                     onChange={(e) => setFormData({ ...formData, maxUses: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                     placeholder="Unlimited"
                   />
                   <p className="text-xs text-gray-500 mt-1">Leave empty for unlimited usage</p>
@@ -368,7 +393,7 @@ export default function NewAccessKeyPage() {
                     value={formData.expiresAt}
                     onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                   />
                   <p className="text-xs text-gray-500 mt-1">Leave empty for no expiration</p>
                 </div>
@@ -384,7 +409,7 @@ export default function NewAccessKeyPage() {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 placeholder="e.g., Q1 2024 Employee Assessment Batch"
               />
               <p className="text-xs text-gray-500 mt-1">Internal note to identify this access key</p>

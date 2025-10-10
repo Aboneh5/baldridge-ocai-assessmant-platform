@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { BarChart3, Target, Award, CheckCircle, ArrowRight, LogOut, Eye, PlayCircle } from 'lucide-react'
@@ -24,7 +24,7 @@ interface AssessmentOption {
   borderColor: string
 }
 
-export default function EmployeeAssessmentsPage() {
+function EmployeeAssessmentsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [organization, setOrganization] = useState<Organization | null>(null)
@@ -38,30 +38,124 @@ export default function EmployeeAssessmentsPage() {
   }>({})
 
   useEffect(() => {
-    // Load from localStorage
-    const storedUser = localStorage.getItem('user')
-    const storedOrg = localStorage.getItem('organization')
-    const storedTypes = localStorage.getItem('assessmentTypes')
+    const initDashboard = async () => {
+      // Load from localStorage
+      const storedUser = localStorage.getItem('user')
+      const storedOrg = localStorage.getItem('organization')
+      const storedTypes = localStorage.getItem('assessmentTypes')
 
-    if (!storedUser || !storedOrg || !storedTypes) {
-      router.push('/auth/signin')
-      return
+      if (!storedUser) {
+        router.push('/auth/signin')
+        return
+      }
+
+      const parsedUser = JSON.parse(storedUser)
+      
+      // Handle different user types
+      if (parsedUser.role === 'CREDENTIAL_USER') {
+        // For credential users, organization data is in the user object
+        if (!parsedUser.organizationId || !parsedUser.assessmentTypes) {
+          router.push('/auth/signin')
+          return
+        }
+        
+        setUser(parsedUser)
+        setOrganization({
+          id: parsedUser.organizationId,
+          name: parsedUser.organizationName,
+          logoUrl: undefined,
+          primaryColor: undefined
+        })
+        setAssessmentTypes(parsedUser.assessmentTypes)
+        
+        // Check server-side completion status for each assessment
+        await checkServerCompletionStatus(parsedUser)
+        
+        // Fetch OCAI survey for this organization
+        fetchOcaiSurvey(parsedUser.organizationId)
+      } else {
+        // For access key users, organization data is stored separately
+        if (!storedOrg || !storedTypes) {
+          router.push('/auth/signin')
+          return
+        }
+        
+        const parsedOrg = JSON.parse(storedOrg)
+        
+        setUser(parsedUser)
+        setOrganization(parsedOrg)
+        setAssessmentTypes(JSON.parse(storedTypes))
+        
+        // Load assessment progress statuses
+        const statuses = getAllAssessmentStatuses(parsedOrg.id, parsedUser.id)
+        setAssessmentStatuses(statuses)
+        
+        // Fetch OCAI survey for this organization
+        fetchOcaiSurvey(parsedOrg.id)
+      }
     }
 
-    const parsedUser = JSON.parse(storedUser)
-    const parsedOrg = JSON.parse(storedOrg)
-
-    setUser(parsedUser)
-    setOrganization(parsedOrg)
-    setAssessmentTypes(JSON.parse(storedTypes))
-
-    // Load assessment progress statuses
-    const statuses = getAllAssessmentStatuses(parsedOrg.id, parsedUser.id)
-    setAssessmentStatuses(statuses)
-
-    // Fetch OCAI survey for this organization
-    fetchOcaiSurvey(parsedOrg.id)
+    initDashboard()
   }, [router])
+
+  const checkServerCompletionStatus = async (user: any) => {
+    try {
+      // Check OCAI completion
+      const ocaiCheck = await fetch('/api/ocai/check-completion', {
+        headers: { 'x-user-id': user.id }
+      })
+      
+      if (ocaiCheck.ok) {
+        const ocaiData = await ocaiCheck.json()
+        if (ocaiData.isCompleted) {
+          setAssessmentStatuses(prev => ({
+            ...prev,
+            OCAI: {
+              assessmentType: 'OCAI',
+              organizationId: user.organizationId,
+              accessKey: user.accessKey || '',
+              userId: user.id,
+              status: 'completed',
+              progress: { percentage: 100 },
+              timestamps: {
+                completedAt: ocaiData.completedAt || new Date().toISOString()
+              }
+            }
+          }))
+        }
+      }
+
+      // Check Baldrige completion
+      const baldrigeCheck = await fetch('/api/baldrige/check-completion', {
+        headers: { 'x-user-id': user.id }
+      })
+      
+      if (baldrigeCheck.ok) {
+        const baldrigeData = await baldrigeCheck.json()
+        if (baldrigeData.isCompleted) {
+          setAssessmentStatuses(prev => ({
+            ...prev,
+            BALDRIGE: {
+              assessmentType: 'BALDRIGE',
+              organizationId: user.organizationId,
+              accessKey: user.accessKey || '',
+              userId: user.id,
+              status: 'completed',
+              progress: { percentage: 100 },
+              timestamps: {
+                completedAt: baldrigeData.completedAt || new Date().toISOString()
+              }
+            }
+          }))
+        }
+      }
+    } catch (error) {
+      console.error('Error checking completion status:', error)
+      // Fall back to localStorage status
+      const statuses = getAllAssessmentStatuses(user.organizationId, user.credentialId || user.id)
+      setAssessmentStatuses(statuses)
+    }
+  }
 
   const fetchOcaiSurvey = async (orgId: string) => {
     try {
@@ -82,6 +176,7 @@ export default function EmployeeAssessmentsPage() {
     localStorage.removeItem('user')
     localStorage.removeItem('organization')
     localStorage.removeItem('assessmentTypes')
+    localStorage.removeItem('currentSurveyId')
     router.push('/')
   }
 
@@ -207,6 +302,12 @@ export default function EmployeeAssessmentsPage() {
               }
 
               const handleClick = (e: React.MouseEvent) => {
+                // Block access if already completed
+                if (isCompleted) {
+                  // Already redirects to results page via getAssessmentLink()
+                  return
+                }
+                
                 if (assessment.type === 'OCAI' && ocaiSurveyId) {
                   localStorage.setItem('currentSurveyId', ocaiSurveyId)
                 }
@@ -301,15 +402,31 @@ export default function EmployeeAssessmentsPage() {
             <div>
               <h4 className="font-semibold text-blue-900 mb-2">Important Information</h4>
               <ul className="space-y-1 text-sm text-blue-800">
+                <li>• <strong>Each assessment can only be taken once</strong> - no retakes allowed</li>
                 <li>• Your responses are confidential and will be aggregated with others</li>
-                <li>• You can complete assessments in one sitting or return later</li>
+                <li>• You can complete assessments in one sitting or return later (auto-save enabled)</li>
                 <li>• Answer honestly - there are no right or wrong answers</li>
-                <li>• Results will be shared with your organization to drive improvement</li>
+                <li>• Once completed, you can view your results but cannot change answers</li>
               </ul>
             </div>
           </div>
         </div>
       </main>
     </div>
+  )
+}
+
+export default function EmployeeAssessmentsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading assessments...</p>
+        </div>
+      </div>
+    }>
+      <EmployeeAssessmentsContent />
+    </Suspense>
   )
 }

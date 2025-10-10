@@ -7,6 +7,14 @@ import { BarChart3, CheckCircle, Users, Building2, TrendingUp, Shield } from 'lu
 export default function HomePage() {
   const router = useRouter()
 
+  const handleAssessmentSelect = (type: string) => {
+    if (type === 'ocai') {
+      router.push('/assessments/ocai')
+    } else if (type === 'baldrige') {
+      router.push('/assessments/baldrige')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
@@ -237,6 +245,7 @@ export default function HomePage() {
               </button>
             </div>
           </div>
+          </div>
         </div>
 
         {/* Comparison Section */}
@@ -332,7 +341,7 @@ export default function HomePage() {
             <Link href="/privacy" className="hover:text-gray-700">Privacy</Link>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   )
 }

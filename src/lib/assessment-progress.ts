@@ -45,8 +45,43 @@ export function saveAssessmentProgress(progress: AssessmentProgress): void {
 
     const key = getStorageKey(progress.assessmentType, progress.organizationId, progress.userId);
     localStorage.setItem(key, JSON.stringify(progressData));
+
+    // Also save to server if credential user
+    saveProgressToServer(progressData);
   } catch (error) {
     console.error('Failed to save assessment progress:', error);
+  }
+}
+
+// Helper to save progress to server for credential users
+async function saveProgressToServer(progress: AssessmentProgress): Promise<void> {
+  try {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return;
+
+    const user = JSON.parse(userStr);
+    if (user.role !== 'CREDENTIAL_USER') return;
+
+    // Get or create survey ID for this assessment
+    const surveyId = localStorage.getItem(`currentSurveyId_${progress.assessmentType}`) || '';
+
+    await fetch('/api/assessments/progress', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        credentialEmail: user.email,
+        surveyId: surveyId || progress.organizationId, // Use orgId if no survey
+        progressData: progress.progress.data,
+        demographics: {},
+        nowScores: {},
+        preferredScores: {},
+        isComplete: progress.status === 'completed',
+        ipHash: 'credential-user'
+      })
+    });
+  } catch (error) {
+    console.error('Failed to save progress to server:', error);
+    // Fail silently - localStorage still works
   }
 }
 

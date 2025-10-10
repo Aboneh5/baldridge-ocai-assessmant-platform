@@ -21,11 +21,11 @@ interface Survey {
   title: string
   assessmentType: 'OCAI' | 'BALDRIGE'
   organizationId: string
-  organization: {
+  organization?: {
     name: string
   }
   createdBy: string
-  creator: {
+  creator?: {
     name: string
   }
   createdAt: string
@@ -100,8 +100,8 @@ export default function SurveysPage() {
 
   const filteredSurveys = surveys.filter(survey => {
     const matchesSearch = survey.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      survey.organization.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      survey.creator.name.toLowerCase().includes(searchTerm.toLowerCase())
+      (survey.organization?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (survey.creator?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
 
     const matchesType = filterType === 'all' || survey.assessmentType === filterType
 
@@ -214,7 +214,7 @@ export default function SurveysPage() {
                   placeholder="Search surveys..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 />
               </div>
             </div>
@@ -363,13 +363,13 @@ export default function SurveysPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-gray-900">
                         <Building2 className="w-4 h-4 mr-2 text-gray-400" />
-                        {survey.organization.name}
+                        {survey.organization?.name || 'N/A'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-gray-900">
                         <User className="w-4 h-4 mr-2 text-gray-400" />
-                        {survey.creator.name}
+                        {survey.creator?.name || 'N/A'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

@@ -51,7 +51,7 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
     }
   }, [surveyId])
 
-  // Save progress to localStorage whenever state changes
+  // Save progress to localStorage and server whenever state changes
   useEffect(() => {
     if (responses.length > 0 && currentPhase !== 'results') {
       const storageKey = `ocai_progress_${surveyId}`
@@ -63,8 +63,41 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
         lastSaved: new Date().toISOString()
       }
       localStorage.setItem(storageKey, JSON.stringify(progressData))
+
+      // Also save to server if credential user
+      const userStr = localStorage.getItem('user')
+      if (userStr) {
+        const user = JSON.parse(userStr)
+        if (user.role === 'CREDENTIAL_USER') {
+          // Auto-save to server (debounced)
+          saveProgressToServer(user.email, surveyId, progressData)
+        }
+      }
     }
   }, [responses, currentPhase, currentDimension, demographics, surveyId])
+
+  // Server save function (with debounce)
+  const saveProgressToServer = async (email: string, surveyId: string, progressData: any) => {
+    try {
+      await fetch('/api/assessments/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          credentialEmail: email,
+          surveyId,
+          progressData,
+          demographics: progressData.demographics,
+          nowScores: {}, // Will be filled on completion
+          preferredScores: {}, // Will be filled on completion
+          isComplete: false,
+          ipHash: 'auto-saved'
+        })
+      })
+    } catch (error) {
+      console.error('Failed to auto-save progress:', error)
+      // Fail silently - localStorage still works
+    }
+  }
 
   const handleDimensionChange = (dimensionId: string, phase: 'now' | 'preferred', values: { A: number; B: number; C: number; D: number }) => {
     setResponses(prev => prev.map(response => 
@@ -91,10 +124,9 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
         setCurrentPhase('demographics')
       }
     } else if (currentPhase === 'demographics') {
-      // Calculate scores and show results
+      // Calculate scores and submit (no longer showing results inline)
       const calculatedScores = calculateOCAIScores(responses)
       setScores(calculatedScores)
-      setCurrentPhase('results')
 
       // Clear saved progress since assessment is complete
       const storageKey = `ocai_progress_${surveyId}`
@@ -121,8 +153,6 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
     } else if (currentPhase === 'demographics') {
       setCurrentPhase('preferred')
       setCurrentDimension(OCAI_DIMENSIONS.length - 1)
-    } else if (currentPhase === 'results') {
-      setCurrentPhase('demographics')
     }
 
     setTimeout(() => setIsTransitioning(false), 300)
@@ -158,10 +188,6 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
       return 100
     }
     return 100
-  }
-
-  if (currentPhase === 'results' && scores) {
-    return <OCAIResults scores={scores} onRestart={() => setCurrentPhase('now')} />
   }
 
   return (
@@ -239,7 +265,7 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
                     type="text"
                     value={demographics.department || ''}
                     onChange={(e) => setDemographics(prev => ({ ...prev, department: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-medium placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="e.g., Engineering, Marketing"
                   />
                 </div>
@@ -250,7 +276,7 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
                     type="text"
                     value={demographics.team || ''}
                     onChange={(e) => setDemographics(prev => ({ ...prev, team: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-medium placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="e.g., Frontend Team, Sales Team"
                   />
                 </div>
@@ -260,7 +286,7 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
                   <select
                     value={demographics.tenure || ''}
                     onChange={(e) => setDemographics(prev => ({ ...prev, tenure: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select tenure</option>
                     <option value="less-than-1">Less than 1 year</option>
@@ -277,7 +303,7 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
                     type="text"
                     value={demographics.location || ''}
                     onChange={(e) => setDemographics(prev => ({ ...prev, location: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-medium placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="e.g., New York, Remote"
                   />
                 </div>
@@ -287,7 +313,7 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
                   <select
                     value={demographics.gender || ''}
                     onChange={(e) => setDemographics(prev => ({ ...prev, gender: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select gender</option>
                     <option value="male">Male</option>
@@ -303,7 +329,7 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
                     type="text"
                     value={demographics.laborUnit || ''}
                     onChange={(e) => setDemographics(prev => ({ ...prev, laborUnit: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-medium placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="e.g., Management, Individual Contributor"
                   />
                 </div>
@@ -313,7 +339,7 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
                   <select
                     value={demographics.raceEthnicity || ''}
                     onChange={(e) => setDemographics(prev => ({ ...prev, raceEthnicity: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select race/ethnicity</option>
                     <option value="american-indian">American Indian or Alaska Native</option>
@@ -331,9 +357,9 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
           ) : (
             <OCAIDimensionInput
               dimension={OCAI_DIMENSIONS[currentDimension]}
-              phase={currentPhase}
+              phase={currentPhase as 'now' | 'preferred'}
               response={getCurrentResponse()}
-              onChange={(values) => handleDimensionChange(OCAI_DIMENSIONS[currentDimension].id, currentPhase, values)}
+              onChange={(values) => handleDimensionChange(OCAI_DIMENSIONS[currentDimension].id, currentPhase as 'now' | 'preferred', values)}
             />
           )}
         </div>

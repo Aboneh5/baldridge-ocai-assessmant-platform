@@ -9,20 +9,82 @@ export default function OCAIIntroPage() {
   const router = useRouter()
   const [creatingAssessment, setCreatingAssessment] = useState(false)
   const [surveyId, setSurveyId] = useState<string | null>(null)
+  const [checkingCompletion, setCheckingCompletion] = useState(true)
 
   useEffect(() => {
-    // Check for survey ID from URL or localStorage
-    const urlParams = new URLSearchParams(window.location.search)
-    const urlSurveyId = urlParams.get('surveyId')
-    const storedSurveyId = localStorage.getItem('currentSurveyId')
+    const checkCompletionAndInit = async () => {
+      // Check if user has already completed OCAI
+      const storedUser = localStorage.getItem('user')
+      const storedOrg = localStorage.getItem('organization')
 
-    if (urlSurveyId) {
-      setSurveyId(urlSurveyId)
-      localStorage.setItem('currentSurveyId', urlSurveyId)
-    } else if (storedSurveyId) {
-      setSurveyId(storedSurveyId)
+      if (storedUser) {
+        const user = JSON.parse(storedUser)
+
+        // Server-side completion check for credential users
+        if (user.id) {
+          try {
+            const completionCheck = await fetch(`/api/ocai/check-completion`, {
+              headers: {
+                'x-user-id': user.id
+              }
+            })
+
+            if (completionCheck.ok) {
+              const completionData = await completionCheck.json()
+              if (completionData.isCompleted) {
+                // Already completed - redirect to results
+                alert('You have already completed this assessment. You cannot retake it.')
+                router.push('/ocai/my-results')
+                return
+              }
+            }
+          } catch (error) {
+            console.error('Error checking completion:', error)
+          }
+        }
+      }
+
+      // FIXED: Instead of using localStorage, fetch actual survey from database
+      if (storedOrg || (storedUser && JSON.parse(storedUser).organizationId)) {
+        try {
+          const org = storedOrg ? JSON.parse(storedOrg) : null
+          const user = storedUser ? JSON.parse(storedUser) : null
+          const orgId = org?.id || user?.organizationId
+
+          if (orgId) {
+            // Fetch existing OCAI survey for this organization
+            const checkResponse = await fetch(`/api/surveys?organizationId=${orgId}&type=OCAI&status=OPEN`)
+            
+            if (checkResponse.ok) {
+              const checkData = await checkResponse.json()
+              
+              if (checkData.surveys && checkData.surveys.length > 0) {
+                // Found existing survey - use it
+                const existingSurvey = checkData.surveys[0]
+                console.log('Found existing OCAI survey:', existingSurvey.id)
+                setSurveyId(existingSurvey.id)
+                localStorage.setItem('currentSurveyId', existingSurvey.id)
+              } else {
+                // No survey found - clear old localStorage
+                console.log('No existing OCAI survey found, will create on button click')
+                localStorage.removeItem('currentSurveyId')
+                setSurveyId(null)
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching survey:', error)
+          // Clear potentially invalid survey ID
+          localStorage.removeItem('currentSurveyId')
+          setSurveyId(null)
+        }
+      }
+
+      setCheckingCompletion(false)
     }
-  }, [])
+
+    checkCompletionAndInit()
+  }, [router])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">

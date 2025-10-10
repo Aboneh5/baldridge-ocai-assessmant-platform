@@ -1,12 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getUserId } from '@/lib/get-user-id';
 
 // GET /api/admin/ocai/responses
 // Fetch all OCAI responses organized by company/organization
 export async function GET(request: NextRequest) {
   try {
+    // Check authentication
+    const userId = await getUserId(request);
+    
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, message: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Get user role
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check role - only SYSTEM_ADMIN and FACILITATOR can view responses
+    if (user.role !== 'SYSTEM_ADMIN' && user.role !== 'FACILITATOR') {
+      return NextResponse.json(
+        { success: false, message: 'Forbidden' },
+        { status: 403 }
+      );
+    }
+
     // Get all OCAI responses with user and organization info
     const responses = await prisma.response.findMany({
+      where: {
+        survey: {
+          assessmentType: 'OCAI'
+        }
+      },
       include: {
         user: {
           include: {
@@ -28,8 +64,14 @@ export async function GET(request: NextRequest) {
       const orgName = response.user?.organization?.name || 'No Organization';
       const userId = response.userId || 'anonymous';
       const userName = response.user?.name || 'Anonymous User';
-      const userEmail = response.user?.email || 'N/A';
-      const accessKey = response.user?.accessKeyUsed || 'N/A';
+      
+      // PRIVACY: Hide emails/credentials for facilitators
+      const userEmail = user.role === 'SYSTEM_ADMIN' 
+        ? (response.user?.email || response.credentialEmail || 'N/A')
+        : '***HIDDEN***';
+      const accessKey = user.role === 'SYSTEM_ADMIN'
+        ? (response.user?.accessKeyUsed || 'N/A')
+        : '***HIDDEN***';
 
       // Initialize organization if not exists
       if (!organizationData[orgId]) {

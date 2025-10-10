@@ -99,9 +99,7 @@ export class AggregationService {
         preferredMarket: scores.preferred.Market,
         preferredHierarchy: scores.preferred.Hierarchy,
         delta: scores.delta,
-        n: validResponses.length,
-        participationRate: this.calculateParticipationRate(validResponses.length, responses.length),
-        congruenceIndicators
+        n: validResponses.length
       }
     })
   }
@@ -143,9 +141,7 @@ export class AggregationService {
         preferredMarket: scores.preferred.Market,
         preferredHierarchy: scores.preferred.Hierarchy,
         delta: scores.delta,
-        n: sliceResponses.length,
-        participationRate: slice.participationRate,
-        congruenceIndicators
+        n: sliceResponses.length
       }
     })
   }
@@ -313,7 +309,7 @@ export class AggregationService {
    */
   static async getAggregates(surveyId: string): Promise<AggregateData[]> {
     const aggregates = await prisma.aggregate.findMany({
-      where: { 
+      where: {
         surveyId,
         n: { gte: K_ANONYMITY_THRESHOLD }
       },
@@ -323,24 +319,46 @@ export class AggregationService {
       ]
     })
 
-    return aggregates.map(agg => ({
-      id: agg.id,
-      surveyId: agg.surveyId,
-      sliceKey: agg.sliceKey,
-      sliceLabel: agg.sliceLabel,
-      currentClan: agg.currentClan,
-      currentAdhocracy: agg.currentAdhocracy,
-      currentMarket: agg.currentMarket,
-      currentHierarchy: agg.currentHierarchy,
-      preferredClan: agg.preferredClan,
-      preferredAdhocracy: agg.preferredAdhocracy,
-      preferredMarket: agg.preferredMarket,
-      preferredHierarchy: agg.preferredHierarchy,
-      delta: agg.delta as Record<string, number>,
-      n: agg.n,
-      participationRate: agg.participationRate,
-      congruenceIndicators: agg.congruenceIndicators as Record<string, number>
-    }))
+    // Fetch responses to calculate derived fields
+    const survey = await prisma.survey.findUnique({
+      where: { id: surveyId },
+      include: { responses: true }
+    })
+
+    if (!survey) return []
+
+    const totalResponses = survey.responses.length
+
+    return aggregates.map(agg => {
+      // Calculate congruence indicators based on the aggregate delta
+      const delta = agg.delta as Record<string, number>
+      const congruenceIndicators: Record<string, number> = {}
+
+      for (const dimension of ['Clan', 'Adhocracy', 'Market', 'Hierarchy']) {
+        const deltaValue = delta[dimension] || 0
+        // Congruence is 1 - (absolute difference / 100)
+        congruenceIndicators[dimension] = Math.max(0, 1 - (Math.abs(deltaValue) / 100))
+      }
+
+      return {
+        id: agg.id,
+        surveyId: agg.surveyId,
+        sliceKey: agg.sliceKey,
+        sliceLabel: agg.sliceLabel,
+        currentClan: agg.currentClan,
+        currentAdhocracy: agg.currentAdhocracy,
+        currentMarket: agg.currentMarket,
+        currentHierarchy: agg.currentHierarchy,
+        preferredClan: agg.preferredClan,
+        preferredAdhocracy: agg.preferredAdhocracy,
+        preferredMarket: agg.preferredMarket,
+        preferredHierarchy: agg.preferredHierarchy,
+        delta: delta,
+        n: agg.n,
+        participationRate: this.calculateParticipationRate(agg.n, totalResponses),
+        congruenceIndicators
+      }
+    })
   }
 
   /**
@@ -351,13 +369,13 @@ export class AggregationService {
     overall: AggregateData | null
   }> {
     const aggregates = await this.getAggregates(surveyId)
-    
-    const leadership = aggregates.find(agg => 
-      agg.sliceKey.includes('laborUnit') && 
-      agg.sliceLabel.toLowerCase().includes('leadership')
-    )
 
-    const overall = aggregates.find(agg => agg.sliceKey === 'whole_org')
+    const leadership = aggregates.find(agg =>
+      agg.sliceKey.includes('laborUnit') &&
+      agg.sliceLabel.toLowerCase().includes('leadership')
+    ) || null
+
+    const overall = aggregates.find(agg => agg.sliceKey === 'whole_org') || null
 
     return { leadership, overall }
   }

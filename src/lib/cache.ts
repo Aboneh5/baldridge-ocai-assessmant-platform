@@ -121,8 +121,8 @@ export class StaticGenerationService {
   static async shouldRegenerate(surveyId: string, lastModified: Date): Promise<boolean> {
     // Check if aggregates have changed since last generation
     const cacheKey = CacheService.getAggregatesKey(surveyId)
-    const cached = cache.get(cacheKey)
-    
+    const cached = cache.get<{ timestamp: number }>(cacheKey)
+
     if (!cached) {
       return true
     }

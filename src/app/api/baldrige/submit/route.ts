@@ -41,24 +41,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { surveyId } = body;
 
-    // Get total question count (excluding Organizational Profile - displayOrder 0)
-    const totalQuestions = await prisma.baldrigeQuestion.count({
-      where: {
-        subcategory: {
-          category: {
-            displayOrder: {
-              gt: 0,
-            },
-          },
-        },
-      },
-    });
+    // Normalize surveyId to null if undefined or empty string
+    const normalizedSurveyId = surveyId || null;
+
+    // Get total question count (ALL questions including Organizational Profile)
+    const totalQuestions = await prisma.baldrigeQuestion.count();
 
     // Get user's answered questions count with non-empty responses
     const answeredQuestions = await prisma.baldrigeResponse.count({
       where: {
         userId: userId,
-        surveyId: surveyId || null,
+        surveyId: normalizedSurveyId,
         responseText: {
           not: '',
         },
@@ -115,7 +108,7 @@ export async function POST(request: NextRequest) {
         assessmentId,
         userId: user.id,
         organizationId: user.organizationId,
-        surveyId: surveyId || null,
+        surveyId: normalizedSurveyId,
         accessKey: user.accessKeyUsed,
         submittedAt: new Date(),
         isCompleted: true,
@@ -130,25 +123,32 @@ export async function POST(request: NextRequest) {
     });
 
     // Mark assessment as completed
-    await prisma.baldrigeProgress.upsert({
+    const existingProgress = await prisma.baldrigeProgress.findFirst({
       where: {
-        userId_surveyId: {
-          userId: userId,
-          surveyId: surveyId || null,
-        },
-      },
-      update: {
-        isCompleted: true,
-        completedAt: new Date(),
-      },
-      create: {
         userId: userId,
-        surveyId: surveyId || null,
-        completedQuestions: [],
-        isCompleted: true,
-        completedAt: new Date(),
+        surveyId: normalizedSurveyId,
       },
     });
+
+    if (existingProgress) {
+      await prisma.baldrigeProgress.update({
+        where: { id: existingProgress.id },
+        data: {
+          isCompleted: true,
+          completedAt: new Date(),
+        },
+      });
+    } else {
+      await prisma.baldrigeProgress.create({
+        data: {
+          userId: userId,
+          surveyId: normalizedSurveyId,
+          completedQuestions: [],
+          isCompleted: true,
+          completedAt: new Date(),
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,

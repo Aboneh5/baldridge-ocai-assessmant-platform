@@ -1,9 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getUserId } from '@/lib/get-user-id'
 
-// GET all access keys
+// GET all access keys (SYSTEM_ADMIN only)
 export async function GET(request: NextRequest) {
   try {
+    // Check authentication - only SYSTEM_ADMIN can view access keys
+    const userId = await getUserId(request)
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    })
+
+    if (!user || user.role !== 'SYSTEM_ADMIN') {
+      return NextResponse.json(
+        { error: 'Forbidden - Only admins can view access keys' },
+        { status: 403 }
+      )
+    }
+
     const accessKeys = await prisma.accessKey.findMany({
       include: {
         organization: {
@@ -28,9 +50,30 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST create new access key
+// POST create new access key (SYSTEM_ADMIN only)
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication - only SYSTEM_ADMIN can create access keys
+    const userId = await getUserId(request)
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    })
+
+    if (!user || user.role !== 'SYSTEM_ADMIN') {
+      return NextResponse.json(
+        { error: 'Forbidden - Only admins can create access keys' },
+        { status: 403 }
+      )
+    }
+
     const body = await request.json()
     const {
       key,

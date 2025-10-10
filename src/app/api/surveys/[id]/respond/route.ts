@@ -35,11 +35,26 @@ export async function POST(
     const clientIP = getClientIP(request)
     const ipHash = hashIP(clientIP)
 
+    // Get user email if userId is provided (for tracking credential users)
+    let credentialEmail = null;
+    if (userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, role: true }
+      });
+      
+      // Save email for credential users (EMPLOYEE role from credentials)
+      if (user && user.email) {
+        credentialEmail = user.email;
+      }
+    }
+
     // Create the response
     const response = await prisma.response.create({
       data: {
         surveyId: id,
         userId: userId || null,
+        credentialEmail: credentialEmail, // Track email for duplicate prevention
         demographics: demographics || {},
         nowScores,
         preferredScores,
@@ -47,8 +62,33 @@ export async function POST(
         consentGiven: consentGiven || false,
         consentTimestamp: consentGiven ? new Date() : null,
         consentVersion: survey.organization?.consentVersion || '1.0',
+        isComplete: true, // Mark as complete when submitted
       },
     })
+
+    // If this is an OCAI survey, trigger aggregation update
+    if (survey.assessmentType === 'OCAI' && survey.organizationId) {
+      try {
+        // Trigger aggregation update in the background
+        fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3010'}/api/ocai/update-aggregation`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': userId || 'system',
+          },
+          body: JSON.stringify({
+            organizationId: survey.organizationId,
+            surveyId: id
+          })
+        }).catch(error => {
+          console.error('Failed to trigger aggregation update:', error);
+          // Don't fail the main request if aggregation update fails
+        });
+      } catch (error) {
+        console.error('Error triggering aggregation update:', error);
+        // Don't fail the main request if aggregation update fails
+      }
+    }
 
     return NextResponse.json({
       success: true,

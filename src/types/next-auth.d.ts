@@ -5,7 +5,7 @@ declare module 'next-auth' {
     user: {
       id: string
       role: string
-      organizationId: string
+      organizationId: string | null
       organization?: {
         id: string
         name: string
@@ -14,14 +14,14 @@ declare module 'next-auth' {
         country?: string | null
         logoUrl?: string | null
         settings?: any
-      }
+      } | null
     } & DefaultSession['user']
   }
 
   interface User {
     id: string
     role: string
-    organizationId: string
+    organizationId: string | null
     organization?: {
       id: string
       name: string
@@ -30,6 +30,6 @@ declare module 'next-auth' {
       country?: string | null
       logoUrl?: string | null
       settings?: any
-    }
+    } | null
   }
 }

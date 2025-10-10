@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getUserId } from '@/lib/get-user-id'
 
 // GET single organization
 export async function GET(
@@ -51,12 +52,33 @@ export async function GET(
   }
 }
 
-// PATCH update organization
+// PATCH update organization (SYSTEM_ADMIN only)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check authentication - only SYSTEM_ADMIN can update organizations
+    const userId = await getUserId(request)
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    })
+
+    if (!user || user.role !== 'SYSTEM_ADMIN') {
+      return NextResponse.json(
+        { error: 'Forbidden - Only admins can update organizations' },
+        { status: 403 }
+      )
+    }
+
     const { id } = await params
     const body = await request.json()
 
