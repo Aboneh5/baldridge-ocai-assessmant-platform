@@ -45,6 +45,9 @@ export default function OCAIIntroPage() {
       }
 
       // FIXED: Instead of using localStorage, fetch actual survey from database
+      // Always clear any stale localStorage survey ID first
+      localStorage.removeItem('currentSurveyId')
+
       if (storedOrg || (storedUser && JSON.parse(storedUser).organizationId)) {
         try {
           const org = storedOrg ? JSON.parse(storedOrg) : null
@@ -52,22 +55,29 @@ export default function OCAIIntroPage() {
           const orgId = org?.id || user?.organizationId
 
           if (orgId) {
-            // Fetch existing OCAI survey for this organization
+            // Fetch existing OCAI survey for this organization from database
             const checkResponse = await fetch(`/api/surveys?organizationId=${orgId}&type=OCAI&status=OPEN`)
-            
+
             if (checkResponse.ok) {
               const checkData = await checkResponse.json()
-              
+
               if (checkData.surveys && checkData.surveys.length > 0) {
-                // Found existing survey - use it
+                // Found existing survey - use it and verify it exists
                 const existingSurvey = checkData.surveys[0]
-                console.log('Found existing OCAI survey:', existingSurvey.id)
-                setSurveyId(existingSurvey.id)
-                localStorage.setItem('currentSurveyId', existingSurvey.id)
+
+                // Verify the survey exists by fetching it directly
+                const verifyResponse = await fetch(`/api/surveys/${existingSurvey.id}`)
+                if (verifyResponse.ok) {
+                  console.log('Found and verified existing OCAI survey:', existingSurvey.id)
+                  setSurveyId(existingSurvey.id)
+                  localStorage.setItem('currentSurveyId', existingSurvey.id)
+                } else {
+                  console.log('Survey found in list but not accessible, will create new one')
+                  setSurveyId(null)
+                }
               } else {
                 // No survey found - clear old localStorage
                 console.log('No existing OCAI survey found, will create on button click')
-                localStorage.removeItem('currentSurveyId')
                 setSurveyId(null)
               }
             }
@@ -321,54 +331,60 @@ export default function OCAIIntroPage() {
           </Link>
           <button
             onClick={async () => {
-              if (surveyId) {
-                // Survey exists, proceed to it
-                router.push(`/surveys/${surveyId}/respond`)
-                return
-              }
-
-              // No survey in state - check if one exists or create one
               setCreatingAssessment(true)
 
               try {
                 const storedOrg = localStorage.getItem('organization')
                 const storedUser = localStorage.getItem('user')
 
-                if (!storedOrg) {
+                if (!storedOrg && !storedUser) {
                   alert('Organization information not found. Please sign in again.')
                   router.push('/auth/signin')
                   return
                 }
 
-                const org = JSON.parse(storedOrg)
+                const org = storedOrg ? JSON.parse(storedOrg) : null
                 const user = storedUser ? JSON.parse(storedUser) : null
+                const orgId = org?.id || user?.organizationId
 
-                // First, check if an OCAI survey already exists for this organization
-                const checkResponse = await fetch(`/api/surveys?organizationId=${org.id}&type=OCAI&status=OPEN`)
+                if (!orgId) {
+                  alert('Organization information not found. Please sign in again.')
+                  router.push('/auth/signin')
+                  return
+                }
+
+                // Always fetch fresh from database - check if an OCAI survey already exists
+                const checkResponse = await fetch(`/api/surveys?organizationId=${orgId}&type=OCAI&status=OPEN`)
 
                 if (checkResponse.ok) {
                   const checkData = await checkResponse.json()
 
                   if (checkData.surveys && checkData.surveys.length > 0) {
-                    // Use existing survey
+                    // Use existing survey - verify it's accessible
                     const existingSurvey = checkData.surveys[0]
-                    localStorage.setItem('currentSurveyId', existingSurvey.id)
-                    setSurveyId(existingSurvey.id)
-                    router.push(`/surveys/${existingSurvey.id}/respond`)
-                    return
+
+                    const verifyResponse = await fetch(`/api/surveys/${existingSurvey.id}`)
+                    if (verifyResponse.ok) {
+                      localStorage.setItem('currentSurveyId', existingSurvey.id)
+                      setSurveyId(existingSurvey.id)
+                      router.push(`/surveys/${existingSurvey.id}/respond`)
+                      return
+                    } else {
+                      console.error('Survey found but not accessible, will create new one')
+                    }
                   }
                 }
 
-                // No existing survey - create one for this organization
+                // No existing survey or survey not accessible - create one for this organization
                 const response = await fetch('/api/surveys', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    title: `${org.name} - OCAI Culture Assessment`,
+                    title: `${org?.name || 'Organization'} - OCAI Culture Assessment`,
                     description: 'Organizational Culture Assessment Instrument',
                     assessmentType: 'OCAI',
                     status: 'OPEN',
-                    organizationId: org.id,
+                    organizationId: orgId,
                     allowAnonymous: true,
                     requireOrgEmailDomain: false,
                   }),
@@ -386,7 +402,8 @@ export default function OCAIIntroPage() {
                   router.push(`/surveys/${newSurveyId}/respond`)
                 } else {
                   const error = await response.json()
-                  alert(error.message || 'Failed to create assessment. Please contact your administrator.')
+                  console.error('Survey creation error:', error)
+                  alert(error.error || error.message || 'Failed to create assessment. Please contact your administrator.')
                 }
               } catch (error) {
                 console.error('Error with OCAI survey:', error)

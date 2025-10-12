@@ -24,6 +24,8 @@ export async function GET(request: NextRequest) {
         where.status = status
       }
 
+      console.log('[Surveys API] Fetching surveys with filters:', where)
+
       const surveys = await prisma.survey.findMany({
         where,
         orderBy: { createdAt: 'desc' },
@@ -33,6 +35,8 @@ export async function GET(request: NextRequest) {
           },
         },
       })
+
+      console.log('[Surveys API] Found surveys:', surveys.length, surveys.map(s => ({ id: s.id, title: s.title, status: s.status })))
 
       return NextResponse.json({ surveys })
     }

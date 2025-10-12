@@ -198,8 +198,7 @@ function SignInContent() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
-                      placeholder="admin@tenadam.com"
+                      className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                     />
                     <Mail className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
                   </div>
@@ -218,8 +217,7 @@ function SignInContent() {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
-                      placeholder="••••••••"
+                      className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                     />
                     <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
                   </div>
@@ -248,14 +246,6 @@ function SignInContent() {
                     )}
                   </button>
                 </div>
-
-                <div className="mt-6 bg-teal-50 border border-teal-200 rounded-lg p-4">
-                  <p className="text-xs font-semibold text-teal-900 mb-2">Demo Credentials:</p>
-                  <div className="space-y-1 text-xs text-teal-800">
-                    <div>• <strong>Admin:</strong> admin@tenadam.com / admin123</div>
-                    <div>• <strong>Facilitator:</strong> facilitator@acme.com / facilitator123</div>
-                  </div>
-                </div>
               </form>
             ) : (
               <form onSubmit={handleAccessKeyLogin} className="space-y-6">
@@ -271,7 +261,7 @@ function SignInContent() {
                       required
                       value={accessKey}
                       onChange={(e) => setAccessKey(e.target.value.toUpperCase())}
-                      className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm uppercase font-mono tracking-wider"
+                      className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm uppercase font-mono tracking-wider"
                       placeholder="ACME2024"
                       maxLength={20}
                     />
@@ -293,7 +283,7 @@ function SignInContent() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                       placeholder="John Doe"
                     />
                   </div>
