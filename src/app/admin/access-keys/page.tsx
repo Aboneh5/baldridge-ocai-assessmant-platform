@@ -18,6 +18,8 @@ import {
   EyeOff,
   Calendar,
 } from 'lucide-react'
+import { useLocale } from '@/lib/i18n/context'
+import LanguageSwitcher from '@/components/localization/LanguageSwitcher'
 
 interface AccessKey {
   id: string
@@ -38,6 +40,7 @@ interface AccessKey {
 
 export default function AccessKeysPage() {
   const router = useRouter()
+  const { t } = useLocale()
   const [user, setUser] = useState<any>(null)
   const [accessKeys, setAccessKeys] = useState<AccessKey[]>([])
   const [loading, setLoading] = useState(true)
@@ -184,7 +187,7 @@ export default function AccessKeysPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -201,18 +204,19 @@ export default function AccessKeysPage() {
                 <Shield className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">System Administration</h1>
-                <p className="text-sm text-gray-600">Access Keys Management</p>
+                <h1 className="text-xl font-bold text-gray-900">{t('common.systemAdministration')}</h1>
+                <p className="text-sm text-gray-600">{t('accessKeys.title')}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">{user?.name}</span>
+              <LanguageSwitcher />
               <button
                 onClick={handleSignOut}
                 className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="text-sm font-medium">Sign Out</span>
+                <span className="text-sm font-medium">{t('nav.signOut')}</span>
               </button>
             </div>
           </div>
@@ -227,25 +231,25 @@ export default function AccessKeysPage() {
               href="/admin/dashboard"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Dashboard
+              {t('nav.dashboard')}
             </Link>
             <Link
               href="/admin/organizations"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Organizations
+              {t('nav.organizations')}
             </Link>
             <Link
               href="/admin/access-keys"
               className="border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600"
             >
-              Access Keys
+              {t('nav.accessKeys')}
             </Link>
             <Link
               href="/admin/users"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Users
+              {t('nav.users')}
             </Link>
           </nav>
         </div>
@@ -256,9 +260,9 @@ export default function AccessKeysPage() {
         {/* Actions Bar */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Access Keys</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{t('accessKeys.title')}</h2>
             <p className="text-sm text-gray-600 mt-1">
-              Manage organization access codes and permissions
+              {t('accessKeys.subtitle')}
             </p>
           </div>
           <Link
@@ -266,7 +270,7 @@ export default function AccessKeysPage() {
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
             <Plus className="w-5 h-5 mr-2" />
-            Generate Access Key
+            {t('accessKeys.generateNew')}
           </Link>
         </div>
 
@@ -278,7 +282,7 @@ export default function AccessKeysPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Search access keys..."
+                  placeholder={`${t('common.search')} ${t('nav.accessKeys').toLowerCase()}...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -294,7 +298,7 @@ export default function AccessKeysPage() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                All
+                {t('common.all')}
               </button>
               <button
                 onClick={() => setFilterActive('active')}
@@ -304,7 +308,7 @@ export default function AccessKeysPage() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                Active
+                {t('accessKeys.active')}
               </button>
               <button
                 onClick={() => setFilterActive('inactive')}
@@ -314,7 +318,7 @@ export default function AccessKeysPage() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                Inactive
+                {t('accessKeys.expired')}
               </button>
             </div>
           </div>

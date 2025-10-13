@@ -17,9 +17,12 @@ import {
   Bell,
   Globe,
 } from 'lucide-react'
+import { useLocale } from '@/lib/i18n/context'
+import LanguageSwitcher from '@/components/localization/LanguageSwitcher'
 
 export default function SettingsPage() {
   const router = useRouter()
+  const { t } = useLocale()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -83,7 +86,7 @@ export default function SettingsPage() {
       const updatedUser = { ...user, ...data.user }
       localStorage.setItem('user', JSON.stringify(updatedUser))
       setUser(updatedUser)
-      setSuccess('Profile updated successfully')
+      setSuccess(t('settings.profileUpdated'))
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -97,12 +100,12 @@ export default function SettingsPage() {
     setSuccess('')
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError('New passwords do not match')
+      setError(t('settings.passwordMismatch'))
       return
     }
 
     if (passwordData.newPassword.length < 6) {
-      setError('Password must be at least 6 characters')
+      setError(t('settings.passwordMinLength'))
       return
     }
 
@@ -123,7 +126,7 @@ export default function SettingsPage() {
         throw new Error(data.error || 'Failed to update password')
       }
 
-      setSuccess('Password updated successfully')
+      setSuccess(t('settings.passwordUpdated'))
       setPasswordData({
         currentPassword: '',
         newPassword: '',
@@ -160,18 +163,19 @@ export default function SettingsPage() {
                 <Shield className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">System Administration</h1>
-                <p className="text-sm text-gray-600">Settings</p>
+                <h1 className="text-xl font-bold text-gray-900">{t('common.systemAdministration')}</h1>
+                <p className="text-sm text-gray-600">{t('nav.settings')}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">{user?.name}</span>
+              <LanguageSwitcher />
               <button
                 onClick={handleSignOut}
                 className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="text-sm font-medium">Sign Out</span>
+                <span className="text-sm font-medium">{t('nav.signOut')}</span>
               </button>
             </div>
           </div>
@@ -186,37 +190,37 @@ export default function SettingsPage() {
               href="/admin/dashboard"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Dashboard
+              {t('nav.dashboard')}
             </Link>
             <Link
               href="/admin/organizations"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Organizations
+              {t('nav.organizations')}
             </Link>
             <Link
               href="/admin/access-keys"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Access Keys
+              {t('nav.accessKeys')}
             </Link>
             <Link
               href="/admin/users"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Users
+              {t('nav.users')}
             </Link>
             <Link
               href="/admin/surveys"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Surveys
+              {t('nav.surveys')}
             </Link>
             <Link
               href="/admin/settings"
               className="border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600"
             >
-              Settings
+              {t('nav.settings')}
             </Link>
           </nav>
         </div>
@@ -225,9 +229,9 @@ export default function SettingsPage() {
       {/* Main Content */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t('nav.settings')}</h2>
           <p className="text-sm text-gray-600 mt-1">
-            Manage your account and system preferences
+            {t('settings.subtitle')}
           </p>
         </div>
 
@@ -260,7 +264,7 @@ export default function SettingsPage() {
                   }`}
                 >
                   <User className="w-5 h-5 mr-3" />
-                  Profile
+                  {t('settings.profile')}
                 </button>
                 <button
                   onClick={() => setActiveTab('security')}
@@ -271,7 +275,7 @@ export default function SettingsPage() {
                   }`}
                 >
                   <Lock className="w-5 h-5 mr-3" />
-                  Security
+                  {t('settings.security')}
                 </button>
                 <button
                   onClick={() => setActiveTab('system')}
@@ -282,7 +286,7 @@ export default function SettingsPage() {
                   }`}
                 >
                   <Database className="w-5 h-5 mr-3" />
-                  System
+                  {t('settings.system')}
                 </button>
               </nav>
             </div>

@@ -4,7 +4,10 @@ import { useEffect, useRef } from 'react'
 import { Chart, registerables } from 'chart.js'
 import { OCAIScores, CULTURE_TYPES } from '@/lib/ocai-data'
 
-Chart.register(...registerables)
+// Register Chart.js components
+if (typeof window !== 'undefined') {
+  Chart.register(...registerables)
+}
 
 interface OCAIRadarChartProps {
   scores: OCAIScores

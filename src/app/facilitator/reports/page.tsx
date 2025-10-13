@@ -234,25 +234,34 @@ export default function FacilitatorReportsPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">OCAI</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-2">
-                      {reportData.byAssessmentType.OCAI.responses}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {reportData.byAssessmentType.OCAI.surveys} surveys
-                    </p>
+              <Link href="/ocai/results" className="block">
+                <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500 hover:shadow-lg transition-shadow">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">OCAI</p>
+                      <p className="text-3xl font-bold text-gray-900 mt-2">
+                        {reportData.byAssessmentType.OCAI.responses}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {reportData.byAssessmentType.OCAI.surveys} surveys
+                      </p>
+                    </div>
+                    <div className="p-3 bg-purple-50 rounded-lg">
+                      <BarChart3 className="w-8 h-8 text-purple-600" />
+                    </div>
                   </div>
-                  <div className="p-3 bg-purple-50 rounded-lg">
-                    <BarChart3 className="w-8 h-8 text-purple-600" />
-                  </div>
+                  {reportData.byAssessmentType.OCAI.responses > 0 && (
+                    <div className="pt-3 border-t border-gray-200">
+                      <span className="text-sm font-medium text-purple-600 hover:text-purple-700">
+                        View Results →
+                      </span>
+                    </div>
+                  )}
                 </div>
-              </div>
+              </Link>
 
               <div className="bg-white rounded-lg shadow p-6 border-l-4 border-orange-500">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-3">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Baldrige</p>
                     <p className="text-3xl font-bold text-gray-900 mt-2">
@@ -266,6 +275,19 @@ export default function FacilitatorReportsPage() {
                     <BarChart3 className="w-8 h-8 text-orange-600" />
                   </div>
                 </div>
+                {reportData.byAssessmentType.BALDRIGE.responses > 0 ? (
+                  <div className="pt-3 border-t border-gray-200">
+                    <p className="text-xs text-gray-500">
+                      Contact your administrator to export Baldrige responses
+                    </p>
+                  </div>
+                ) : (
+                  <div className="pt-3 border-t border-gray-200">
+                    <p className="text-xs text-gray-400">
+                      No responses available
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

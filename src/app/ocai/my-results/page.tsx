@@ -144,6 +144,8 @@ export default function MyOCAIResultsPage() {
   };
 
   const radarOptions = {
+    responsive: true,
+    maintainAspectRatio: true,
     scales: {
       r: {
         beginAtZero: true,
@@ -288,8 +290,14 @@ export default function MyOCAIResultsPage() {
               <span>Preferred</span>
             </div>
           </div>
-          <div className="max-w-2xl mx-auto">
-            {chartData && <Radar ref={radarChartRef} data={chartData} options={radarOptions} />}
+          <div className="w-full max-w-2xl mx-auto" style={{ height: '400px' }}>
+            {chartData ? (
+              <Radar ref={radarChartRef} data={chartData} options={radarOptions} />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                Loading chart...
+              </div>
+            )}
           </div>
         </div>
 

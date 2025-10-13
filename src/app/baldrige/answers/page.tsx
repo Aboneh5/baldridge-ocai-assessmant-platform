@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CheckCircle, FileText } from 'lucide-react';
 import Link from 'next/link';
+import { useLocale } from '@/lib/i18n/context';
+import { getLocalizedBaldrigeQuestionText } from '@/lib/baldrige-data';
+import LanguageSwitcher from '@/components/localization/LanguageSwitcher';
 
 interface BaldrigeResponse {
   questionId: string;
@@ -16,10 +19,24 @@ interface BaldrigeResponse {
 
 export default function BaldrigeAnswersPage() {
   const router = useRouter();
+  const { t, locale, translations } = useLocale();
   const [responses, setResponses] = useState<BaldrigeResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [organization, setOrganization] = useState<any>(null);
+
+  // Helper function to get localized category name
+  const getCategoryName = useCallback((name: string) => {
+    return translations?.categoryNames?.[name] || name;
+  }, [translations]);
+
+  // Helper function to get localized question text
+  const getQuestionText = useCallback((itemCode: string, fallbackText: string) => {
+    if (translations?.questions?.[itemCode]) {
+      return translations.questions[itemCode];
+    }
+    return fallbackText;
+  }, [translations]);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -65,7 +82,7 @@ export default function BaldrigeAnswersPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your responses...</p>
+          <p className="mt-4 text-gray-600">{t('assessment.loadingAssessment')}</p>
         </div>
       </div>
     );
@@ -82,17 +99,20 @@ export default function BaldrigeAnswersPage() {
                 <FileText className="w-6 h-6 text-emerald-600" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Your Baldrige Responses</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{t('baldrigeAnswers.title')}</h1>
                 <p className="text-sm text-gray-600">{organization?.name}</p>
               </div>
             </div>
-            <Link
-              href="/employee/assessments"
-              className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to Assessments</span>
-            </Link>
+            <div className="flex items-center space-x-4">
+              <LanguageSwitcher />
+              <Link
+                href="/employee/assessments"
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>{t('baldrigeIntro.backToAssessments')}</span>
+              </Link>
+            </div>
           </div>
         </div>
       </header>
@@ -104,9 +124,9 @@ export default function BaldrigeAnswersPage() {
           <div className="flex items-center space-x-3">
             <CheckCircle className="w-8 h-8 text-emerald-600" />
             <div>
-              <h2 className="text-lg font-semibold text-emerald-900">Assessment Completed!</h2>
+              <h2 className="text-lg font-semibold text-emerald-900">{t('baldrigeAnswers.completed')}</h2>
               <p className="text-emerald-700 text-sm">
-                You have successfully submitted your Baldrige Excellence Assessment. Your responses are shown below.
+                {t('baldrigeAnswers.completedDesc')}
               </p>
             </div>
           </div>
@@ -116,15 +136,15 @@ export default function BaldrigeAnswersPage() {
         {Object.keys(groupedResponses).length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
             <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Responses Found</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('baldrigeAnswers.noResponses')}</h3>
             <p className="text-gray-600 mb-6">
-              You haven't submitted any Baldrige assessment responses yet.
+              {t('baldrigeAnswers.noResponsesDesc')}
             </p>
             <Link
               href="/assessments/baldrige"
               className="inline-flex items-center px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
             >
-              Start Assessment
+              {t('baldrigeIntro.startAssessment')}
             </Link>
           </div>
         ) : (
@@ -132,8 +152,8 @@ export default function BaldrigeAnswersPage() {
             {Object.entries(groupedResponses).map(([category, categoryResponses]) => (
               <div key={category} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                 <div className="bg-emerald-50 border-b border-emerald-100 px-6 py-4">
-                  <h3 className="text-lg font-bold text-gray-900">{category}</h3>
-                  <p className="text-sm text-gray-600">{categoryResponses.length} questions answered</p>
+                  <h3 className="text-lg font-bold text-gray-900">{getCategoryName(category)}</h3>
+                  <p className="text-sm text-gray-600">{categoryResponses.length} {t('baldrigeAnswers.questionsAnswered')}</p>
                 </div>
 
                 <div className="p-6 space-y-6">
@@ -145,9 +165,9 @@ export default function BaldrigeAnswersPage() {
                         </span>
                         <div className="flex-1">
                           <p className="text-sm font-medium text-emerald-600 mb-1">{response.itemCode}</p>
-                          <p className="text-gray-900 font-medium mb-3">{response.questionText}</p>
+                          <p className="text-gray-900 font-medium mb-3">{getQuestionText(response.itemCode, response.questionText)}</p>
                           <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <p className="text-sm font-medium text-gray-700 mb-2">Your Response:</p>
+                            <p className="text-sm font-medium text-gray-700 mb-2">{t('baldrigeAnswers.yourResponse')}</p>
                             <p className="text-gray-700 whitespace-pre-wrap">{response.responseText}</p>
                           </div>
                         </div>
@@ -166,7 +186,7 @@ export default function BaldrigeAnswersPage() {
             href="/employee/assessments"
             className="px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
           >
-            Back to Dashboard
+            {t('assessment.returnToDashboard')}
           </Link>
           {/* Future: Add Print/Export PDF button */}
         </div>

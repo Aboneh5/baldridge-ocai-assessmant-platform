@@ -17,6 +17,8 @@ import {
   FileText,
   AlertCircle,
 } from 'lucide-react'
+import LanguageSwitcher from '@/components/localization/LanguageSwitcher'
+import { useLocale } from '@/lib/i18n/context'
 
 interface DashboardStats {
   totalOrganizations: number
@@ -30,6 +32,7 @@ interface DashboardStats {
 
 export default function AdminDashboardPage() {
   const router = useRouter()
+  const { t } = useLocale()
   const [user, setUser] = useState<any>(null)
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -76,7 +79,7 @@ export default function AdminDashboardPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -84,40 +87,40 @@ export default function AdminDashboardPage() {
 
   const quickActions = [
     {
-      title: 'Create Organization',
-      description: 'Add a new client organization',
+      title: t('dashboard.createOrganization'),
+      description: t('dashboard.createOrgDesc'),
       icon: <Building2 className="w-6 h-6" />,
       href: '/admin/organizations/new',
       color: 'bg-blue-500',
       hoverColor: 'hover:bg-blue-600',
     },
     {
-      title: 'Upload Credentials',
-      description: 'Bulk email/password upload',
+      title: t('dashboard.uploadCredentials'),
+      description: t('dashboard.uploadCredDesc'),
       icon: <Users className="w-6 h-6" />,
       href: '/admin/assessment-credentials',
       color: 'bg-indigo-500',
       hoverColor: 'hover:bg-indigo-600',
     },
     {
-      title: 'Generate Access Key',
-      description: 'Create new access codes',
+      title: t('dashboard.generateAccessKey'),
+      description: t('dashboard.generateKeyDesc'),
       icon: <Key className="w-6 h-6" />,
       href: '/admin/access-keys/new',
       color: 'bg-green-500',
       hoverColor: 'hover:bg-green-600',
     },
     {
-      title: 'OCAI Results',
-      description: 'View org-wide culture analysis',
+      title: t('dashboard.ocaiResults'),
+      description: t('dashboard.ocaiResultsDesc'),
       icon: <BarChart3 className="w-6 h-6" />,
       href: '/ocai/results',
       color: 'bg-purple-500',
       hoverColor: 'hover:bg-purple-600',
     },
     {
-      title: 'Baldrige Responses',
-      description: 'View excellence assessments',
+      title: t('dashboard.baldrigeResponses'),
+      description: t('dashboard.baldrigeDesc'),
       icon: <FileText className="w-6 h-6" />,
       href: '/admin/baldrige',
       color: 'bg-emerald-500',
@@ -136,20 +139,21 @@ export default function AdminDashboardPage() {
                 <Shield className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">System Administration</h1>
-                <p className="text-sm text-gray-600">Tenadam Assessment Hub</p>
+                <h1 className="text-xl font-bold text-gray-900">{t('common.systemAdministration')}</h1>
+                <p className="text-sm text-gray-600">{t('common.tenadamAssessmentHub')}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
                 {user?.name}
               </span>
+              <LanguageSwitcher />
               <button
                 onClick={handleSignOut}
                 className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="text-sm font-medium">Sign Out</span>
+                <span className="text-sm font-medium">{t('nav.signOut')}</span>
               </button>
             </div>
           </div>
@@ -164,55 +168,55 @@ export default function AdminDashboardPage() {
               href="/admin/dashboard"
               className="border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600"
             >
-              Dashboard
+              {t('nav.dashboard')}
             </Link>
             <Link
               href="/admin/organizations"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Organizations
+              {t('nav.organizations')}
             </Link>
             <Link
               href="/admin/access-keys"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Access Keys
+              {t('nav.accessKeys')}
             </Link>
             <Link
               href="/admin/assessment-credentials"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Credentials
+              {t('nav.credentials')}
             </Link>
             <Link
               href="/admin/users"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Users
+              {t('nav.users')}
             </Link>
             <Link
               href="/admin/ocai"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              OCAI
+              {t('nav.ocai')}
             </Link>
             <Link
               href="/admin/baldrige"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Baldrige
+              {t('nav.baldrige')}
             </Link>
             <Link
               href="/admin/surveys"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Surveys
+              {t('nav.surveys')}
             </Link>
             <Link
               href="/admin/settings"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Settings
+              {t('nav.settings')}
             </Link>
           </nav>
         </div>
@@ -225,12 +229,12 @@ export default function AdminDashboardPage() {
           <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Organizations</p>
+                <p className="text-sm font-medium text-gray-600">{t('nav.organizations')}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">
                   {stats?.totalOrganizations || 0}
                 </p>
                 <p className="text-xs text-green-600 mt-1">
-                  {stats?.activeOrganizations || 0} active
+                  {stats?.activeOrganizations || 0} {t('organizations.active').toLowerCase()}
                 </p>
               </div>
               <div className="p-3 bg-blue-50 rounded-lg">
@@ -242,11 +246,11 @@ export default function AdminDashboardPage() {
           <div className="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
+                <p className="text-sm font-medium text-gray-600">{t('dashboard.totalUsers')}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">
                   {stats?.totalUsers || 0}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">All roles</p>
+                <p className="text-xs text-gray-500 mt-1">{t('organizations.allRoles')}</p>
               </div>
               <div className="p-3 bg-green-50 rounded-lg">
                 <Users className="w-8 h-8 text-green-600" />
@@ -257,12 +261,12 @@ export default function AdminDashboardPage() {
           <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Access Keys</p>
+                <p className="text-sm font-medium text-gray-600">{t('nav.accessKeys')}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">
                   {stats?.totalAccessKeys || 0}
                 </p>
                 <p className="text-xs text-green-600 mt-1">
-                  {stats?.activeAccessKeys || 0} active
+                  {stats?.activeAccessKeys || 0} {t('accessKeys.active').toLowerCase()}
                 </p>
               </div>
               <div className="p-3 bg-purple-50 rounded-lg">
@@ -274,12 +278,12 @@ export default function AdminDashboardPage() {
           <div className="bg-white rounded-lg shadow p-6 border-l-4 border-orange-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Responses</p>
+                <p className="text-sm font-medium text-gray-600">{t('dashboard.totalResponses')}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">
                   {stats?.totalResponses || 0}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {stats?.totalSurveys || 0} surveys
+                  {stats?.totalSurveys || 0} {t('nav.surveys').toLowerCase()}
                 </p>
               </div>
               <div className="p-3 bg-orange-50 rounded-lg">
@@ -291,7 +295,7 @@ export default function AdminDashboardPage() {
 
         {/* Quick Actions */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('dashboard.quickActions')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {quickActions.map((action, index) => (
               <Link
@@ -317,22 +321,22 @@ export default function AdminDashboardPage() {
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Recent Organizations</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.recentOrganizations')}</h3>
                 <Link href="/admin/organizations" className="text-sm text-blue-600 hover:text-blue-700">
-                  View all →
+                  {t('dashboard.viewAll')} →
                 </Link>
               </div>
             </div>
             <div className="p-6">
               <div className="text-center py-8 text-gray-500">
                 <Building2 className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                <p className="text-sm">No recent organizations</p>
+                <p className="text-sm">{t('dashboard.noRecentOrganizations')}</p>
                 <Link
                   href="/admin/organizations/new"
                   className="inline-flex items-center mt-4 text-sm text-blue-600 hover:text-blue-700"
                 >
                   <Plus className="w-4 h-4 mr-1" />
-                  Create first organization
+                  {t('dashboard.createFirstOrg')}
                 </Link>
               </div>
             </div>
@@ -341,36 +345,36 @@ export default function AdminDashboardPage() {
           {/* System Status */}
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">System Status</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.systemStatus')}</h3>
             </div>
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-700">Database</span>
+                  <span className="text-sm text-gray-700">{t('dashboard.database')}</span>
                 </div>
-                <span className="text-sm font-medium text-green-600">Operational</span>
+                <span className="text-sm font-medium text-green-600">{t('dashboard.operational')}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-700">API Services</span>
+                  <span className="text-sm text-gray-700">{t('dashboard.apiServices')}</span>
                 </div>
-                <span className="text-sm font-medium text-green-600">Operational</span>
+                <span className="text-sm font-medium text-green-600">{t('dashboard.operational')}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-700">Authentication</span>
+                  <span className="text-sm text-gray-700">{t('dashboard.authentication')}</span>
                 </div>
-                <span className="text-sm font-medium text-green-600">Operational</span>
+                <span className="text-sm font-medium text-green-600">{t('dashboard.operational')}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-700">File Storage</span>
+                  <span className="text-sm text-gray-700">{t('dashboard.fileStorage')}</span>
                 </div>
-                <span className="text-sm font-medium text-green-600">Operational</span>
+                <span className="text-sm font-medium text-green-600">{t('dashboard.operational')}</span>
               </div>
             </div>
           </div>

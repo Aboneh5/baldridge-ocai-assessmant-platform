@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
+import LanguageSwitcher from '@/components/localization/LanguageSwitcher'
 
 export function AssessmentHubNav() {
   const pathname = usePathname()
@@ -25,7 +26,7 @@ export function AssessmentHubNav() {
               <span className="text-sm font-medium">Back</span>
             </button>
           </div>
-          
+
           <div className="flex items-center space-x-6 text-sm">
             <span className="text-teal-100">
               Currently in: <span className="font-semibold">
@@ -34,6 +35,7 @@ export function AssessmentHubNav() {
                  pathname?.includes('/assessment') ? 'Assessment' : 'OCAI Hub'}
               </span>
             </span>
+            <LanguageSwitcher />
           </div>
         </div>
       </div>

@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { OCAI_DIMENSIONS, OCAIResponse, validateOCAIResponse, calculateOCAIScores, OCAIScores } from '@/lib/ocai-data'
+import { useState, useEffect, useMemo } from 'react'
+import { getLocalizedOCAIDimensions, OCAIResponse, validateOCAIResponse, calculateOCAIScores, OCAIScores } from '@/lib/ocai-data'
 import { OCAIDimensionInput } from './ocai-dimension-input'
 import { OCAIHelpPanel } from './ocai-help-panel'
 import { OCAIResults } from './ocai-results'
+import { useLocale } from '@/lib/i18n/context'
 
 interface Demographics {
   department?: string
@@ -22,6 +23,14 @@ interface OCAIQuestionnaireProps {
 }
 
 export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnaireProps) {
+  const { t, locale } = useLocale()
+  const OCAI_DIMENSIONS = useMemo(() => {
+    console.log(`OCAI: Generating dimensions for locale: ${locale}`)
+    const dims = getLocalizedOCAIDimensions(t)
+    console.log(`OCAI: First dimension title: ${dims[0]?.title}`)
+    return dims
+  }, [t, locale])
+  
   const [currentPhase, setCurrentPhase] = useState<'now' | 'preferred' | 'demographics' | 'results'>('now')
   const [currentDimension, setCurrentDimension] = useState(0)
   const [responses, setResponses] = useState<OCAIResponse[]>([])
@@ -49,7 +58,7 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
       }))
       setResponses(initialResponses)
     }
-  }, [surveyId])
+  }, [surveyId, OCAI_DIMENSIONS])
 
   // Save progress to localStorage and server whenever state changes
   useEffect(() => {
@@ -248,9 +257,9 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Main Content */}
-        <div className={`lg:col-span-2 transition-all duration-300 ease-in-out ${
+        <div className={`lg:col-span-3 transition-all duration-300 ease-in-out ${
           isTransitioning ? 'opacity-0 transform translate-x-4' : 'opacity-100 transform translate-x-0'
         }`}>
           {currentPhase === 'demographics' ? (

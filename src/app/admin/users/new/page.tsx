@@ -57,10 +57,22 @@ export default function NewUserPage() {
 
   const loadOrganizations = async () => {
     try {
-      const response = await fetch('/api/admin/organizations')
+      const storedUser = localStorage.getItem('user')
+      if (!storedUser) return
+
+      const user = JSON.parse(storedUser)
+
+      const response = await fetch('/api/admin/organizations', {
+        headers: {
+          'x-user-id': user.id,
+        },
+      })
+
       if (response.ok) {
         const data = await response.json()
-        setOrganizations(data.organizations)
+        setOrganizations(data.organizations || [])
+      } else {
+        console.error('Failed to load organizations:', response.status)
       }
     } catch (error) {
       console.error('Failed to load organizations:', error)
@@ -90,9 +102,21 @@ export default function NewUserPage() {
     setLoading(true)
 
     try {
+      const storedUser = localStorage.getItem('user')
+      if (!storedUser) {
+        setError('Authentication required')
+        setLoading(false)
+        return
+      }
+
+      const currentUser = JSON.parse(storedUser)
+
       const response = await fetch('/api/admin/users', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': currentUser.id,
+        },
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,

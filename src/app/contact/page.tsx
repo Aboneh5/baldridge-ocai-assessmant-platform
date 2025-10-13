@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, MapPin, Phone, Mail, Clock, Send, MessageCircle, Building2, Users, Globe, CheckCircle, AlertCircle } from "lucide-react";
 import { useState } from "react";
+import LanguageSwitcher from "@/components/localization/LanguageSwitcher";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -85,13 +86,16 @@ export default function ContactPage() {
                 <p className="text-sm text-teal-700 font-medium">by Tenadam Training, Consultancy & Research PLC</p>
               </div>
             </div>
-            <Link
-              href="/"
-              className="flex items-center space-x-2 px-4 py-2 text-teal-700 hover:text-teal-800 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to Home</span>
-            </Link>
+            <div className="flex items-center space-x-4">
+              <LanguageSwitcher />
+              <Link
+                href="/"
+                className="flex items-center space-x-2 px-4 py-2 text-teal-700 hover:text-teal-800 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Home</span>
+              </Link>
+            </div>
           </div>
         </div>
       </header>

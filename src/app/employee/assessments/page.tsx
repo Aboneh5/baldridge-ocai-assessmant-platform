@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { BarChart3, Target, Award, CheckCircle, ArrowRight, LogOut, Eye, PlayCircle } from 'lucide-react'
 import { getAllAssessmentStatuses, AssessmentProgress } from '@/lib/assessment-progress'
+import { useLocale } from '@/lib/i18n/context'
+import LanguageSwitcher from '@/components/localization/LanguageSwitcher'
 
 interface Organization {
   id: string
@@ -27,6 +29,7 @@ interface AssessmentOption {
 function EmployeeAssessmentsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { t } = useLocale()
   const [organization, setOrganization] = useState<Organization | null>(null)
   const [assessmentTypes, setAssessmentTypes] = useState<string[]>([])
   const [user, setUser] = useState<any>(null)
@@ -183,9 +186,9 @@ function EmployeeAssessmentsContent() {
   const assessmentOptions: AssessmentOption[] = [
     {
       type: 'OCAI',
-      title: 'OCAI Culture Assessment',
-      description: 'Assess your organization\'s culture across 6 key dimensions using the Competing Values Framework.',
-      duration: '15-20 minutes',
+      title: t('employee.ocaiTitle'),
+      description: t('employee.ocaiDescription'),
+      duration: t('employee.ocaiDuration'),
       icon: <Target className="w-8 h-8" />,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
@@ -193,9 +196,9 @@ function EmployeeAssessmentsContent() {
     },
     {
       type: 'BALDRIGE',
-      title: 'Baldrige Excellence Assessment',
-      description: 'Evaluate organizational excellence across 7 categories with the comprehensive Baldrige framework.',
-      duration: '45-60 minutes',
+      title: t('employee.baldrigeTitle'),
+      description: t('employee.baldrigeDescription'),
+      duration: t('employee.baldrigeDuration'),
       icon: <Award className="w-8 h-8" />,
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-50',
@@ -213,7 +216,7 @@ function EmployeeAssessmentsContent() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -246,16 +249,19 @@ function EmployeeAssessmentsContent() {
               )}
               <div>
                 <h1 className="text-xl font-bold text-gray-900">{organization?.name}</h1>
-                <p className="text-sm text-gray-600">Assessment Portal</p>
+                <p className="text-sm text-gray-600">{t('employee.assessmentPortal')}</p>
               </div>
             </div>
-            <button
-              onClick={handleSignOut}
-              className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="text-sm font-medium">Sign Out</span>
-            </button>
+            <div className="flex items-center space-x-4">
+              <LanguageSwitcher />
+              <button
+                onClick={handleSignOut}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="text-sm font-medium">{t('nav.signOut')}</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -265,10 +271,10 @@ function EmployeeAssessmentsContent() {
         {/* Welcome Section */}
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-3">
-            Welcome, {user?.name}!
+            {t('employee.welcome', { name: user?.name })}
           </h2>
           <p className="text-lg text-gray-600">
-            Select an assessment below to begin. Your responses will help {organization?.name} improve and grow.
+            {t('employee.selectAssessment', { org: organization?.name || '' })}
           </p>
         </div>
 
@@ -319,20 +325,20 @@ function EmployeeAssessmentsContent() {
                   return (
                     <span className="flex items-center space-x-2 text-green-600 font-medium group-hover:text-green-700">
                       <Eye className="w-4 h-4" />
-                      <span>{assessment.type === 'OCAI' ? 'View Results' : 'View Answers'}</span>
+                      <span>{assessment.type === 'OCAI' ? t('employee.viewResults') : t('employee.viewAnswers')}</span>
                     </span>
                   )
                 } else if (isInProgress) {
                   return (
                     <span className="flex items-center space-x-2 text-blue-600 font-medium group-hover:text-blue-700">
                       <PlayCircle className="w-4 h-4" />
-                      <span>Continue ({progressPercent}%)</span>
+                      <span>{t('employee.continue')} ({progressPercent}%)</span>
                     </span>
                   )
                 } else {
                   return (
                     <span className="flex items-center space-x-2 text-blue-600 font-medium group-hover:text-blue-700">
-                      <span>Start Assessment</span>
+                      <span>{t('employee.startAssessment')}</span>
                       <ArrowRight className="w-4 h-4" />
                     </span>
                   )
@@ -350,7 +356,7 @@ function EmployeeAssessmentsContent() {
                   <div className="absolute top-4 right-4">
                     <div className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center space-x-1">
                       <CheckCircle className="w-3 h-3" />
-                      <span>Completed</span>
+                      <span>{t('employee.completed')}</span>
                     </div>
                   </div>
                 )}
@@ -368,7 +374,7 @@ function EmployeeAssessmentsContent() {
                 {isInProgress && (
                   <div className="mb-4">
                     <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                      <span>Progress</span>
+                      <span>{t('employee.progress')}</span>
                       <span>{progressPercent}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
@@ -391,7 +397,7 @@ function EmployeeAssessmentsContent() {
           </div>
         ) : (
           <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">
-            <p className="text-gray-600">No assessments available with your access key.</p>
+            <p className="text-gray-600">{t('employee.noAssessments')}</p>
           </div>
         )}
 
@@ -400,13 +406,13 @@ function EmployeeAssessmentsContent() {
           <div className="flex items-start space-x-3">
             <CheckCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-blue-900 mb-2">Important Information</h4>
+              <h4 className="font-semibold text-blue-900 mb-2">{t('employee.importantInfo')}</h4>
               <ul className="space-y-1 text-sm text-blue-800">
-                <li>• <strong>Each assessment can only be taken once</strong> - no retakes allowed</li>
-                <li>• Your responses are confidential and will be aggregated with others</li>
-                <li>• You can complete assessments in one sitting or return later (auto-save enabled)</li>
-                <li>• Answer honestly - there are no right or wrong answers</li>
-                <li>• Once completed, you can view your results but cannot change answers</li>
+                <li>• {t('employee.infoOnce')}</li>
+                <li>• {t('employee.infoConfidential')}</li>
+                <li>• {t('employee.infoAutoSave')}</li>
+                <li>• {t('employee.infoHonest')}</li>
+                <li>• {t('employee.infoCompleted')}</li>
               </ul>
             </div>
           </div>
@@ -416,16 +422,21 @@ function EmployeeAssessmentsContent() {
   )
 }
 
+function SuspenseFallback() {
+  const { t } = useLocale()
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">{t('employee.loadingAssessments')}</p>
+      </div>
+    </div>
+  )
+}
+
 export default function EmployeeAssessmentsPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading assessments...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<SuspenseFallback />}>
       <EmployeeAssessmentsContent />
     </Suspense>
   )

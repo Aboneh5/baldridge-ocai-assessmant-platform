@@ -8,6 +8,8 @@ import * as XLSX from 'xlsx';
 import { OCAIRadarChart } from '@/components/ocai/ocai-radar-chart';
 import { OCAIBarChart } from '@/components/ocai/ocai-bar-chart';
 import type { OCAIScores } from '@/lib/ocai-data';
+import { useLocale } from '@/lib/i18n/context';
+import LanguageSwitcher from '@/components/localization/LanguageSwitcher';
 
 interface OCAIResponse {
   id: string;
@@ -49,6 +51,7 @@ interface ResponseData {
 
 export default function AdminOCAIPage() {
   const router = useRouter();
+  const { t } = useLocale();
   const [user, setUser] = useState<any>(null);
   const [data, setData] = useState<OrganizationData[]>([]);
   const [summary, setSummary] = useState<any>(null);
@@ -300,8 +303,8 @@ export default function AdminOCAIPage() {
                 <BarChart3 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">OCAI Assessment Data</h1>
-                <p className="text-sm text-gray-600">Organizational Culture Assessment Instrument</p>
+                <h1 className="text-xl font-bold text-gray-900">{t('assessments.ocaiTitle')}</h1>
+                <p className="text-sm text-gray-600">{t('ocai.subtitle')}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -310,29 +313,30 @@ export default function AdminOCAIPage() {
                 className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
                 <BarChart3 className="w-4 h-4" />
-                <span className="text-sm font-medium">View Results</span>
+                <span className="text-sm font-medium">{t('assessments.viewResponses')}</span>
               </Link>
               <button
                 onClick={exportAllToCSV}
                 className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
               >
                 <Download className="w-4 h-4" />
-                <span className="text-sm font-medium">Export All CSV</span>
+                <span className="text-sm font-medium">{t('common.export')} CSV</span>
               </button>
               <button
                 onClick={exportAllToExcel}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <FileSpreadsheet className="w-4 h-4" />
-                <span className="text-sm font-medium">Export All Excel</span>
+                <span className="text-sm font-medium">{t('assessments.exportExcel')}</span>
               </button>
               <span className="text-sm text-gray-600">{user?.name}</span>
+              <LanguageSwitcher />
               <button
                 onClick={handleSignOut}
                 className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="text-sm font-medium">Sign Out</span>
+                <span className="text-sm font-medium">{t('nav.signOut')}</span>
               </button>
             </div>
           </div>
@@ -347,37 +351,37 @@ export default function AdminOCAIPage() {
               href="/admin/dashboard"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Dashboard
+              {t('nav.dashboard')}
             </Link>
             <Link
               href="/admin/organizations"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Organizations
+              {t('nav.organizations')}
             </Link>
             <Link
               href="/admin/ocai"
               className="border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600"
             >
-              OCAI Responses
+              {t('assessments.ocai')}
             </Link>
             <Link
               href="/admin/baldrige"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Baldrige Responses
+              {t('assessments.baldrige')}
             </Link>
             <Link
               href="/admin/surveys"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Surveys
+              {t('nav.surveys')}
             </Link>
             <Link
               href="/admin/settings"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Settings
+              {t('nav.settings')}
             </Link>
           </nav>
         </div>
@@ -390,7 +394,7 @@ export default function AdminOCAIPage() {
           <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Organizations</p>
+                <p className="text-sm font-medium text-gray-600">{t('nav.organizations')}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{summary?.totalOrganizations || 0}</p>
               </div>
               <div className="p-3 bg-blue-50 rounded-lg">
@@ -402,7 +406,7 @@ export default function AdminOCAIPage() {
           <div className="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Completed Assessments</p>
+                <p className="text-sm font-medium text-gray-600">{t('assessments.completedAssessments')}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{summary?.totalUsers || 0}</p>
               </div>
               <div className="p-3 bg-green-50 rounded-lg">
@@ -414,7 +418,7 @@ export default function AdminOCAIPage() {
           <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Responses</p>
+                <p className="text-sm font-medium text-gray-600">{t('assessments.totalResponses')}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{summary?.totalResponses || 0}</p>
               </div>
               <div className="p-3 bg-purple-50 rounded-lg">
@@ -429,8 +433,8 @@ export default function AdminOCAIPage() {
           {data.length === 0 ? (
             <div className="bg-white rounded-lg shadow p-12 text-center">
               <BarChart3 className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-600 text-lg">No OCAI assessments completed yet</p>
-              <p className="text-gray-500 text-sm mt-2">Completed assessments will appear here</p>
+              <p className="text-gray-600 text-lg">{t('assessments.noResponses')}</p>
+              <p className="text-gray-500 text-sm mt-2">{t('assessments.noResponsesDesc')}</p>
             </div>
           ) : (
             data.map(org => (
@@ -450,7 +454,7 @@ export default function AdminOCAIPage() {
                       <Building2 className="w-6 h-6 text-blue-600" />
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">{org.organizationName}</h3>
-                        <p className="text-sm text-gray-600">{org.totalUsers} completed assessment(s)</p>
+                        <p className="text-sm text-gray-600">{org.totalUsers} {t('assessments.completedAssessments').toLowerCase()}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -481,17 +485,20 @@ export default function AdminOCAIPage() {
                 {/* Organization Users */}
                 {expandedOrgs.has(org.organizationId) && (
                   <div className="p-6 space-y-6">
-                    {/* Organization Aggregate Section */}
-                    {org.users.length > 1 && (
-                      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border-2 border-purple-200 p-6">
+                    {/* Organization Aggregate Section - Always Show */}
+                    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border-2 border-purple-200 p-6">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
                               <BarChart3 className="w-6 h-6 text-white" />
                             </div>
                             <div>
-                              <h3 className="text-lg font-bold text-purple-900">Organization Aggregate</h3>
-                              <p className="text-sm text-purple-700">Average of {org.users.length} assessment(s)</p>
+                              <h3 className="text-lg font-bold text-purple-900">Organization-Wide Aggregate Results</h3>
+                              <p className="text-sm text-purple-700">
+                                {org.users.length === 1
+                                  ? 'Mean average from 1 assessment (showing aggregate view for consistency)'
+                                  : `Mean average from ${org.users.length} assessments`}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -652,19 +659,16 @@ export default function AdminOCAIPage() {
                             </>
                           );
                         })()}
-                      </div>
-                    )}
+                    </div>
 
                     {/* Divider */}
-                    {org.users.length > 1 && (
-                      <div className="border-t-2 border-purple-200 my-6">
-                        <div className="text-center -mt-3">
-                          <span className="bg-gray-50 px-4 py-1 text-sm font-medium text-purple-700">
-                            Individual Assessments
-                          </span>
-                        </div>
+                    <div className="border-t-2 border-purple-200 my-6">
+                      <div className="text-center -mt-3">
+                        <span className="bg-gray-50 px-4 py-1 text-sm font-medium text-purple-700">
+                          Individual Assessments
+                        </span>
                       </div>
-                    )}
+                    </div>
 
                     {org.users.map(user => (
                       <div key={user.userId} className="border border-gray-200 rounded-lg">

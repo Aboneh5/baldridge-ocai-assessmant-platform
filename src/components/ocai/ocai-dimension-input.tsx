@@ -73,16 +73,16 @@ export function OCAIDimensionInput({ dimension, phase, response, onChange }: OCA
         <p className="text-gray-600 mb-4">{dimension.description}</p>
       </div>
 
-      <div className="max-h-[600px] overflow-y-auto space-y-4 pr-2 border border-gray-200 rounded-lg p-4 bg-gray-50">
+      <div className="max-h-[600px] overflow-y-auto space-y-6 pr-2 border border-gray-200 rounded-lg p-6 bg-gray-50">
         {Object.entries(dimension.options).map(([key, option]) => (
-          <div key={key} className="border border-gray-200 rounded-lg p-4 bg-white">
-            <div className="flex items-start space-x-4">
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-gray-900">
+          <div key={key} className="border border-gray-200 rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-start space-x-6">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-semibold text-gray-900 text-lg">
                     Option {key}: {option.culture}
                   </span>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-3">
                     <input
                       type="number"
                       min="0"
@@ -90,12 +90,12 @@ export function OCAIDimensionInput({ dimension, phase, response, onChange }: OCA
                       value={values[key as keyof typeof values]}
                       onChange={(e) => updateValue(key as 'A' | 'B' | 'C' | 'D', parseInt(e.target.value) || 0)}
                       onKeyDown={(e) => handleKeyDown(key as 'A' | 'B' | 'C' | 'D', e)}
-                      className="w-20 px-2 py-1 border border-gray-300 rounded text-center text-gray-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-24 px-3 py-2 border border-gray-300 rounded text-center text-gray-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                     />
-                    <span className="text-sm text-gray-500">%</span>
+                    <span className="text-lg text-gray-500 font-medium">%</span>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600">{option.text}</p>
+                <p className="text-base text-gray-700 leading-relaxed">{option.text}</p>
               </div>
             </div>
           </div>

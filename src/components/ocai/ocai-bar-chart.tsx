@@ -4,7 +4,10 @@ import { useEffect, useRef } from 'react'
 import { Chart, registerables } from 'chart.js'
 import { OCAIScores, CULTURE_TYPES } from '@/lib/ocai-data'
 
-Chart.register(...registerables)
+// Register Chart.js components
+if (typeof window !== 'undefined') {
+  Chart.register(...registerables)
+}
 
 interface OCAIBarChartProps {
   scores: OCAIScores
@@ -29,7 +32,15 @@ export function OCAIBarChart({ scores }: OCAIBarChartProps) {
     const deltaValues = Object.values(scores.delta)
     const colors = cultureTypes.map(type => CULTURE_TYPES[type as keyof typeof CULTURE_TYPES].color)
 
-    chartRef.current = new Chart(ctx, {
+    console.log('OCAI Bar Chart Data:', {
+      cultureTypes,
+      deltaValues,
+      colors,
+      scores
+    })
+
+    try {
+      chartRef.current = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: cultureTypes,
@@ -98,6 +109,9 @@ export function OCAIBarChart({ scores }: OCAIBarChartProps) {
         }
       }
     })
+    } catch (error) {
+      console.error('Error creating OCAI bar chart:', error)
+    }
 
     return () => {
       if (chartRef.current) {
@@ -107,8 +121,12 @@ export function OCAIBarChart({ scores }: OCAIBarChartProps) {
   }, [scores])
 
   return (
-    <div className="relative h-80">
-      <canvas ref={canvasRef} />
+    <div className="relative h-80 w-full">
+      <canvas 
+        ref={canvasRef} 
+        className="w-full h-full"
+        style={{ width: '100%', height: '100%' }}
+      />
     </div>
   )
 }

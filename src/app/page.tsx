@@ -3,9 +3,12 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { BarChart3, CheckCircle, Users, Building2, TrendingUp, Shield, Target, Award } from 'lucide-react'
+import LanguageSwitcher from '@/components/localization/LanguageSwitcher'
+import { useLocale } from '@/lib/i18n/context'
 
 export default function HomePage() {
   const router = useRouter()
+  const { t } = useLocale()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50">
@@ -39,33 +42,35 @@ export default function HomePage() {
                 href="/about"
                 className="text-gray-700 hover:text-teal-600 font-medium transition-colors duration-200 relative group"
               >
-                About
+                {t('nav.about')}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-teal-600 transition-all duration-200 group-hover:w-full"></span>
               </Link>
               <Link
                 href="/contact"
                 className="text-gray-700 hover:text-teal-600 font-medium transition-colors duration-200 relative group"
               >
-                Contact
+                {t('nav.contact')}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-teal-600 transition-all duration-200 group-hover:w-full"></span>
               </Link>
               <div className="h-6 w-px bg-gray-300"></div>
+              <LanguageSwitcher />
               <Link
                 href="/auth/signin"
                 className="relative group px-6 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 overflow-hidden"
               >
-                <span className="relative z-10">Sign In</span>
+                <span className="relative z-10">{t('nav.signIn')}</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-teal-700 to-emerald-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </Link>
             </nav>
 
             {/* Mobile Menu Button */}
-            <div className="md:hidden animate-fade-in-up animation-delay-400">
+            <div className="md:hidden flex items-center space-x-3 animate-fade-in-up animation-delay-400">
+              <LanguageSwitcher />
               <Link
                 href="/auth/signin"
                 className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
               >
-                Sign In
+                {t('nav.signIn')}
               </Link>
             </div>
           </div>
@@ -77,21 +82,20 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-bold text-gray-900 mb-6 animate-fade-in-up">
-              Transform Your Organization with
+              {t('home.hero.title1')}
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-teal-700 to-emerald-600 mt-2 animate-gradient animate-float">
-                Data-Driven Assessments
+                {t('home.hero.title2')}
               </span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed animate-fade-in-up animation-delay-200">
-              A comprehensive assessment platform designed by Tenadam Training, Consultancy & Research PLC 
-              to help organizations assess culture, performance, and excellence. Powered by proven frameworks including OCAI and Baldrige.
+              {t('home.hero.description')}
             </p>
             <div className="mt-10 animate-fade-in-up animation-delay-400">
               <Link
                 href="/auth/signin"
                 className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-teal-700 to-emerald-600 text-white text-lg font-medium rounded-lg hover:from-teal-800 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 transform"
               >
-                Get Started
+                {t('home.hero.cta')}
                 <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
@@ -105,7 +109,7 @@ export default function HomePage() {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h3 className="text-3xl font-bold text-center text-gray-900 mb-12 animate-fade-in-up">
-            Powerful Features for Organizations
+            {t('home.features.title')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Feature 1 */}
@@ -113,9 +117,9 @@ export default function HomePage() {
               <div className="w-12 h-12 bg-teal-800 rounded-lg flex items-center justify-center mb-4 group-hover:bg-teal-900 transition-all duration-300 hover:rotate-12 hover:scale-110 transform">
                 <Users className="w-6 h-6 text-white group-hover:animate-pulse" />
               </div>
-              <h4 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-teal-800 transition-colors duration-300">Multi-User Access</h4>
+              <h4 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-teal-800 transition-colors duration-300">{t('home.features.multiUser.title')}</h4>
               <p className="text-gray-600 group-hover:text-gray-700 transition-colors duration-300">
-                System administrators, facilitators, and employees - each with tailored access and permissions.
+                {t('home.features.multiUser.description')}
               </p>
             </div>
 
@@ -124,9 +128,9 @@ export default function HomePage() {
               <div className="w-12 h-12 bg-emerald-700 rounded-lg flex items-center justify-center mb-4 group-hover:bg-emerald-800 transition-all duration-300 hover:rotate-12 hover:scale-110 transform">
                 <Building2 className="w-6 h-6 text-white group-hover:animate-pulse" />
               </div>
-              <h4 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-emerald-800 transition-colors duration-300">Organization Management</h4>
+              <h4 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-emerald-800 transition-colors duration-300">{t('home.features.orgManagement.title')}</h4>
               <p className="text-gray-600 group-hover:text-gray-700 transition-colors duration-300">
-                Create and manage multiple organizations with custom branding and assessment access.
+                {t('home.features.orgManagement.description')}
               </p>
             </div>
 
@@ -135,9 +139,9 @@ export default function HomePage() {
               <div className="w-12 h-12 bg-teal-700 rounded-lg flex items-center justify-center mb-4 group-hover:bg-teal-800 transition-all duration-300 hover:rotate-12 hover:scale-110 transform">
                 <Shield className="w-6 h-6 text-white group-hover:animate-pulse" />
               </div>
-              <h4 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-teal-800 transition-colors duration-300">Secure Access Keys</h4>
+              <h4 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-teal-800 transition-colors duration-300">{t('home.features.secureKeys.title')}</h4>
               <p className="text-gray-600 group-hover:text-gray-700 transition-colors duration-300">
-                Generate unique access codes for employees to participate in assessments anonymously and securely.
+                {t('home.features.secureKeys.description')}
               </p>
             </div>
 
@@ -146,9 +150,9 @@ export default function HomePage() {
               <div className="w-12 h-12 bg-teal-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-teal-700 transition-all duration-300 hover:rotate-12 hover:scale-110 transform">
                 <TrendingUp className="w-6 h-6 text-white group-hover:animate-pulse" />
               </div>
-              <h4 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-teal-700 transition-colors duration-300">Real-Time Analytics</h4>
+              <h4 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-teal-700 transition-colors duration-300">{t('home.features.analytics.title')}</h4>
               <p className="text-gray-600 group-hover:text-gray-700 transition-colors duration-300">
-                Track participation, view aggregate results, and gain insights with comprehensive reporting tools.
+                {t('home.features.analytics.description')}
               </p>
             </div>
 
@@ -157,9 +161,9 @@ export default function HomePage() {
               <div className="w-12 h-12 bg-teal-500 rounded-lg flex items-center justify-center mb-4 group-hover:bg-teal-600 transition-all duration-300 hover:rotate-12 hover:scale-110 transform">
                 <Target className="w-6 h-6 text-white group-hover:animate-pulse" />
               </div>
-              <h4 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-teal-600 transition-colors duration-300">OCAI Assessment</h4>
+              <h4 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-teal-600 transition-colors duration-300">{t('home.features.ocai.title')}</h4>
               <p className="text-gray-600 group-hover:text-gray-700 transition-colors duration-300">
-                Measure organizational culture across 6 dimensions using the proven Competing Values Framework.
+                {t('home.features.ocai.description')}
               </p>
             </div>
 
@@ -168,9 +172,9 @@ export default function HomePage() {
               <div className="w-12 h-12 bg-teal-400 rounded-lg flex items-center justify-center mb-4 group-hover:bg-teal-500 transition-all duration-300 hover:rotate-12 hover:scale-110 transform">
                 <Award className="w-6 h-6 text-white group-hover:animate-pulse" />
               </div>
-              <h4 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-teal-500 transition-colors duration-300">Baldrige Framework</h4>
+              <h4 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-emerald-700 transition-colors duration-300">{t('home.features.baldrige.title')}</h4>
               <p className="text-gray-600 group-hover:text-gray-700 transition-colors duration-300">
-                Assess organizational excellence across 7 categories with the 1000-point Baldrige system.
+                {t('home.features.baldrige.description')}
               </p>
             </div>
           </div>
@@ -181,34 +185,34 @@ export default function HomePage() {
       <section className="py-16 bg-gradient-to-br from-teal-50 to-emerald-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h3 className="text-3xl font-bold text-center text-gray-900 mb-12 animate-fade-in-up">
-            How It Works
+            {t('home.howItWorks.title')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center animate-fade-in-up animation-delay-200 hover:scale-105 transition-transform duration-300">
               <div className="w-16 h-16 bg-teal-700 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4 hover:bg-teal-800 transition-colors duration-300 hover:rotate-12 transform">
                 1
               </div>
-              <h4 className="text-xl font-semibold text-gray-900 mb-2">Sign In</h4>
+              <h4 className="text-xl font-semibold text-gray-900 mb-2">{t('home.howItWorks.step1.title')}</h4>
               <p className="text-gray-600">
-                Administrators and facilitators sign in with credentials. Employees use secure access keys.
+                {t('home.howItWorks.step1.description')}
               </p>
             </div>
             <div className="text-center animate-fade-in-up animation-delay-400 hover:scale-105 transition-transform duration-300">
               <div className="w-16 h-16 bg-emerald-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4 hover:bg-emerald-700 transition-colors duration-300 hover:rotate-12 transform">
                 2
               </div>
-              <h4 className="text-xl font-semibold text-gray-900 mb-2">Take Assessment</h4>
+              <h4 className="text-xl font-semibold text-gray-900 mb-2">{t('home.howItWorks.step2.title')}</h4>
               <p className="text-gray-600">
-                Choose from available assessments (OCAI, Baldrige) and complete them at your own pace.
+                {t('home.howItWorks.step2.description')}
               </p>
             </div>
             <div className="text-center animate-fade-in-up animation-delay-600 hover:scale-105 transition-transform duration-300">
               <div className="w-16 h-16 bg-slate-700 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4 hover:bg-slate-800 transition-colors duration-300 hover:rotate-12 transform">
                 3
               </div>
-              <h4 className="text-xl font-semibold text-gray-900 mb-2">View Results</h4>
+              <h4 className="text-xl font-semibold text-gray-900 mb-2">{t('home.howItWorks.step3.title')}</h4>
               <p className="text-gray-600">
-                Access comprehensive reports, aggregate data, and actionable insights for your organization.
+                {t('home.howItWorks.step3.description')}
               </p>
             </div>
           </div>
@@ -219,16 +223,16 @@ export default function HomePage() {
       <section className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h3 className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in-up">
-            Ready to Transform Your Organization?
+            {t('home.cta.title')}
           </h3>
           <p className="text-xl text-gray-600 mb-8 animate-fade-in-up animation-delay-200">
-            Join organizations worldwide using Tenadam's assessment platform to drive meaningful change and organizational excellence.
+            {t('home.cta.description')}
           </p>
           <Link
             href="/auth/signin"
             className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-teal-700 to-emerald-600 text-white text-lg font-medium rounded-lg hover:from-teal-800 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 transform animate-fade-in-up animation-delay-400"
           >
-            Get Started Today
+            {t('home.cta.button')}
             <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
@@ -251,30 +255,30 @@ export default function HomePage() {
                     className="object-contain hover:scale-110 transition-transform duration-300"
                   />
                 </div>
-                <span className="text-xl font-bold">Assessment Hub</span>
+                <span className="text-xl font-bold">{t('app.name')}</span>
               </div>
               <p className="text-gray-400">
-                Empowering organizations through data-driven assessments and insights.
+                {t('footer.tagline')}
               </p>
             </div>
             <div className="animate-fade-in-up animation-delay-400">
-              <h4 className="text-lg font-semibold mb-4">Platform</h4>
+              <h4 className="text-lg font-semibold mb-4">{t('footer.platform')}</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><Link href="/auth/signin" className="hover:text-white transition-colors hover:translate-x-1 transform inline-block">Sign In</Link></li>
-                <li><Link href="/about" className="hover:text-white transition-colors hover:translate-x-1 transform inline-block">About Us</Link></li>
-                <li><Link href="/contact" className="hover:text-white transition-colors hover:translate-x-1 transform inline-block">Contact</Link></li>
+                <li><Link href="/auth/signin" className="hover:text-white transition-colors hover:translate-x-1 transform inline-block">{t('nav.signIn')}</Link></li>
+                <li><Link href="/about" className="hover:text-white transition-colors hover:translate-x-1 transform inline-block">{t('nav.about')}</Link></li>
+                <li><Link href="/contact" className="hover:text-white transition-colors hover:translate-x-1 transform inline-block">{t('nav.contact')}</Link></li>
               </ul>
             </div>
             <div className="animate-fade-in-up animation-delay-600">
-              <h4 className="text-lg font-semibold mb-4">Legal</h4>
+              <h4 className="text-lg font-semibold mb-4">{t('footer.legal')}</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><Link href="/privacy" className="hover:text-white transition-colors hover:translate-x-1 transform inline-block">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="hover:text-white transition-colors hover:translate-x-1 transform inline-block">Terms of Service</Link></li>
+                <li><Link href="/privacy" className="hover:text-white transition-colors hover:translate-x-1 transform inline-block">{t('nav.privacy')}</Link></li>
+                <li><Link href="/terms" className="hover:text-white transition-colors hover:translate-x-1 transform inline-block">{t('nav.terms')}</Link></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 text-center text-gray-400 animate-fade-in-up animation-delay-800">
-            <p>&copy; 2024 Tenadam Training, Consultancy & Research PLC. All rights reserved.</p>
+            <p>{t('footer.copyright', { year: new Date().getFullYear() })}</p>
           </div>
       </div>
       </footer>

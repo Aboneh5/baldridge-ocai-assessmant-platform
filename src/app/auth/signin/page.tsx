@@ -4,11 +4,14 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Mail, Lock, Key, AlertCircle, Loader2 } from 'lucide-react'
+import { useLocale } from '@/lib/i18n/context'
+import LanguageSwitcher from '@/components/localization/LanguageSwitcher'
 
 type LoginMode = 'credentials' | 'accesskey'
 
 function SignInContent() {
   const searchParams = useSearchParams()
+  const { t } = useLocale()
   const [mode, setMode] = useState<LoginMode>('credentials')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -123,21 +126,24 @@ function SignInContent() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link href="/" className="flex items-center space-x-3">
-            <div className="w-10 h-10 flex items-center justify-center">
-              <img
-                src="/tenadam-logo.png"
-                alt="Tenadam Logo"
-                width={40}
-                height={40}
-                className="object-contain"
-              />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Assessment Hub</h1>
-              <p className="text-xs text-teal-700 font-medium">by Tenadam Training, Consultancy & Research PLC</p>
-            </div>
-          </Link>
+          <div className="flex justify-between items-center">
+            <Link href="/" className="flex items-center space-x-3">
+              <div className="w-10 h-10 flex items-center justify-center">
+                <img
+                  src="/tenadam-logo.png"
+                  alt="Tenadam Logo"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">{t('app.name')}</h1>
+                <p className="text-xs text-teal-700 font-medium">by Tenadam Training, Consultancy & Research PLC</p>
+              </div>
+            </Link>
+            <LanguageSwitcher />
+          </div>
         </div>
       </header>
 
@@ -145,10 +151,10 @@ function SignInContent() {
       <div className="flex-1 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <h2 className="text-center text-3xl font-extrabold text-gray-900 mb-2">
-            Welcome Back
+            {t('signin.title')}
           </h2>
           <p className="text-center text-sm text-gray-600">
-            Sign in to access Tenadam's comprehensive assessment platform
+            {t('signin.subtitle')}
           </p>
         </div>
 
@@ -165,7 +171,7 @@ function SignInContent() {
                 }`}
               >
                 <Mail className="w-4 h-4 inline mr-2" />
-                Email & Password
+                {t('signin.tabEmailPassword')}
               </button>
               <button
                 onClick={() => setMode('accesskey')}
@@ -176,7 +182,7 @@ function SignInContent() {
                 }`}
               >
                 <Key className="w-4 h-4 inline mr-2" />
-                Access Key
+                {t('signin.tabAccessKey')}
               </button>
             </div>
           </div>
@@ -187,7 +193,7 @@ function SignInContent() {
               <form onSubmit={handleCredentialLogin} className="space-y-6">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                    Email address
+                    {t('signin.email')}
                   </label>
                   <div className="mt-1 relative">
                     <input
@@ -206,7 +212,7 @@ function SignInContent() {
 
                 <div>
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                    Password
+                    {t('signin.password')}
                   </label>
                   <div className="mt-1 relative">
                     <input
@@ -239,10 +245,10 @@ function SignInContent() {
                     {isLoading ? (
                       <>
                         <Loader2 className="animate-spin w-5 h-5 mr-2" />
-                        Signing in...
+                        {t('common.loading')}
                       </>
                     ) : (
-                      'Sign in'
+                      t('signin.submit')
                     )}
                   </button>
                 </div>
@@ -251,7 +257,7 @@ function SignInContent() {
               <form onSubmit={handleAccessKeyLogin} className="space-y-6">
                 <div>
                   <label htmlFor="accessKey" className="block text-sm font-medium text-gray-700">
-                    Access Key
+                    {t('accessKey.title')}
                   </label>
                   <div className="mt-1 relative">
                     <input
@@ -268,13 +274,13 @@ function SignInContent() {
                     <Key className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
                   </div>
                   <p className="mt-1 text-xs text-gray-500">
-                    Enter the access code provided by your organization
+                    {t('accessKey.description')}
                   </p>
                 </div>
 
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                    Your Name <span className="text-gray-400 font-normal">(optional)</span>
+                    {t('common.name')} <span className="text-gray-400 font-normal">(optional)</span>
                   </label>
                   <div className="mt-1">
                     <input
@@ -308,10 +314,10 @@ function SignInContent() {
                     {isLoading ? (
                       <>
                         <Loader2 className="animate-spin w-5 h-5 mr-2" />
-                        Validating...
+                        {t('common.loading')}
                       </>
                     ) : (
-                      'Continue'
+                      t('accessKey.submit')
                     )}
                   </button>
                 </div>
@@ -330,7 +336,7 @@ function SignInContent() {
           {/* Back to home */}
           <div className="mt-6 text-center">
             <Link href="/" className="text-sm text-teal-700 hover:text-teal-800 font-medium">
-              ← Back to home
+              ← {t('signin.backToHome')}
             </Link>
           </div>
         </div>
@@ -345,7 +351,7 @@ export default function SignInPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-700 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading sign in...</p>
+          <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
     }>

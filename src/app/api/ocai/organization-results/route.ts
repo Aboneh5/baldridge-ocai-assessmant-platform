@@ -111,35 +111,40 @@ export async function GET(request: NextRequest) {
     // Calculate organization-wide aggregate (mean)
     const aggregate = calculateOrganizationAggregate(responses);
 
-    // Get individual results
-    const individualResults = responses.map(response => {
-      const nowScores = typeof response.nowScores === 'string'
-        ? JSON.parse(response.nowScores)
-        : response.nowScores;
+    // Get individual results - ONLY for SYSTEM_ADMIN
+    // Facilitators should only see aggregate data to protect employee privacy
+    let individualResults: any[] = [];
 
-      const preferredScores = typeof response.preferredScores === 'string'
-        ? JSON.parse(response.preferredScores)
-        : response.preferredScores;
+    if (user.role === 'SYSTEM_ADMIN') {
+      individualResults = responses.map(response => {
+        const nowScores = typeof response.nowScores === 'string'
+          ? JSON.parse(response.nowScores)
+          : response.nowScores;
 
-      return {
-        responseId: response.id,
-        userId: response.user?.id,
-        userName: response.user?.name || 'Anonymous',
-        userEmail: response.user?.email || 'N/A',
-        accessKey: response.user?.accessKeyUsed || 'N/A',
-        surveyId: response.survey?.id,
-        surveyTitle: response.survey?.title || 'Individual Assessment',
-        submittedAt: response.submittedAt,
-        nowScores,
-        preferredScores,
-        delta: {
-          Clan: round(preferredScores.clan - nowScores.clan),
-          Adhocracy: round(preferredScores.adhocracy - nowScores.adhocracy),
-          Market: round(preferredScores.market - nowScores.market),
-          Hierarchy: round(preferredScores.hierarchy - nowScores.hierarchy),
-        },
-      };
-    });
+        const preferredScores = typeof response.preferredScores === 'string'
+          ? JSON.parse(response.preferredScores)
+          : response.preferredScores;
+
+        return {
+          responseId: response.id,
+          userId: response.user?.id,
+          userName: response.user?.name || 'Anonymous',
+          userEmail: response.user?.email || 'N/A',
+          accessKey: response.user?.accessKeyUsed || 'N/A',
+          surveyId: response.survey?.id,
+          surveyTitle: response.survey?.title || 'Individual Assessment',
+          submittedAt: response.submittedAt,
+          nowScores,
+          preferredScores,
+          delta: {
+            Clan: round(preferredScores.clan - nowScores.clan),
+            Adhocracy: round(preferredScores.adhocracy - nowScores.adhocracy),
+            Market: round(preferredScores.market - nowScores.market),
+            Hierarchy: round(preferredScores.hierarchy - nowScores.hierarchy),
+          },
+        };
+      });
+    }
 
     return NextResponse.json({
       success: true,

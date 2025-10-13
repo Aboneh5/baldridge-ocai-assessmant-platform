@@ -37,6 +37,32 @@ export interface OCAIScores {
   }
 }
 
+// Helper function to get localized OCAI dimensions
+// t: translation function from useLocale hook
+export function getLocalizedOCAIDimensions(t: (key: string) => string): OCAIDimension[] {
+  const dimensionIds = [
+    'dominant_characteristics',
+    'leadership', 
+    'management_employees',
+    'organization_glue',
+    'strategic_emphases',
+    'criteria_success'
+  ];
+
+  return dimensionIds.map(id => ({
+    id,
+    title: t(`questionDimensions.${id}.title`),
+    description: t(`questionDimensions.${id}.description`),
+    options: {
+      A: { text: t(`questionDimensions.${id}.optionA`), culture: 'Clan' as const },
+      B: { text: t(`questionDimensions.${id}.optionB`), culture: 'Adhocracy' as const },
+      C: { text: t(`questionDimensions.${id}.optionC`), culture: 'Market' as const },
+      D: { text: t(`questionDimensions.${id}.optionD`), culture: 'Hierarchy' as const }
+    }
+  }));
+}
+
+// Default English dimensions (for backward compatibility)
 export const OCAI_DIMENSIONS: OCAIDimension[] = [
   {
     id: 'dominant_characteristics',
@@ -106,6 +132,33 @@ export const OCAI_DIMENSIONS: OCAIDimension[] = [
   }
 ]
 
+// Helper function to get localized culture types
+export function getLocalizedCultureTypes(t: (key: string) => string) {
+  return {
+    Clan: {
+      name: `${t('dimensions.clan.name')} (${t('dimensions.clan.subtitle')})`,
+      description: t('cultureDescriptions.clan.fullDescription'),
+      color: '#3B82F6'
+    },
+    Adhocracy: {
+      name: `${t('dimensions.adhocracy.name')} (${t('dimensions.adhocracy.subtitle')})`,
+      description: t('cultureDescriptions.adhocracy.fullDescription'),
+      color: '#10B981'
+    },
+    Market: {
+      name: `${t('dimensions.market.name')} (${t('dimensions.market.subtitle')})`,
+      description: t('cultureDescriptions.market.fullDescription'),
+      color: '#F59E0B'
+    },
+    Hierarchy: {
+      name: `${t('dimensions.hierarchy.name')} (${t('dimensions.hierarchy.subtitle')})`,
+      description: t('cultureDescriptions.hierarchy.fullDescription'),
+      color: '#EF4444'
+    }
+  };
+}
+
+// Default English culture types (for backward compatibility)
 export const CULTURE_TYPES = {
   Clan: {
     name: 'Clan (Collaborate)',

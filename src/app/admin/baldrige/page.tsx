@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Download, Building2, Users, FileText, LogOut, Shield, ChevronDown, ChevronRight, FileSpreadsheet } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { useLocale } from '@/lib/i18n/context';
+import LanguageSwitcher from '@/components/localization/LanguageSwitcher';
 import { 
   generateAllBaldrigeQuestions, 
   generateBaldrigeExcelHeaders, 
@@ -59,6 +61,7 @@ interface ResponseData {
 
 export default function AdminBaldrigePage() {
   const router = useRouter();
+  const { t } = useLocale();
   const [user, setUser] = useState<any>(null);
   const [data, setData] = useState<OrganizationData[]>([]);
   const [summary, setSummary] = useState<any>(null);
@@ -258,7 +261,7 @@ export default function AdminBaldrigePage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading Baldrige data...</p>
+          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -275,8 +278,8 @@ export default function AdminBaldrigePage() {
                 <Shield className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Baldrige Assessment Data</h1>
-                <p className="text-sm text-gray-600">Tenadam Assessment Hub</p>
+                <h1 className="text-xl font-bold text-gray-900">{t('assessments.baldrigeTitle')}</h1>
+                <p className="text-sm text-gray-600">{t('common.tenadamAssessmentHub')}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -285,22 +288,23 @@ export default function AdminBaldrigePage() {
                 className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
               >
                 <Download className="w-4 h-4" />
-                <span className="text-sm font-medium">Export All CSV (97 Q)</span>
+                <span className="text-sm font-medium">{t('common.export')} CSV (97 Q)</span>
               </button>
               <button
                 onClick={exportAllToExcel}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <FileSpreadsheet className="w-4 h-4" />
-                <span className="text-sm font-medium">Export All (97 Questions)</span>
+                <span className="text-sm font-medium">{t('assessments.exportExcel')} (97 Questions)</span>
               </button>
               <span className="text-sm text-gray-600">{user?.name}</span>
+              <LanguageSwitcher />
               <button
                 onClick={handleSignOut}
                 className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="text-sm font-medium">Sign Out</span>
+                <span className="text-sm font-medium">{t('nav.signOut')}</span>
               </button>
             </div>
           </div>
@@ -315,37 +319,37 @@ export default function AdminBaldrigePage() {
               href="/admin/dashboard"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Dashboard
+              {t('nav.dashboard')}
             </Link>
             <Link
               href="/admin/organizations"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Organizations
+              {t('nav.organizations')}
             </Link>
             <Link
               href="/admin/ocai"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              OCAI Responses
+              {t('assessments.ocai')}
             </Link>
             <Link
               href="/admin/baldrige"
               className="border-b-2 border-emerald-500 py-4 px-1 text-sm font-medium text-emerald-600"
             >
-              Baldrige Responses
+              {t('assessments.baldrige')}
             </Link>
             <Link
               href="/admin/surveys"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Surveys
+              {t('nav.surveys')}
             </Link>
             <Link
               href="/admin/settings"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Settings
+              {t('nav.settings')}
             </Link>
           </nav>
         </div>
@@ -358,7 +362,7 @@ export default function AdminBaldrigePage() {
           <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Organizations</p>
+                <p className="text-sm font-medium text-gray-600">{t('nav.organizations')}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{summary?.totalOrganizations || 0}</p>
               </div>
               <div className="p-3 bg-blue-50 rounded-lg">
@@ -370,7 +374,7 @@ export default function AdminBaldrigePage() {
           <div className="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Completed Assessments</p>
+                <p className="text-sm font-medium text-gray-600">{t('assessments.completedAssessments')}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{summary?.totalUsers || 0}</p>
               </div>
               <div className="p-3 bg-green-50 rounded-lg">
@@ -382,7 +386,7 @@ export default function AdminBaldrigePage() {
           <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Responses</p>
+                <p className="text-sm font-medium text-gray-600">{t('assessments.totalResponses')}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{summary?.totalResponses || 0}</p>
               </div>
               <div className="p-3 bg-purple-50 rounded-lg">
@@ -397,8 +401,8 @@ export default function AdminBaldrigePage() {
           {data.length === 0 ? (
             <div className="bg-white rounded-lg shadow p-12 text-center">
               <FileText className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-600 text-lg">No Baldrige assessments completed yet</p>
-              <p className="text-gray-500 text-sm mt-2">Completed assessments will appear here</p>
+              <p className="text-gray-600 text-lg">{t('assessments.noResponses')}</p>
+              <p className="text-gray-500 text-sm mt-2">{t('assessments.noResponsesDesc')}</p>
             </div>
           ) : (
             data.map(org => (

@@ -16,6 +16,8 @@ import {
   UserCog,
   User,
 } from 'lucide-react'
+import { useLocale } from '@/lib/i18n/context'
+import LanguageSwitcher from '@/components/localization/LanguageSwitcher'
 
 interface User {
   id: string
@@ -32,6 +34,7 @@ interface User {
 
 export default function UsersPage() {
   const router = useRouter()
+  const { t } = useLocale()
   const [user, setUser] = useState<any>(null)
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -57,10 +60,22 @@ export default function UsersPage() {
 
   const loadUsers = async () => {
     try {
-      const response = await fetch('/api/admin/users')
+      const storedUser = localStorage.getItem('user')
+      if (!storedUser) return
+
+      const user = JSON.parse(storedUser)
+
+      const response = await fetch('/api/admin/users', {
+        headers: {
+          'x-user-id': user.id,
+        },
+      })
+
       if (response.ok) {
         const data = await response.json()
-        setUsers(data.users)
+        setUsers(data.users || [])
+      } else {
+        console.error('Failed to load users:', response.status)
       }
     } catch (error) {
       console.error('Failed to load users:', error)
@@ -75,8 +90,16 @@ export default function UsersPage() {
     }
 
     try {
+      const storedUser = localStorage.getItem('user')
+      if (!storedUser) return
+
+      const currentUser = JSON.parse(storedUser)
+
       const response = await fetch(`/api/admin/users/${id}`, {
         method: 'DELETE',
+        headers: {
+          'x-user-id': currentUser.id,
+        },
       })
 
       if (response.ok) {
@@ -136,7 +159,7 @@ export default function UsersPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -153,18 +176,19 @@ export default function UsersPage() {
                 <Shield className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">System Administration</h1>
-                <p className="text-sm text-gray-600">Users Management</p>
+                <h1 className="text-xl font-bold text-gray-900">{t('common.systemAdministration')}</h1>
+                <p className="text-sm text-gray-600">{t('users.subtitle')}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">{user?.name}</span>
+              <LanguageSwitcher />
               <button
                 onClick={handleSignOut}
                 className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="text-sm font-medium">Sign Out</span>
+                <span className="text-sm font-medium">{t('nav.signOut')}</span>
               </button>
             </div>
           </div>
@@ -179,25 +203,25 @@ export default function UsersPage() {
               href="/admin/dashboard"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Dashboard
+              {t('nav.dashboard')}
             </Link>
             <Link
               href="/admin/organizations"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Organizations
+              {t('nav.organizations')}
             </Link>
             <Link
               href="/admin/access-keys"
               className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              Access Keys
+              {t('nav.accessKeys')}
             </Link>
             <Link
               href="/admin/users"
               className="border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600"
             >
-              Users
+              {t('nav.users')}
             </Link>
           </nav>
         </div>
@@ -208,9 +232,9 @@ export default function UsersPage() {
         {/* Actions Bar */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Users</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{t('users.title')}</h2>
             <p className="text-sm text-gray-600 mt-1">
-              Manage system users and facilitators
+              {t('users.subtitle')}
             </p>
           </div>
           <Link
@@ -218,7 +242,7 @@ export default function UsersPage() {
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
             <Plus className="w-5 h-5 mr-2" />
-            Create User
+            {t('users.newUser')}
           </Link>
         </div>
 
@@ -230,7 +254,7 @@ export default function UsersPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Search users..."
+                  placeholder={t('common.search') + ' ' + t('users.title').toLowerCase() + '...'}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -246,7 +270,7 @@ export default function UsersPage() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                All
+                {t('common.all')}
               </button>
               <button
                 onClick={() => setFilterRole('SYSTEM_ADMIN')}
@@ -256,7 +280,7 @@ export default function UsersPage() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                Admins
+                {t('users.roles.systemAdmin')}
               </button>
               <button
                 onClick={() => setFilterRole('FACILITATOR')}
@@ -266,7 +290,7 @@ export default function UsersPage() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                Facilitators
+                {t('users.roles.facilitator')}
               </button>
               <button
                 onClick={() => setFilterRole('EMPLOYEE')}
@@ -276,7 +300,7 @@ export default function UsersPage() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                Employees
+                {t('users.roles.employee')}
               </button>
             </div>
           </div>
@@ -287,12 +311,12 @@ export default function UsersPage() {
           <div className="bg-white rounded-lg shadow p-12 text-center">
             <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {searchTerm ? 'No users found' : 'No users yet'}
+              {searchTerm ? t('users.noUsersFound') : t('users.noUsers')}
             </h3>
             <p className="text-gray-600 mb-6">
               {searchTerm
-                ? 'Try adjusting your search or filters'
-                : 'Create your first user to get started'}
+                ? t('organizations.tryAdjust')
+                : t('users.createFirst')}
             </p>
             {!searchTerm && (
               <Link
@@ -300,7 +324,7 @@ export default function UsersPage() {
                 className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
                 <Plus className="w-5 h-5 mr-2" />
-                Create User
+                {t('users.newUser')}
               </Link>
             )}
           </div>
@@ -310,22 +334,22 @@ export default function UsersPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User
+                    {t('users.name')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
+                    {t('users.email')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Role
+                    {t('users.role')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Organization
+                    {t('users.organization')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Last Login
+                    {t('users.lastLogin')}
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    {t('common.actions')}
                   </th>
                 </tr>
               </thead>
@@ -358,12 +382,14 @@ export default function UsersPage() {
                           {u.email}
                         </div>
                       ) : (
-                        <span className="text-sm text-gray-500">No email</span>
+                        <span className="text-sm text-gray-500">{t('common.noEmail')}</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(u.role)}`}>
-                        {u.role.replace('_', ' ')}
+                        {u.role === 'SYSTEM_ADMIN' ? t('users.roles.systemAdmin') : 
+                         u.role === 'FACILITATOR' ? t('users.roles.facilitator') : 
+                         t('users.roles.employee')}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -379,21 +405,21 @@ export default function UsersPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {u.lastLoginAt
                         ? new Date(u.lastLoginAt).toLocaleDateString()
-                        : 'Never'}
+                        : t('common.never')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end gap-2">
                         <Link
                           href={`/admin/users/${u.id}/edit`}
                           className="text-indigo-600 hover:text-indigo-900"
-                          title="Edit"
+                          title={t('common.edit')}
                         >
                           <Edit className="w-5 h-5" />
                         </Link>
                         <button
                           onClick={() => handleDelete(u.id)}
                           className="text-red-600 hover:text-red-900"
-                          title="Delete"
+                          title={t('common.delete')}
                           disabled={u.id === user?.id}
                         >
                           <Trash2 className="w-5 h-5" />

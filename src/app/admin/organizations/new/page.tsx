@@ -84,7 +84,7 @@ export default function NewOrganizationPage() {
     try {
       const response = await fetch('/api/admin/organizations', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'x-user-id': user?.id || ''
         },

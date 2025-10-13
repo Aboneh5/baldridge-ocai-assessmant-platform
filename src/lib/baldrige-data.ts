@@ -1,3 +1,36 @@
+// Helper function to get localized Baldrige question text
+export function getLocalizedBaldrigeQuestionText(itemCode: string, translations: any): string {
+  // Access translations directly since itemCode contains dots that shouldn't be split
+  if (translations && translations.questions && translations.questions[itemCode]) {
+    return translations.questions[itemCode];
+  }
+  // Fallback: return the itemCode if translation not found
+  return itemCode;
+}
+
+// Helper function to localize baldrige data structure
+export function getLocalizedBaldrigeData(t: (key: string) => string) {
+  return {
+    "organizational-profile": baldrigeData["organizational-profile"].map(section => ({
+      ...section,
+      questions: section.questions.map(q => ({
+        ...q,
+        text: t(`questions.${q.itemCode}`)
+      }))
+    })),
+    categories: baldrigeData.categories.map(category => ({
+      ...category,
+      items: category.items.map(item => ({
+        ...item,
+        questions: item.questions.map(q => ({
+          ...q,
+          text: t(`questions.${q.itemCode}`)
+        }))
+      }))
+    }))
+  };
+}
+
 export const baldrigeData = {
   "organizational-profile": [
     {

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Upload, Download, Key, AlertCircle, CheckCircle, XCircle, Calendar, Users } from 'lucide-react'
+import { useLocale } from '@/lib/i18n/context'
+import LanguageSwitcher from '@/components/localization/LanguageSwitcher'
 
 interface Organization {
   id: string
@@ -32,6 +34,7 @@ interface Batch {
 }
 
 export default function AssessmentCredentialsPage() {
+  const { t } = useLocale()
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [batches, setBatches] = useState<Batch[]>([])
   const [selectedOrg, setSelectedOrg] = useState('')
@@ -267,7 +270,7 @@ bob.johnson@company.com,temp789`
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -277,25 +280,28 @@ bob.johnson@company.com,temp789`
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Assessment Credentials</h1>
-          <p className="mt-2 text-gray-600">
-            Upload email/password credentials for employees to access assessments
-          </p>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">{t('credentials.title')}</h1>
+            <p className="mt-2 text-gray-600">
+              {t('credentials.subtitle')}
+            </p>
+          </div>
+          <LanguageSwitcher />
         </div>
 
         {/* Upload Form */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
             <Upload className="w-5 h-5 mr-2 text-blue-600" />
-            Create Assessment Credentials
+            {t('credentials.upload')}
           </h2>
 
           <form onSubmit={handleUpload} className="space-y-6">
             {/* Organization Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Organization <span className="text-red-500">*</span>
+                {t('common.organization')} <span className="text-red-500">*</span>
               </label>
               <select
                 value={selectedOrg}
@@ -303,7 +309,7 @@ bob.johnson@company.com,temp789`
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 font-medium"
                 required
               >
-                <option value="" className="text-gray-500">Select Organization</option>
+                <option value="" className="text-gray-500">{t('accessKeys.selectOrganization')}</option>
                 {organizations.map(org => (
                   <option key={org.id} value={org.id} className="text-gray-900">{org.name}</option>
                 ))}
@@ -313,7 +319,7 @@ bob.johnson@company.com,temp789`
             {/* Assessment Type Checkboxes */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Assessment Type(s) <span className="text-red-500">*</span>
+                {t('accessKeys.assessmentTypes')} <span className="text-red-500">*</span>
               </label>
               <div className="flex space-x-6">
                 <label className="flex items-center cursor-pointer">

@@ -4,9 +4,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Clock, Users, BarChart3, CheckCircle, Info } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { useLocale } from '@/lib/i18n/context'
+import LanguageSwitcher from '@/components/localization/LanguageSwitcher'
 
 export default function OCAIIntroPage() {
   const router = useRouter()
+  const { t } = useLocale()
   const [creatingAssessment, setCreatingAssessment] = useState(false)
   const [surveyId, setSurveyId] = useState<string | null>(null)
   const [checkingCompletion, setCheckingCompletion] = useState(true)
@@ -33,7 +36,7 @@ export default function OCAIIntroPage() {
               const completionData = await completionCheck.json()
               if (completionData.isCompleted) {
                 // Already completed - redirect to results
-                alert('You have already completed this assessment. You cannot retake it.')
+                alert(t('ocaiIntro.alreadyCompleted'))
                 router.push('/ocai/my-results')
                 return
               }
@@ -113,16 +116,19 @@ export default function OCAIIntroPage() {
                 />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">OCAI Assessment</h1>
-                <p className="text-sm text-blue-600 font-medium">Organizational Culture Assessment Instrument</p>
+                <h1 className="text-2xl font-bold text-gray-900">{t('ocaiIntro.title')}</h1>
+                <p className="text-sm text-blue-600 font-medium">{t('ocaiIntro.subtitle')}</p>
               </div>
             </div>
-            <Link
-              href="/employee/assessments"
-              className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <span>Back</span>
-            </Link>
+            <div className="flex items-center space-x-4">
+              <LanguageSwitcher />
+              <Link
+                href="/employee/assessments"
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <span>{t('common.back')}</span>
+              </Link>
+            </div>
           </div>
         </div>
       </header>
@@ -135,10 +141,10 @@ export default function OCAIIntroPage() {
             <BarChart3 className="w-10 h-10 text-blue-600" />
           </div>
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Organizational Culture Assessment Instrument (OCAI)
+            {t('ocaiIntro.heroTitle')}
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Understand your organization's current and preferred culture using the proven Competing Values Framework
+            {t('ocaiIntro.heroDescription')}
           </p>
         </div>
 
@@ -148,90 +154,90 @@ export default function OCAIIntroPage() {
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
               <Clock className="w-6 h-6 text-blue-600" />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2">Duration</h3>
-            <p className="text-gray-600">15-20 minutes</p>
+            <h3 className="font-semibold text-gray-900 mb-2">{t('ocaiIntro.duration')}</h3>
+            <p className="text-gray-600">{t('ocaiIntro.durationTime')}</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
               <BarChart3 className="w-6 h-6 text-green-600" />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2">Questions</h3>
-            <p className="text-gray-600">24 questions (6 dimensions)</p>
+            <h3 className="font-semibold text-gray-900 mb-2">{t('ocaiIntro.questions')}</h3>
+            <p className="text-gray-600">{t('ocaiIntro.questionsCount')}</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
               <Users className="w-6 h-6 text-purple-600" />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2">Format</h3>
-            <p className="text-gray-600">Point allocation (100 points per question)</p>
+            <h3 className="font-semibold text-gray-900 mb-2">{t('ocaiIntro.format')}</h3>
+            <p className="text-gray-600">{t('ocaiIntro.formatType')}</p>
           </div>
         </div>
 
         {/* What You'll Assess */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-12">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6">What You'll Assess</h3>
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">{t('ocaiIntro.whatYouAssess')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Six Key Dimensions:</h4>
+              <h4 className="font-semibold text-gray-900 mb-3">{t('ocaiIntro.sixDimensions')}</h4>
               <ul className="space-y-2">
                 <li className="flex items-start">
                   <CheckCircle className="w-5 h-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-700">Dominant Characteristics</span>
+                  <span className="text-gray-700">{t('questionDimensions.dominant_characteristics.title')}</span>
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="w-5 h-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-700">Organizational Leadership</span>
+                  <span className="text-gray-700">{t('questionDimensions.leadership.title')}</span>
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="w-5 h-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-700">Management of Employees</span>
+                  <span className="text-gray-700">{t('questionDimensions.management_employees.title')}</span>
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="w-5 h-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-700">Organization Glue</span>
+                  <span className="text-gray-700">{t('questionDimensions.organization_glue.title')}</span>
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="w-5 h-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-700">Strategic Emphases</span>
+                  <span className="text-gray-700">{t('questionDimensions.strategic_emphases.title')}</span>
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="w-5 h-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-700">Criteria of Success</span>
+                  <span className="text-gray-700">{t('questionDimensions.criteria_success.title')}</span>
                 </li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Four Culture Types:</h4>
+              <h4 className="font-semibold text-gray-900 mb-3">{t('ocaiIntro.fourCultureTypes')}</h4>
               <ul className="space-y-2">
                 <li className="flex items-start">
                   <div className="w-4 h-4 bg-green-500 rounded-full mr-2 mt-1 flex-shrink-0"></div>
                   <div>
-                    <span className="font-medium text-gray-900">Clan (Collaborative)</span>
-                    <p className="text-sm text-gray-600">Family-like, mentoring, teamwork</p>
+                    <span className="font-medium text-gray-900">{t('cultureTypes.clan')}</span>
+                    <p className="text-sm text-gray-600">{t('cultureTypes.clanDesc')}</p>
                   </div>
                 </li>
                 <li className="flex items-start">
                   <div className="w-4 h-4 bg-purple-500 rounded-full mr-2 mt-1 flex-shrink-0"></div>
                   <div>
-                    <span className="font-medium text-gray-900">Adhocracy (Creative)</span>
-                    <p className="text-sm text-gray-600">Dynamic, entrepreneurial, innovative</p>
+                    <span className="font-medium text-gray-900">{t('cultureTypes.adhocracy')}</span>
+                    <p className="text-sm text-gray-600">{t('cultureTypes.adhocracyDesc')}</p>
                   </div>
                 </li>
                 <li className="flex items-start">
                   <div className="w-4 h-4 bg-red-500 rounded-full mr-2 mt-1 flex-shrink-0"></div>
                   <div>
-                    <span className="font-medium text-gray-900">Market (Competitive)</span>
-                    <p className="text-sm text-gray-600">Results-oriented, competitive, achieving</p>
+                    <span className="font-medium text-gray-900">{t('cultureTypes.market')}</span>
+                    <p className="text-sm text-gray-600">{t('cultureTypes.marketDesc')}</p>
                   </div>
                 </li>
                 <li className="flex items-start">
                   <div className="w-4 h-4 bg-blue-500 rounded-full mr-2 mt-1 flex-shrink-0"></div>
                   <div>
-                    <span className="font-medium text-gray-900">Hierarchy (Controlled)</span>
-                    <p className="text-sm text-gray-600">Structured, formalized, efficient</p>
+                    <span className="font-medium text-gray-900">{t('cultureTypes.hierarchy')}</span>
+                    <p className="text-sm text-gray-600">{t('cultureTypes.hierarchyDesc')}</p>
                   </div>
                 </li>
               </ul>
@@ -244,23 +250,23 @@ export default function OCAIIntroPage() {
           <div className="flex items-start space-x-3 mb-4">
             <Info className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
             <div>
-              <h3 className="text-xl font-bold text-blue-900 mb-3">How It Works</h3>
+              <h3 className="text-xl font-bold text-blue-900 mb-3">{t('ocaiIntro.howItWorksTitle')}</h3>
               <div className="space-y-3 text-blue-800">
                 <p>
-                  <strong>Step 1:</strong> For each question, you'll see 4 statements (A, B, C, D) describing different aspects of your organization.
+                  <strong>{t('ocaiIntro.step1Label')}</strong> {t('ocaiIntro.step1Text')}
                 </p>
                 <p>
-                  <strong>Step 2:</strong> Divide 100 points among the 4 statements based on how similar they are to your organization.
+                  <strong>{t('ocaiIntro.step2Label')}</strong> {t('ocaiIntro.step2Text')}
                 </p>
                 <p>
-                  <strong>Step 3:</strong> You'll do this twice for each question:
+                  <strong>{t('ocaiIntro.step3Label')}</strong> {t('ocaiIntro.step3Text')}
                 </p>
                 <ul className="ml-6 space-y-1">
-                  <li>• <strong>Now:</strong> How your organization currently is</li>
-                  <li>• <strong>Preferred:</strong> How you would like your organization to be in 5 years</li>
+                  <li>• <strong>{t('ocaiIntro.nowLabel')}</strong> {t('ocaiIntro.nowText')}</li>
+                  <li>• <strong>{t('ocaiIntro.preferredLabel')}</strong> {t('ocaiIntro.preferredText')}</li>
                 </ul>
                 <p className="pt-2">
-                  <strong>Remember:</strong> The total points for each question must equal 100.
+                  <strong>{t('ocaiIntro.rememberLabel')}</strong> {t('ocaiIntro.rememberText')}
                 </p>
               </div>
             </div>
@@ -269,54 +275,54 @@ export default function OCAIIntroPage() {
 
         {/* Example */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-12">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Example Question</h3>
-          <p className="text-gray-700 mb-4 font-medium">Dominant Characteristics</p>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">{t('ocaiIntro.exampleQuestion')}</h3>
+          <p className="text-gray-700 mb-4 font-medium">{t('questionDimensions.dominant_characteristics.title')}</p>
           <div className="space-y-3 mb-4">
-            <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg">
               <span className="font-semibold text-gray-900">A.</span>
-              <span className="text-gray-700">The organization is a very personal place. It is like an extended family. People seem to share a lot of themselves.</span>
-              <input type="number" className="w-20 ml-auto px-3 py-1 border border-gray-300 rounded" placeholder="25" disabled />
+              <span className="text-gray-700 flex-1">{t('questionDimensions.dominant_characteristics.optionA')}</span>
+              <input type="number" className="w-20 ml-4 px-3 py-1 border border-gray-300 rounded" placeholder="25" disabled />
             </div>
-            <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg">
               <span className="font-semibold text-gray-900">B.</span>
-              <span className="text-gray-700">The organization is a very dynamic and entrepreneurial place. People are willing to stick their necks out and take risks.</span>
-              <input type="number" className="w-20 ml-auto px-3 py-1 border border-gray-300 rounded" placeholder="30" disabled />
+              <span className="text-gray-700 flex-1">{t('questionDimensions.dominant_characteristics.optionB')}</span>
+              <input type="number" className="w-20 ml-4 px-3 py-1 border border-gray-300 rounded" placeholder="30" disabled />
             </div>
-            <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg">
               <span className="font-semibold text-gray-900">C.</span>
-              <span className="text-gray-700">The organization is very results-oriented. A major concern is with getting the job done. People are very competitive and achievement-oriented.</span>
-              <input type="number" className="w-20 ml-auto px-3 py-1 border border-gray-300 rounded" placeholder="20" disabled />
+              <span className="text-gray-700 flex-1">{t('questionDimensions.dominant_characteristics.optionC')}</span>
+              <input type="number" className="w-20 ml-4 px-3 py-1 border border-gray-300 rounded" placeholder="20" disabled />
             </div>
-            <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg">
               <span className="font-semibold text-gray-900">D.</span>
-              <span className="text-gray-700">The organization is a very controlled and structured place. Formal procedures generally govern what people do.</span>
-              <input type="number" className="w-20 ml-auto px-3 py-1 border border-gray-300 rounded" placeholder="25" disabled />
+              <span className="text-gray-700 flex-1">{t('questionDimensions.dominant_characteristics.optionD')}</span>
+              <input type="number" className="w-20 ml-4 px-3 py-1 border border-gray-300 rounded" placeholder="25" disabled />
             </div>
           </div>
           <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-            <strong>Total: 100 points</strong> (25 + 30 + 20 + 25 = 100)
+            <strong>{t('ocaiIntro.totalPoints')}</strong> (25 + 30 + 20 + 25 = 100)
           </div>
         </div>
 
         {/* Privacy & Confidentiality */}
         <div className="bg-gray-50 rounded-2xl p-8 mb-12">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Privacy & Confidentiality</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">{t('ocaiIntro.privacyTitle')}</h3>
           <ul className="space-y-2 text-gray-700">
             <li className="flex items-start">
               <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-              <span>Your individual responses are confidential and will not be shared with anyone</span>
+              <span>{t('ocaiIntro.privacy1')}</span>
             </li>
             <li className="flex items-start">
               <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-              <span>Only aggregate data is used for organizational analysis</span>
+              <span>{t('ocaiIntro.privacy2')}</span>
             </li>
             <li className="flex items-start">
               <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-              <span>You can save your progress and return later</span>
+              <span>{t('ocaiIntro.privacy3')}</span>
             </li>
             <li className="flex items-start">
               <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-              <span>Your honest feedback helps improve the organization</span>
+              <span>{t('ocaiIntro.privacy4')}</span>
             </li>
           </ul>
         </div>
@@ -327,7 +333,7 @@ export default function OCAIIntroPage() {
             href="/employee/assessments"
             className="inline-flex items-center justify-center px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-lg"
           >
-            Back to Assessments
+            {t('ocaiIntro.backToAssessments')}
           </Link>
           <button
             onClick={async () => {
@@ -338,7 +344,7 @@ export default function OCAIIntroPage() {
                 const storedUser = localStorage.getItem('user')
 
                 if (!storedOrg && !storedUser) {
-                  alert('Organization information not found. Please sign in again.')
+                  alert(t('ocaiIntro.orgNotFound'))
                   router.push('/auth/signin')
                   return
                 }
@@ -348,7 +354,7 @@ export default function OCAIIntroPage() {
                 const orgId = org?.id || user?.organizationId
 
                 if (!orgId) {
-                  alert('Organization information not found. Please sign in again.')
+                  alert(t('ocaiIntro.orgNotFound'))
                   router.push('/auth/signin')
                   return
                 }
@@ -403,11 +409,11 @@ export default function OCAIIntroPage() {
                 } else {
                   const error = await response.json()
                   console.error('Survey creation error:', error)
-                  alert(error.error || error.message || 'Failed to create assessment. Please contact your administrator.')
+                  alert(error.error || error.message || t('ocaiIntro.createFailed'))
                 }
               } catch (error) {
                 console.error('Error with OCAI survey:', error)
-                alert('An error occurred. Please try again or contact your administrator.')
+                alert(t('ocaiIntro.errorOccurred'))
               } finally {
                 setCreatingAssessment(false)
               }
@@ -418,11 +424,11 @@ export default function OCAIIntroPage() {
             {creatingAssessment ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                Preparing Assessment...
+                {t('ocaiIntro.preparing')}
               </>
             ) : (
               <>
-                Start OCAI Assessment
+                {t('ocaiIntro.startAssessment')}
                 <ArrowRight className="ml-2 w-5 h-5" />
               </>
             )}
@@ -434,7 +440,7 @@ export default function OCAIIntroPage() {
       <footer className="bg-slate-900 text-white py-8 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-gray-400">
-            © 2024 Tenadam Training, Consultancy & Research PLC. All rights reserved.
+            {t('common.copyright')}
           </p>
         </div>
       </footer>

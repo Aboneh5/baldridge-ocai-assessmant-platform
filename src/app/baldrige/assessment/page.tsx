@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
@@ -10,6 +10,9 @@ import {
   isAssessmentCompleted,
   calculateProgressPercentage,
 } from '@/lib/assessment-progress';
+import { useLocale } from '@/lib/i18n/context';
+import { getLocalizedBaldrigeQuestionText } from '@/lib/baldrige-data';
+import LanguageSwitcher from '@/components/localization/LanguageSwitcher';
 
 interface BaldrigeQuestion {
   id: string;
@@ -43,6 +46,7 @@ interface BaldrigeCategory {
 export default function BaldrigeAssessmentPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { t, locale, translations } = useLocale();
   const [categories, setCategories] = useState<BaldrigeCategory[]>([]);
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [currentSubcategoryIndex, setCurrentSubcategoryIndex] = useState(0);
@@ -58,6 +62,30 @@ export default function BaldrigeAssessmentPage() {
   const [submissionData, setSubmissionData] = useState<any>(null);
   const [isResuming, setIsResuming] = useState(false);
   const [resumedCount, setResumedCount] = useState(0);
+  
+  // Memoize main categories (must be before any conditional returns per React Rules of Hooks)
+  const mainCategories = useMemo(() => categories.filter(c => c.displayOrder > 0), [categories]);
+  
+  // Helper function to get localized category name (memoized to prevent re-computation)
+  const getCategoryName = useCallback((name: string) => {
+    return translations?.categoryNames?.[name] || name;
+  }, [translations]);
+
+  // Helper function to get localized subcategory name (memoized to prevent re-computation)
+  const getSubcategoryName = useCallback((name: string) => {
+    return translations?.subcategoryNames?.[name] || name;
+  }, [translations]);
+  
+  // Helper function to get localized question text (memoized to prevent re-computation)
+  const getQuestionText = useCallback((itemCode: string, fallbackText: string) => {
+    // Always try to use translation if translations object exists
+    if (translations?.questions?.[itemCode]) {
+      return translations.questions[itemCode];
+    }
+    
+    // Only use fallback if translation not found
+    return fallbackText;
+  }, [translations]);
 
   useEffect(() => {
     // Check for localStorage authentication first (both access key and credential users)
@@ -150,7 +178,7 @@ export default function BaldrigeAssessmentPage() {
       if (completionCheck.ok) {
         const completionData = await completionCheck.json();
         if (completionData.isCompleted) {
-          alert('You have already completed this assessment. Redirecting to your submitted answers...');
+          alert(t('assessment.alreadyCompleted'));
           router.push('/baldrige/answers');
           return;
         }
@@ -282,7 +310,7 @@ export default function BaldrigeAssessmentPage() {
     );
 
     if (!allQuestionsAnswered) {
-      alert('Please answer all questions before proceeding.');
+      alert(t('assessment.pleaseAnswerAllQuestions'));
       return;
     }
 
@@ -364,11 +392,11 @@ export default function BaldrigeAssessmentPage() {
         setSubmissionData(data.data);
         setShowResults(true);
       } else {
-        alert(data.message || 'Please complete all questions before submitting.');
+        alert(data.message || t('assessment.pleaseCompleteAll'));
       }
     } catch (error) {
       console.error('Error submitting assessment:', error);
-      alert('Failed to submit assessment. Please try again.');
+      alert(t('assessment.submitFailed'));
     }
   };
 
@@ -408,7 +436,7 @@ export default function BaldrigeAssessmentPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading assessment...</p>
+          <p className="mt-4 text-gray-600">{t('assessment.loadingAssessment')}</p>
         </div>
       </div>
     );
@@ -428,10 +456,10 @@ export default function BaldrigeAssessmentPage() {
                 </svg>
               </div>
               <h1 className="text-4xl font-bold text-white mb-4">
-                Assessment Complete!
+                {t('assessment.assessmentComplete')}
               </h1>
               <p className="text-xl text-emerald-50">
-                Thank you for completing the Baldrige Excellence Framework Assessment
+                {t('assessment.thankYou')}
               </p>
             </div>
 
@@ -440,15 +468,15 @@ export default function BaldrigeAssessmentPage() {
               {/* Summary Stats */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border-2 border-blue-200">
-                  <p className="text-sm font-medium text-blue-700 mb-2">Questions Answered</p>
+                  <p className="text-sm font-medium text-blue-700 mb-2">{t('assessment.questionsAnswered')}</p>
                   <p className="text-4xl font-bold text-blue-900">{submissionData.totalQuestions}</p>
                 </div>
                 <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-6 border-2 border-emerald-200">
-                  <p className="text-sm font-medium text-emerald-700 mb-2">Completion Rate</p>
+                  <p className="text-sm font-medium text-emerald-700 mb-2">{t('assessment.completionRate')}</p>
                   <p className="text-4xl font-bold text-emerald-900">{submissionData.completionRate}%</p>
                 </div>
                 <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border-2 border-purple-200">
-                  <p className="text-sm font-medium text-purple-700 mb-2">Submitted On</p>
+                  <p className="text-sm font-medium text-purple-700 mb-2">{t('assessment.submittedOn')}</p>
                   <p className="text-lg font-bold text-purple-900">
                     {new Date(submissionData.submittedAt).toLocaleDateString()}
                   </p>
@@ -460,20 +488,20 @@ export default function BaldrigeAssessmentPage() {
 
               {/* User Info */}
               <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Assessment Details</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('assessment.assessmentDetails')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">Participant Name</p>
+                    <p className="text-sm text-gray-600">{t('assessment.participantName')}</p>
                     <p className="text-base font-medium text-gray-900">{submissionData.user.name}</p>
                   </div>
                   {submissionData.user.email && (
                     <div>
-                      <p className="text-sm text-gray-600">Email</p>
+                      <p className="text-sm text-gray-600">{t('assessment.email')}</p>
                       <p className="text-base font-medium text-gray-900">{submissionData.user.email}</p>
                     </div>
                   )}
                   <div>
-                    <p className="text-sm text-gray-600">Submission ID</p>
+                    <p className="text-sm text-gray-600">{t('assessment.submissionId')}</p>
                     <p className="text-base font-mono text-gray-900">{submissionData.submissionId}</p>
                   </div>
                 </div>
@@ -485,26 +513,26 @@ export default function BaldrigeAssessmentPage() {
                   <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  What Happens Next?
+                  {t('assessment.whatHappensNext')}
                 </h3>
                 <ul className="space-y-3 text-emerald-800">
                   <li className="flex items-start">
                     <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    <span>Your responses have been securely saved and submitted to your organization's administrator</span>
+                    <span>{t('assessment.nextStep1')}</span>
                   </li>
                   <li className="flex items-start">
                     <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    <span>Your organization will review your assessment and use it to drive excellence improvements</span>
+                    <span>{t('assessment.nextStep2')}</span>
                   </li>
                   <li className="flex items-start">
                     <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    <span>You may be contacted for follow-up discussions or collaborative workshops based on your insights</span>
+                    <span>{t('assessment.nextStep3')}</span>
                   </li>
                 </ul>
               </div>
@@ -515,20 +543,20 @@ export default function BaldrigeAssessmentPage() {
                   onClick={() => router.push('/employee/assessments')}
                   className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
                 >
-                  Return to Dashboard
+                  {t('assessment.returnToDashboard')}
                 </button>
                 <button
                   onClick={() => window.print()}
                   className="px-8 py-4 bg-white text-emerald-600 border-2 border-emerald-600 rounded-xl hover:bg-emerald-50 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
                 >
-                  Print Summary
+                  {t('assessment.printSummary')}
                 </button>
               </div>
 
               {/* Footer Note */}
               <div className="text-center pt-6 border-t border-gray-200">
                 <p className="text-sm text-gray-600">
-                  For questions about this assessment, please contact your organization's administrator
+                  {t('assessment.contactAdmin')}
                 </p>
               </div>
             </div>
@@ -554,10 +582,10 @@ export default function BaldrigeAssessmentPage() {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-semibold text-blue-800">Welcome Back!</h3>
+                  <h3 className="text-sm font-semibold text-blue-800">{t('assessment.welcomeBack')}</h3>
                   <div className="mt-1 text-sm text-blue-700">
-                    <p>You're resuming your assessment. We've saved your progress: <strong>{resumedCount} questions already answered</strong>.</p>
-                    <p className="mt-1">You can continue from where you left off on any device.</p>
+                    <p>{t('assessment.resumingProgress', { count: resumedCount })}</p>
+                    <p className="mt-1">{t('assessment.continueFromWhere')}</p>
                   </div>
                 </div>
               </div>
@@ -573,11 +601,11 @@ export default function BaldrigeAssessmentPage() {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-semibold text-amber-800">Important Notice</h3>
-                <div className="mt-1 text-sm text-amber-700">
-                  <p>• Your responses are automatically saved as you type, so you can return later if needed.</p>
-                  <p>• Please review your answers carefully before proceeding to the next section.</p>
-                  <p>• Once submitted, you cannot modify your responses.</p>
+                <h3 className="text-sm font-semibold text-amber-800">{t('assessment.importantNotice')}</h3>
+                <div className="mt-1 text-amber-700">
+                  <p>• {t('assessment.autoSaved')}</p>
+                  <p>• {t('assessment.reviewCarefully')}</p>
+                  <p>• {t('assessment.cannotModify')}</p>
                 </div>
               </div>
             </div>
@@ -586,27 +614,26 @@ export default function BaldrigeAssessmentPage() {
           <div className="bg-white rounded-lg shadow-lg p-8">
             <div className="mb-6">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Baldrige Excellence Framework Assessment
+                {t('assessment.title')}
               </h1>
               <p className="text-gray-600">
-                Total Points: 1,000 | Duration: 45-60 minutes
+                {t('assessment.totalPoints')} | {t('assessment.duration')}
               </p>
             </div>
 
             <div className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                {orgProfileCategory.name}
+                {getCategoryName(orgProfileCategory.name)}
               </h2>
               <p className="text-gray-600 mb-6">
-                Before beginning the assessment, please provide information about your organization.
-                This helps contextualize your responses.
+                {t('assessment.provideOrgInfo')}
               </p>
 
               <div className="max-h-[600px] overflow-y-auto pr-2 border border-gray-200 rounded-lg p-4 bg-gray-50">
                 {orgProfileCategory.subcategories.map((subcategory) => (
                   <div key={subcategory.id} className="mb-8 border-l-4 border-emerald-500 pl-6 bg-white p-4 rounded-lg">
                     <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                      {subcategory.name}
+                      {getSubcategoryName(subcategory.name)}
                     </h3>
 
                     {subcategory.questions.map((question) => (
@@ -614,13 +641,13 @@ export default function BaldrigeAssessmentPage() {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           {question.itemCode}
                         </label>
-                        <p className="text-gray-600 mb-3 text-sm">{question.questionText}</p>
+                        <p className="text-gray-600 mb-3 text-sm">{getQuestionText(question.itemCode, question.questionText)}</p>
                         <textarea
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none text-gray-900 placeholder:text-gray-400"
                           rows={4}
                           value={responses[question.id] || ''}
                           onChange={(e) => handleResponseChange(question.id, e.target.value)}
-                          placeholder="Enter your response..."
+                          placeholder={t('assessment.enterResponse')}
                         />
                       </div>
                     ))}
@@ -638,7 +665,7 @@ export default function BaldrigeAssessmentPage() {
                   );
 
                   if (!allAnswered) {
-                    alert('Please answer all organizational profile questions before continuing.');
+                    alert(t('assessment.pleaseAnswerAll'));
                     return;
                   }
 
@@ -668,7 +695,7 @@ export default function BaldrigeAssessmentPage() {
                 }
                 className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
               >
-                Continue to Assessment
+                {t('assessment.continueToAssessment')}
               </button>
             </div>
           </div>
@@ -678,7 +705,6 @@ export default function BaldrigeAssessmentPage() {
   }
 
   // Main Assessment
-  const mainCategories = categories.filter(c => c.displayOrder > 0);
   const currentCategory = mainCategories[currentCategoryIndex];
   const currentSubcategory = currentCategory?.subcategories[currentSubcategoryIndex];
 
@@ -695,10 +721,10 @@ export default function BaldrigeAssessmentPage() {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-semibold text-blue-800">Welcome Back!</h3>
+                <h3 className="text-sm font-semibold text-blue-800">{t('assessment.welcomeBack')}</h3>
                 <div className="mt-1 text-sm text-blue-700">
-                  <p>You're resuming your assessment. We've saved your progress: <strong>{resumedCount} questions already answered</strong>.</p>
-                  <p className="mt-1">You can continue from where you left off on any device.</p>
+                  <p>{t('assessment.resumingProgress', { count: resumedCount })}</p>
+                  <p className="mt-1">{t('assessment.continueFromWhere')}</p>
                 </div>
               </div>
             </div>
@@ -714,11 +740,11 @@ export default function BaldrigeAssessmentPage() {
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-semibold text-amber-800">Important Notice</h3>
-              <div className="mt-1 text-sm text-amber-700">
-                <p>• Your responses are automatically saved as you type, so you can return later if needed.</p>
-                <p>• Please review your answers carefully before proceeding to the next section.</p>
-                <p>• Once submitted, you cannot modify your responses.</p>
+              <h3 className="text-sm font-semibold text-amber-800">{t('assessment.importantNotice')}</h3>
+              <div className="mt-1 text-amber-700">
+                <p>• {t('assessment.autoSaved')}</p>
+                <p>• {t('assessment.reviewCarefully')}</p>
+                <p>• {t('assessment.cannotModify')}</p>
               </div>
             </div>
           </div>
@@ -728,13 +754,16 @@ export default function BaldrigeAssessmentPage() {
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-gray-900">
-              Baldrige Excellence Framework Assessment
+              {t('assessment.title')}
             </h1>
-            <div className="text-right">
-              <p className="text-sm text-gray-600">Progress</p>
-              <p className="text-lg font-semibold text-emerald-600">
-                {getCompletedPoints()} / {getTotalPoints()} points
-              </p>
+            <div className="flex items-center gap-4">
+              <LanguageSwitcher />
+              <div className="text-right">
+                <p className="text-sm text-gray-600">{t('assessment.progress')}</p>
+                <p className="text-lg font-semibold text-emerald-600">
+                  {getCompletedPoints()} / {getTotalPoints()} points
+                </p>
+              </div>
             </div>
           </div>
 
@@ -753,7 +782,7 @@ export default function BaldrigeAssessmentPage() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {cat.name} - {cat.description}
+                {getCategoryName(cat.name)}
               </button>
             ))}
           </div>
@@ -778,14 +807,14 @@ export default function BaldrigeAssessmentPage() {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
-                    {currentSubcategory.name}
+                    {getSubcategoryName(currentSubcategory.name)}
                   </h2>
                   <p className="text-sm text-gray-600">
-                    Category {currentCategory.displayOrder}: {currentCategory.name}
+                    {t('assessment.category')} {currentCategory.displayOrder}: {getCategoryName(currentCategory.name)}
                   </p>
                 </div>
                 <div className="text-right bg-emerald-50 px-4 py-2 rounded-lg">
-                  <p className="text-sm text-emerald-700 font-medium">Points</p>
+                  <p className="text-sm text-emerald-700 font-medium">{t('assessment.points')}</p>
                   <p className="text-2xl font-bold text-emerald-600">{currentSubcategory.points}</p>
                 </div>
               </div>
@@ -798,13 +827,13 @@ export default function BaldrigeAssessmentPage() {
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     {question.itemCode}
                   </label>
-                  <p className="text-gray-700 mb-4">{question.questionText}</p>
+                  <p className="text-gray-700 mb-4">{getQuestionText(question.itemCode, question.questionText)}</p>
                   <textarea
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none text-gray-900 placeholder:text-gray-400"
                     rows={6}
                     value={responses[question.id] || ''}
                     onChange={(e) => handleResponseChange(question.id, e.target.value)}
-                    placeholder="Describe your organization's approach, deployment, and results for this criterion..."
+                    placeholder={t('assessment.describeApproach')}
                   />
                 </div>
               ))}
@@ -816,9 +845,9 @@ export default function BaldrigeAssessmentPage() {
 
               <div className="text-center">
                 <p className="text-sm text-gray-600 font-medium">
-                  Subcategory {currentSubcategoryIndex + 1} of {currentCategory.subcategories.length}
+                  {t('assessment.subcategory')} {currentSubcategoryIndex + 1} {t('assessment.of')} {currentCategory.subcategories.length}
                 </p>
-                <p className="text-xs text-gray-500">Category {currentCategory.displayOrder}: {currentCategory.name}</p>
+                <p className="text-xs text-gray-500">{t('assessment.category')} {currentCategory.displayOrder}: {getCategoryName(currentCategory.name)}</p>
               </div>
 
               <button
@@ -830,12 +859,12 @@ export default function BaldrigeAssessmentPage() {
                 }
                 className="group px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-medium hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center space-x-2"
               >
-                <span>{saving ? 'Saving...' :
+                <span>{saving ? t('assessment.saving') :
                   currentSubcategoryIndex < currentCategory.subcategories.length - 1
-                    ? 'Next Subcategory'
+                    ? t('assessment.nextSubcategory')
                     : currentCategoryIndex < mainCategories.length - 1
-                    ? 'Next Category'
-                    : 'Complete Assessment'}</span>
+                    ? t('assessment.nextCategory')
+                    : t('assessment.completeAssessment')}</span>
                 <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
@@ -846,13 +875,13 @@ export default function BaldrigeAssessmentPage() {
 
         {/* Assessment Info */}
         <div className="mt-6 bg-emerald-50 rounded-lg p-6">
-          <h3 className="font-semibold text-emerald-900 mb-3">Assessment Guidelines:</h3>
+          <h3 className="font-semibold text-emerald-900 mb-3">{t('assessment.assessmentGuidelines')}</h3>
           <ul className="space-y-2 text-sm text-emerald-800">
-            <li>• Answer all questions thoroughly, providing specific examples from your organization</li>
-            <li>• Focus on describing your approach, deployment, and results for each criterion</li>
-            <li>• You can navigate between categories and subcategories at any time</li>
-            <li>• Your progress is saved automatically as you type</li>
-            <li>• Total assessment time: 45-60 minutes</li>
+            <li>• {t('assessment.guideline1')}</li>
+            <li>• {t('assessment.guideline2')}</li>
+            <li>• {t('assessment.guideline3')}</li>
+            <li>• {t('assessment.guideline4')}</li>
+            <li>• {t('assessment.guideline5')}</li>
           </ul>
         </div>
       </div>

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { AuthSessionProvider } from '@/components/providers/session-provider'
 import { QueryProvider } from '@/components/providers/query-provider'
+import { LocaleProvider } from '@/lib/i18n/context'
 import { AssessmentHubNav } from '@/components/navigation/assessment-hub-nav'
 import './globals.css'
 
@@ -28,14 +29,16 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body className={`${inter.className} h-full bg-gray-50`}>
-        <AuthSessionProvider>
-          <QueryProvider>
-            <AssessmentHubNav />
-            <div className="min-h-full">
-              {children}
-            </div>
-          </QueryProvider>
-        </AuthSessionProvider>
+        <LocaleProvider>
+          <AuthSessionProvider>
+            <QueryProvider>
+              <AssessmentHubNav />
+              <div className="min-h-full">
+                {children}
+              </div>
+            </QueryProvider>
+          </AuthSessionProvider>
+        </LocaleProvider>
       </body>
     </html>
   )
