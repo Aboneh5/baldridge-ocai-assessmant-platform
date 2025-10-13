@@ -15,6 +15,7 @@ const LocaleContext = createContext<LocaleContextType | undefined>(undefined);
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(defaultLocale);
   const [translations, setTranslations] = useState<Record<string, any>>({});
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Load locale from localStorage
@@ -31,6 +32,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
   const loadTranslations = async (loc: Locale) => {
     try {
+      setIsLoading(true);
       console.log(`Loading translations for locale: ${loc}`);
       const common = await import(`@/locales/${loc}/common.json`);
       const auth = await import(`@/locales/${loc}/auth.json`);
@@ -49,11 +51,17 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
         ...facilitator.default,
         ...admin.default,
       };
-      
+
       console.log(`Translations loaded for ${loc}:`, Object.keys(loadedTranslations));
+      console.log('Sample translation check:', {
+        'nav.about': loadedTranslations.nav?.about,
+        'home.hero.title1': loadedTranslations.home?.hero?.title1
+      });
       setTranslations(loadedTranslations);
     } catch (error) {
       console.error('Failed to load translations:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -71,6 +79,10 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     }
 
     if (typeof value !== 'string') {
+      // If still loading, return empty string to avoid showing keys
+      if (isLoading) {
+        return '';
+      }
       return key; // Return key if translation not found
     }
 
@@ -83,6 +95,21 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
     return value;
   };
+
+  // Show loading screen while translations are loading
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-emerald-50">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-t-4 border-teal-600"></div>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Loading...</h2>
+          <p className="text-gray-600">Please wait</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <LocaleContext.Provider value={{ locale, setLocale, t, translations }}>
