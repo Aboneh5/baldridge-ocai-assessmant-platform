@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma, ensurePrismaConnected } from '@/lib/prisma';
 import { getUserId } from '@/lib/get-user-id';
 
 // POST /api/baldrige/response
 // Save or update a response to a Baldrige question
 export async function POST(request: NextRequest) {
   try {
+    await ensurePrismaConnected();
+    console.log('[Baldrige Response API] Starting POST request');
     const userId = await getUserId(request);
 
+    console.log('[Baldrige Response API] User ID:', userId);
+
     if (!userId) {
+      console.log('[Baldrige Response API] No user ID - returning 401');
       return NextResponse.json(
         {
           success: false,
@@ -21,6 +26,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { questionId, responseText, surveyId, timeSpent } = body;
 
+    console.log('[Baldrige Response API] Request body:', { questionId, responseTextLength: responseText?.length, surveyId, timeSpent });
+
     if (!questionId) {
       return NextResponse.json(
         {
@@ -29,6 +36,17 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       );
+    }
+
+    // Validate that responseText is not empty
+    const trimmedResponse = responseText?.trim() || '';
+    if (!trimmedResponse) {
+      console.log('[Baldrige Response API] Empty response text, skipping save');
+      return NextResponse.json({
+        success: true,
+        message: 'Empty response, not saved',
+        data: { skipped: true },
+      });
     }
 
     // Verify question exists
@@ -50,21 +68,30 @@ export async function POST(request: NextRequest) {
     const normalizedSurveyId = surveyId || null;
 
     // Find existing response
+    // Note: Explicitly handle null surveyId for proper Prisma query matching
     const existingResponse = await prisma.baldrigeResponse.findFirst({
       where: {
         userId: userId,
         questionId: questionId,
-        surveyId: normalizedSurveyId,
+        ...(normalizedSurveyId ? { surveyId: normalizedSurveyId } : { surveyId: null }),
       },
     });
 
     let response;
     if (existingResponse) {
+      // Short-circuit if unchanged to reduce DB writes
+      if ((existingResponse.responseText || '') === trimmedResponse) {
+        return NextResponse.json({
+          success: true,
+          message: 'No changes to save',
+          data: { id: existingResponse.id, responseText: existingResponse.responseText, updatedAt: existingResponse.updatedAt },
+        });
+      }
       // Update existing response
       response = await prisma.baldrigeResponse.update({
         where: { id: existingResponse.id },
         data: {
-          responseText: responseText?.trim() || '',
+          responseText: trimmedResponse,
           timeSpent: timeSpent || 0,
           updatedAt: new Date(),
         },
@@ -76,7 +103,7 @@ export async function POST(request: NextRequest) {
           userId: userId,
           questionId: questionId,
           surveyId: normalizedSurveyId,
-          responseText: responseText?.trim() || '',
+          responseText: trimmedResponse,
           timeSpent: timeSpent || 0,
         },
       });
@@ -92,8 +119,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Error saving Baldrige response:', error);
-    console.error('Error details:', {
+    console.error('[Baldrige Response API] ERROR:', error);
+    console.error('[Baldrige Response API] Error details:', {
+      name: error.name,
       message: error.message,
       code: error.code,
       meta: error.meta,

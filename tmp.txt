@@ -1,0 +1,120 @@
+    saveTimers.current[questionId] = setTimeout(() => {
+      saveResponseImmediate(questionId, value);
+      delete saveTimers.current[questionId];
+    }, DEBOUNCE_MS);
+
+    // Update progress tracking in localStorage
+    const storedUser = localStorage.getItem('user');
+    const storedOrg = localStorage.getItem('organization');
+    const storedAccessKey = localStorage.getItem('accessKey');
+
+    if (storedUser && storedOrg) {
+      const user = JSON.parse(storedUser);
+      const org = JSON.parse(storedOrg);
+
+      // Calculate total questions and answered questions
+      const totalQuestions = categories.reduce((total, cat) => {
+        return total + cat.subcategories.reduce((subTotal, sub) => {
+          return subTotal + sub.questions.length;
+        }, 0);
+      }, 0);
+
+      const answeredQuestions = Object.keys(responses).filter(key => responses[key]?.trim()).length + 1; // +1 for current answer
+      const percentage = calculateProgressPercentage(answeredQuestions, totalQuestions);
+
+      saveAssessmentProgress({
+        assessmentType: 'BALDRIGE',
+        organizationId: org.id,
+        accessKey: storedAccessKey || '',
+        userId: user.id,
+        status: 'in_progress',
+        progress: {
+          currentStep: answeredQuestions,
+          totalSteps: totalQuestions,
+          percentage,
+          data: { currentCategoryIndex, currentSubcategoryIndex },
+        },
+        timestamps: {
+          startedAt: new Date().toISOString(),
+        },
+      });
+    }
+  };
+
+  const handleSubcategoryComplete = async () => {
+    // Get main categories (excluding organizational profile)
+    const mainCategories = categories.filter(c => c.displayOrder > 0);
+    const currentCategory = mainCategories[currentCategoryIndex];
+    const currentSubcategory = currentCategory?.subcategories[currentSubcategoryIndex];
+
+    if (!currentSubcategory) return;
+
+    const allQuestionsAnswered = currentSubcategory.questions.every(
+      q => responses[q.id]?.trim()
+    );
+
+    if (!allQuestionsAnswered) {
+      alert(t('assessment.pleaseAnswerAllQuestions'));
+      return;
+    }
+
+    // Save all responses for this subcategory before proceeding
+    setSaving(true);
+    await Promise.all(
+      currentSubcategory.questions
+        .filter(q => responses[q.id]?.trim()) // Only save non-empty responses
+        .map(q =>
+          fetch('/api/baldrige/response', {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({
+              questionId: q.id,
+              responseText: responses[q.id],
+            }),
+          })
+        )
+    );
+    setSaving(false);
+
+    // Start transition
+    setIsTransitioning(true);
+
+    // Mark questions as completed
+    const newCompleted = new Set(completedQuestions);
+    currentSubcategory.questions.forEach(q => newCompleted.add(q.id));
+    setCompletedQuestions(newCompleted);
+
+    // Check if this is the last subcategory of the last category
+    const isLastSubcategory = currentSubcategoryIndex === currentCategory.subcategories.length - 1;
+    const isLastCategory = currentCategoryIndex === mainCategories.length - 1;
+
+    if (isLastSubcategory && isLastCategory) {
+      // Assessment complete - submit it
+      submitAssessment();
+    } else if (currentSubcategoryIndex < currentCategory.subcategories.length - 1) {
+      // Move to next subcategory in same category
+      setCurrentSubcategoryIndex(currentSubcategoryIndex + 1);
+    } else {
+      // Move to next category, first subcategory
+      setCurrentCategoryIndex(currentCategoryIndex + 1);
+      setCurrentSubcategoryIndex(0);
+    }
+
+    // End transition after animation
+    setTimeout(() => setIsTransitioning(false), 300);
+
+    // Save progress in background (non-blocking)
+    fetch('/api/baldrige/progress', {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({
+        completedQuestions: Array.from(newCompleted),
+      }),
+    }).catch(err => console.error('Progress save failed:', err));
+  };
+
+  const submitAssessment = async () => {
+    try {
+      const res = await fetch('/api/baldrige/submit', {
+        method: 'POST',
+        headers: getHeaders(),

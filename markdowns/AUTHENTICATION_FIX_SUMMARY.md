@@ -234,3 +234,6 @@ src/app/api/admin/organizations/route.ts
 **The authentication issue has been completely resolved!** ✅
 
 
+
+
+

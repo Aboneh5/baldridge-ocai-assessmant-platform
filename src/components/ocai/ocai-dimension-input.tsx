@@ -73,7 +73,7 @@ export function OCAIDimensionInput({ dimension, phase, response, onChange }: OCA
         <p className="text-gray-600 mb-4">{dimension.description}</p>
       </div>
 
-      <div className="max-h-[600px] overflow-y-auto space-y-6 pr-2 border border-gray-200 rounded-lg p-6 bg-gray-50">
+      <div className="max-h-[900px] overflow-y-auto space-y-6 pr-2 border border-gray-200 rounded-lg p-6 bg-gray-50">
         {Object.entries(dimension.options).map(([key, option]) => (
           <div key={key} className="border border-gray-200 rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-start space-x-6">

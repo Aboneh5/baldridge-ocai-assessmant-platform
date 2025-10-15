@@ -7,11 +7,16 @@ import { getUserId } from '@/lib/get-user-id';
 // Also loads user's existing responses for resuming assessment
 export async function GET(request: NextRequest) {
   try {
+    console.log('[Baldrige Categories API] Starting request');
+    
     const userId = await getUserId(request);
     const { searchParams } = new URL(request.url);
     const surveyId = searchParams.get('surveyId') || null;
 
+    console.log('[Baldrige Categories API] Request params:', { userId, surveyId });
+
     // Get categories with questions
+    console.log('[Baldrige Categories API] Fetching categories from database...');
     const categories = await prisma.baldrigeCategory.findMany({
       orderBy: { displayOrder: 'asc' },
       include: {
@@ -26,15 +31,19 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    console.log('[Baldrige Categories API] Categories fetched:', categories.length);
+
     // If user is authenticated, load their existing responses
     let userResponses: any[] = [];
     if (userId) {
+      console.log('[Baldrige Categories API] Fetching user responses...');
       userResponses = await prisma.baldrigeResponse.findMany({
         where: {
           userId: userId,
           surveyId: surveyId,
         },
       });
+      console.log('[Baldrige Categories API] User responses fetched:', userResponses.length);
     }
 
     // Map responses to questions
@@ -54,16 +63,23 @@ export async function GET(request: NextRequest) {
       })),
     }));
 
+    console.log('[Baldrige Categories API] Success - returning data');
     return NextResponse.json({
       success: true,
       data: categoriesWithResponses,
     });
   } catch (error) {
-    console.error('Error fetching Baldrige categories:', error);
+    console.error('[Baldrige Categories API] ERROR:', error);
+    console.error('[Baldrige Categories API] Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
       {
         success: false,
         message: 'Failed to fetch categories',
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

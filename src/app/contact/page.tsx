@@ -4,8 +4,10 @@ import Link from "next/link";
 import { ArrowLeft, MapPin, Phone, Mail, Clock, Send, MessageCircle, Building2, Users, Globe, CheckCircle, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import LanguageSwitcher from "@/components/localization/LanguageSwitcher";
+import { useLocale } from "@/lib/i18n/context";
 
 export default function ContactPage() {
+  const { t, translations } = useLocale();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -82,7 +84,7 @@ export default function ContactPage() {
                 />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Assessment Hub</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{t('app.name')}</h1>
                 <p className="text-sm text-teal-700 font-medium">by Tenadam Training, Consultancy & Research PLC</p>
               </div>
             </div>
@@ -93,7 +95,7 @@ export default function ContactPage() {
                 className="flex items-center space-x-2 px-4 py-2 text-teal-700 hover:text-teal-800 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>Back to Home</span>
+                <span>{t('contact.backToHome')}</span>
               </Link>
             </div>
           </div>
@@ -108,11 +110,10 @@ export default function ContactPage() {
             <MessageCircle className="w-10 h-10 text-teal-700" />
           </div>
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Get in Touch
+            {t('contact.title')}
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Ready to transform your organization? Let's discuss how Tenadam's comprehensive 
-            training, consultancy, and assessment services can help you achieve your goals.
+            {t('contact.subtitle')}
           </p>
         </div>
 
@@ -124,10 +125,9 @@ export default function ContactPage() {
               <div className="w-16 h-16 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <MapPin className="w-8 h-8 text-teal-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Our Address</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Lem-Hotel Area<br />
-                Addis Ababa, Ethiopia
+              <h3 className="text-xl font-bold text-gray-900 mb-4">{t('contact.info.address.title')}</h3>
+              <p className="text-gray-600 leading-relaxed" style={{ whiteSpace: 'pre-line' }}>
+                {t('contact.info.address.value')}
               </p>
             </div>
 
@@ -136,11 +136,11 @@ export default function ContactPage() {
               <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Phone className="w-8 h-8 text-emerald-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Phone Numbers</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">{t('contact.info.phone.title')}</h3>
               <div className="space-y-2 text-gray-600">
-                <p className="font-medium">+251-911-58-4260</p>
-                <p className="font-medium">+251-912-44-2502</p>
-                <p className="font-medium">+251-993-51-8990</p>
+                {(translations.contact?.info?.phone?.values || []).map((phone: string, idx: number) => (
+                  <p key={idx} className="font-medium">{phone}</p>
+                ))}
               </div>
             </div>
 
@@ -149,10 +149,10 @@ export default function ContactPage() {
               <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Mail className="w-8 h-8 text-blue-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Email Address</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">{t('contact.info.email.title')}</h3>
               <p className="text-gray-600">
-                <a href="mailto:info@tenadamconsulting.com" className="text-blue-600 hover:text-blue-700 font-medium">
-                  info@tenadamconsulting.com
+                <a href={`mailto:${t('contact.info.email.value')}`} className="text-blue-600 hover:text-blue-700 font-medium">
+                  {t('contact.info.email.value')}
                 </a>
               </p>
             </div>
@@ -164,33 +164,31 @@ export default function ContactPage() {
           <div className="bg-gradient-to-br from-slate-900 to-gray-800 rounded-2xl p-8 lg:p-12 text-white">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
-                <h2 className="text-3xl font-bold mb-6">Working Hours</h2>
+                <h2 className="text-3xl font-bold mb-6">{t('contact.workingHours.heading')}</h2>
                 <div className="flex items-center space-x-4 mb-6">
                   <div className="w-12 h-12 bg-teal-500 rounded-lg flex items-center justify-center">
                     <Clock className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-1">Monday - Friday</h3>
-                    <p className="text-gray-300">8:30 AM - 5:30 PM</p>
+                    <h3 className="text-xl font-semibold mb-1">{t('contact.workingHours.schedule')}</h3>
+                    <p className="text-gray-300">{t('contact.workingHours.time')}</p>
                   </div>
                 </div>
                 <p className="text-gray-300 leading-relaxed">
-                  Our team is available during business hours to assist you with your training, 
-                  consultancy, and assessment needs. We're committed to providing timely and 
-                  professional support for all your organizational development requirements.
+                  {t('contact.workingHours.description')}
                 </p>
               </div>
               <div className="relative">
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-                  <h3 className="text-lg font-semibold mb-6">Quick Contact Options</h3>
+                  <h3 className="text-lg font-semibold mb-6">{t('contact.workingHours.quickContact')}</h3>
                   <div className="space-y-4">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center">
                         <Phone className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <p className="font-medium">Call us directly</p>
-                        <p className="text-sm text-gray-300">Available during business hours</p>
+                        <p className="font-medium">{t('contact.workingHours.call.title')}</p>
+                        <p className="text-sm text-gray-300">{t('contact.workingHours.call.description')}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
@@ -198,8 +196,8 @@ export default function ContactPage() {
                         <Mail className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <p className="font-medium">Send us an email</p>
-                        <p className="text-sm text-gray-300">We'll respond within 24 hours</p>
+                        <p className="font-medium">{t('contact.workingHours.email.title')}</p>
+                        <p className="text-sm text-gray-300">{t('contact.workingHours.email.description')}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
@@ -207,8 +205,8 @@ export default function ContactPage() {
                         <Building2 className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <p className="font-medium">Visit our office</p>
-                        <p className="text-sm text-gray-300">Lem-Hotel Area, Addis Ababa</p>
+                        <p className="font-medium">{t('contact.workingHours.visit.title')}</p>
+                        <p className="text-sm text-gray-300">{t('contact.workingHours.visit.description')}</p>
                       </div>
                     </div>
                   </div>
@@ -222,9 +220,9 @@ export default function ContactPage() {
         <section className="mb-16">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 lg:p-12">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Send us a Message</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('contact.form.heading')}</h2>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Have questions about our services or need a custom solution? We'd love to hear from you.
+                {t('contact.form.subtitle')}
               </p>
             </div>
 
@@ -234,10 +232,9 @@ export default function ContactPage() {
                 <div className="bg-green-50 border border-green-200 rounded-lg p-6 flex items-start space-x-3">
                   <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
                   <div>
-                    <h3 className="text-lg font-semibold text-green-900 mb-2">Message Sent Successfully!</h3>
+                    <h3 className="text-lg font-semibold text-green-900 mb-2">{t('contact.form.success.title')}</h3>
                     <p className="text-green-800">
-                      Thank you for contacting us. We have received your message and will get back to you within 24 hours. 
-                      You should also receive a confirmation email shortly.
+                      {t('contact.form.success.description')}
                     </p>
                   </div>
                 </div>
@@ -249,9 +246,9 @@ export default function ContactPage() {
                 <div className="bg-red-50 border border-red-200 rounded-lg p-6 flex items-start space-x-3">
                   <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
                   <div>
-                    <h3 className="text-lg font-semibold text-red-900 mb-2">Error Sending Message</h3>
+                    <h3 className="text-lg font-semibold text-red-900 mb-2">{t('contact.form.error.title')}</h3>
                     <p className="text-red-800">
-                      {errorMessage || 'There was an error sending your message. Please try again or contact us directly.'}
+                      {errorMessage || t('contact.form.error.description')}
                     </p>
                   </div>
                 </div>
@@ -262,7 +259,7 @@ export default function ContactPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                 <div>
                   <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
-                    First Name *
+                    {t('contact.form.firstName')} {t('contact.form.required')}
                   </label>
                   <input
                     type="text"
@@ -273,12 +270,12 @@ export default function ContactPage() {
                     required
                     disabled={isSubmitting}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
-                    placeholder="Enter your first name"
+                    placeholder={t('contact.form.placeholders.firstName')}
                   />
                 </div>
                 <div>
                   <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
-                    Last Name *
+                    {t('contact.form.lastName')} {t('contact.form.required')}
                   </label>
                   <input
                     type="text"
@@ -289,7 +286,7 @@ export default function ContactPage() {
                     required
                     disabled={isSubmitting}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
-                    placeholder="Enter your last name"
+                    placeholder={t('contact.form.placeholders.lastName')}
                   />
                 </div>
               </div>
@@ -297,7 +294,7 @@ export default function ContactPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address *
+                    {t('contact.form.email')} {t('contact.form.required')}
                   </label>
                   <input
                     type="email"
@@ -308,12 +305,12 @@ export default function ContactPage() {
                     required
                     disabled={isSubmitting}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
-                    placeholder="Enter your email address"
+                    placeholder={t('contact.form.placeholders.email')}
                   />
                 </div>
                 <div>
                   <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number
+                    {t('contact.form.phone')}
                   </label>
                   <input
                     type="tel"
@@ -323,14 +320,14 @@ export default function ContactPage() {
                     onChange={handleInputChange}
                     disabled={isSubmitting}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
-                    placeholder="Enter your phone number"
+                    placeholder={t('contact.form.placeholders.phone')}
                   />
                 </div>
               </div>
 
               <div className="mb-8">
                 <label htmlFor="organization" className="block text-sm font-medium text-gray-700 mb-2">
-                  Organization
+                  {t('contact.form.organization')}
                 </label>
                 <input
                   type="text"
@@ -340,13 +337,13 @@ export default function ContactPage() {
                   onChange={handleInputChange}
                   disabled={isSubmitting}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
-                  placeholder="Enter your organization name"
+                  placeholder={t('contact.form.placeholders.organization')}
                 />
               </div>
 
               <div className="mb-8">
                 <label htmlFor="service" className="block text-sm font-medium text-gray-700 mb-2">
-                  Service Interest
+                  {t('contact.form.service')}
                 </label>
                 <select
                   id="service"
@@ -356,20 +353,20 @@ export default function ContactPage() {
                   disabled={isSubmitting}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
                 >
-                  <option value="">Select a service</option>
-                  <option value="training">Training Services</option>
-                  <option value="consultancy">Consultancy Services</option>
-                  <option value="research">Research Services</option>
-                  <option value="assessment">Assessment Hub Platform</option>
-                  <option value="ocai">OCAI Assessment</option>
-                  <option value="baldrige">Baldrige Framework</option>
-                  <option value="other">Other</option>
+                  <option value="">{t('contact.form.serviceOptions.select')}</option>
+                  <option value="training">{t('contact.form.serviceOptions.training')}</option>
+                  <option value="consultancy">{t('contact.form.serviceOptions.consultancy')}</option>
+                  <option value="research">{t('contact.form.serviceOptions.research')}</option>
+                  <option value="assessment">{t('contact.form.serviceOptions.assessment')}</option>
+                  <option value="ocai">{t('contact.form.serviceOptions.ocai')}</option>
+                  <option value="baldrige">{t('contact.form.serviceOptions.baldrige')}</option>
+                  <option value="other">{t('contact.form.serviceOptions.other')}</option>
                 </select>
               </div>
 
               <div className="mb-8">
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                  Message *
+                  {t('contact.form.message')} {t('contact.form.required')}
                 </label>
                 <textarea
                   id="message"
@@ -380,7 +377,7 @@ export default function ContactPage() {
                   required
                   disabled={isSubmitting}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-vertical disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
-                  placeholder="Tell us about your needs, challenges, or questions..."
+                  placeholder={t('contact.form.placeholders.message')}
                 ></textarea>
               </div>
 
@@ -393,12 +390,12 @@ export default function ContactPage() {
                   {isSubmitting ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Sending...
+                      {t('contact.form.submitting')}
                     </>
                   ) : (
                     <>
                       <Send className="w-5 h-5 mr-2" />
-                      Send Message
+                      {t('contact.form.submit')}
                     </>
                   )}
                 </button>
@@ -410,9 +407,9 @@ export default function ContactPage() {
         {/* Service Areas */}
         <section className="mb-16">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">How We Can Help</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('contact.services.heading')}</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Discover the range of services we offer to support your organizational development goals
+              {t('contact.services.subtitle')}
             </p>
           </div>
 
@@ -422,13 +419,11 @@ export default function ContactPage() {
               <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-6">
                 <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-blue-900 mb-4">Training Services</h3>
+              <h3 className="text-xl font-bold text-blue-900 mb-4">{t('contact.services.training.title')}</h3>
               <ul className="space-y-2 text-blue-800 text-sm">
-                <li>• Leadership and Management</li>
-                <li>• Quality Enhancement and Standardization</li>
-                <li>• Accounting and Finance</li>
-                <li>• Marketing and Service Management</li>
-                <li>• IT, Business and General Skills</li>
+                {(translations.contact?.services?.training?.items || []).map((item: string, idx: number) => (
+                  <li key={idx}>• {item}</li>
+                ))}
               </ul>
             </div>
 
@@ -437,14 +432,11 @@ export default function ContactPage() {
               <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center mb-6">
                 <Building2 className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-emerald-900 mb-4">Consultancy Services</h3>
+              <h3 className="text-xl font-bold text-emerald-900 mb-4">{t('contact.services.consultancy.title')}</h3>
               <ul className="space-y-2 text-emerald-800 text-sm">
-                <li>• Business Strategy</li>
-                <li>• Process Optimization</li>
-                <li>• Change Management</li>
-                <li>• Organizational Development</li>
-                <li>• Market Research and Analysis</li>
-                <li>• Risk Management</li>
+                {(translations.contact?.services?.consultancy?.items || []).map((item: string, idx: number) => (
+                  <li key={idx}>• {item}</li>
+                ))}
               </ul>
             </div>
 
@@ -453,13 +445,11 @@ export default function ContactPage() {
               <div className="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center mb-6">
                 <Globe className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-teal-900 mb-4">Research Services</h3>
+              <h3 className="text-xl font-bold text-teal-900 mb-4">{t('contact.services.research.title')}</h3>
               <ul className="space-y-2 text-teal-800 text-sm">
-                <li>• Competitive Analysis</li>
-                <li>• Feasibility Studies</li>
-                <li>• Industry Research</li>
-                <li>• Data Analysis and Interpretation</li>
-                <li>• Custom Research Projects</li>
+                {(translations.contact?.services?.research?.items || []).map((item: string, idx: number) => (
+                  <li key={idx}>• {item}</li>
+                ))}
               </ul>
             </div>
           </div>
@@ -468,82 +458,57 @@ export default function ContactPage() {
         {/* Client Testimonials */}
         <section className="mb-16">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">What Our Clients Say</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('contact.testimonials.heading')}</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Discover what our clients think about our service
+              {t('contact.testimonials.subtitle')}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-              <div className="flex items-center mb-4">
-                <div className="flex text-yellow-400">
-                  <span>★★★★★</span>
+            {(translations.contact?.testimonials?.reviews || []).map((review: any, idx: number) => (
+              <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                <div className="flex items-center mb-4">
+                  <div className="flex text-yellow-400">
+                    <span>★★★★★</span>
+                  </div>
+                </div>
+                <blockquote className="text-gray-600 leading-relaxed mb-6">
+                  "{review.quote}"
+                </blockquote>
+                <div className="flex items-center">
+                  <div className={`w-12 h-12 ${idx === 0 ? 'bg-teal-100' : 'bg-emerald-100'} rounded-full flex items-center justify-center mr-4`}>
+                    <Users className={`w-6 h-6 ${idx === 0 ? 'text-teal-600' : 'text-emerald-600'}`} />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">{review.author}</p>
+                    <p className="text-gray-600 text-sm">{review.role}</p>
+                  </div>
                 </div>
               </div>
-              <blockquote className="text-gray-600 leading-relaxed mb-6">
-                "The support we received from Tenadam Research, Training, and Consultancy was truly exceptional. 
-                Their meticulous research and practical training modules significantly boosted our operational 
-                efficiency and helped us navigate complex challenges with confidence. A fantastic partner for 
-                anyone seeking to enhance their capabilities!"
-              </blockquote>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mr-4">
-                  <Users className="w-6 h-6 text-teal-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900">Shem Assefa</p>
-                  <p className="text-gray-600 text-sm">Client</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-              <div className="flex items-center mb-4">
-                <div className="flex text-yellow-400">
-                  <span>★★★★★</span>
-                </div>
-              </div>
-              <blockquote className="text-gray-600 leading-relaxed mb-6">
-                "Tenadam Research, Training, and Consultancy has been instrumental in refining our strategic 
-                approach. Their in-depth research and tailored training programs have equipped our team with 
-                invaluable insights, leading to more effective decision-making and improved project outcomes. 
-                We highly recommend their expertise!"
-              </blockquote>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mr-4">
-                  <Users className="w-6 h-6 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900">Henok Gessesse</p>
-                  <p className="text-gray-600 text-sm">Client</p>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </section>
 
         {/* Call to Action */}
         <section className="mb-16">
           <div className="bg-gradient-to-br from-teal-600 to-emerald-600 rounded-2xl p-8 lg:p-12 text-white text-center">
-            <h2 className="text-3xl font-bold mb-4">Ready to Upgrade Your Experience?</h2>
+            <h2 className="text-3xl font-bold mb-4">{t('contact.cta.heading')}</h2>
             <p className="text-xl text-teal-100 mb-8 max-w-2xl mx-auto">
-              Transform your organization with our comprehensive training, consultancy, and assessment services. 
-              Let's work together to achieve your goals.
+              {t('contact.cta.subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/auth/signin"
                 className="inline-flex items-center px-8 py-4 bg-white text-teal-700 rounded-lg hover:bg-gray-100 transition-colors font-medium text-lg shadow-lg hover:shadow-xl"
               >
-                Access Assessment Hub
+                {t('contact.cta.accessHub')}
               </Link>
               <a
-                href="mailto:info@tenadamconsulting.com"
+                href={`mailto:${t('contact.info.email.value')}`}
                 className="inline-flex items-center px-8 py-4 border-2 border-white text-white rounded-lg hover:bg-white hover:text-teal-700 transition-colors font-medium text-lg"
               >
                 <Mail className="w-5 h-5 mr-2" />
-                Contact Us Directly
+                {t('contact.cta.contactDirect')}
               </a>
             </div>
           </div>
@@ -565,12 +530,11 @@ export default function ContactPage() {
               <span className="text-xl font-bold">Tenadam Training, Consultancy & Research PLC</span>
             </div>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Transforming Potential into Performance through comprehensive training, consultancy, 
-              and research services.
+              {t('contact.footer.tagline')}
             </p>
           </div>
           <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Tenadam Training, Consultancy & Research PLC. All rights reserved.</p>
+            <p>{t('contact.footer.copyright', { year: new Date().getFullYear() })}</p>
           </div>
         </div>
       </footer>

@@ -9,7 +9,7 @@ export function middleware(request: NextRequest) {
     '/',
     '/auth/signin',
     '/auth/error',
-    '/api/auth',
+    '/api/auth/',
     '/about',
     '/contact',
     '/privacy',

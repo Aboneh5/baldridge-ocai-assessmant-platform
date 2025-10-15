@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma, ensurePrismaConnected } from '@/lib/prisma';
 import { getUserId } from '@/lib/get-user-id';
 
 // GET /api/baldrige/progress
 // Get user's Baldrige assessment progress
 export async function GET(request: NextRequest) {
   try {
+    await ensurePrismaConnected();
+    console.log('[Baldrige Progress API] Starting GET request');
     const userId = await getUserId(request);
 
+    console.log('[Baldrige Progress API] User ID:', userId);
+
     if (!userId) {
+      console.log('[Baldrige Progress API] No user ID - returning 401');
       return NextResponse.json(
         {
           success: false,
@@ -24,12 +29,17 @@ export async function GET(request: NextRequest) {
     // Normalize surveyId to null if undefined or empty string
     const normalizedSurveyId = surveyId || null;
 
+    console.log('[Baldrige Progress API] Looking up progress for:', { userId, surveyId: normalizedSurveyId });
+
+    // Note: Explicitly handle null surveyId for proper Prisma query matching
     const progress = await prisma.baldrigeProgress.findFirst({
       where: {
         userId: userId,
-        surveyId: normalizedSurveyId,
+        ...(normalizedSurveyId ? { surveyId: normalizedSurveyId } : { surveyId: null }),
       },
     });
+
+    console.log('[Baldrige Progress API] Progress found:', !!progress);
 
     if (!progress) {
       return NextResponse.json({
@@ -46,11 +56,17 @@ export async function GET(request: NextRequest) {
       data: progress,
     });
   } catch (error) {
-    console.error('Error fetching progress:', error);
+    console.error('[Baldrige Progress API] ERROR:', error);
+    console.error('[Baldrige Progress API] Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
       {
         success: false,
         message: 'Failed to fetch progress',
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -61,9 +77,14 @@ export async function GET(request: NextRequest) {
 // Update user's Baldrige assessment progress
 export async function POST(request: NextRequest) {
   try {
+    await ensurePrismaConnected();
+    console.log('[Baldrige Progress API] Starting POST request');
     const userId = await getUserId(request);
 
+    console.log('[Baldrige Progress API] User ID:', userId);
+
     if (!userId) {
+      console.log('[Baldrige Progress API] No user ID - returning 401');
       return NextResponse.json(
         {
           success: false,
@@ -76,14 +97,21 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { completedQuestions, surveyId, isCompleted } = body;
 
+    console.log('[Baldrige Progress API] Request body:', { 
+      completedQuestionsCount: completedQuestions?.length, 
+      surveyId, 
+      isCompleted 
+    });
+
     // Normalize surveyId to null if undefined or empty string
     const normalizedSurveyId = surveyId || null;
 
     // Find existing progress
+    // Note: Explicitly handle null surveyId for proper Prisma query matching
     const existingProgress = await prisma.baldrigeProgress.findFirst({
       where: {
         userId: userId,
-        surveyId: normalizedSurveyId,
+        ...(normalizedSurveyId ? { surveyId: normalizedSurveyId } : { surveyId: null }),
       },
     });
 
@@ -116,11 +144,17 @@ export async function POST(request: NextRequest) {
       data: progress,
     });
   } catch (error) {
-    console.error('Error saving progress:', error);
+    console.error('[Baldrige Progress API] POST ERROR:', error);
+    console.error('[Baldrige Progress API] Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
       {
         success: false,
         message: 'Failed to save progress',
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

@@ -18,10 +18,16 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load locale from localStorage
+    // Load locale from localStorage on mount
     const savedLocale = localStorage.getItem('locale') as Locale;
+    console.log(`LocaleProvider: Loading saved locale from localStorage: ${savedLocale}`);
     if (savedLocale && (savedLocale === 'en' || savedLocale === 'am')) {
+      console.log(`LocaleProvider: Setting locale to saved value: ${savedLocale}`);
       setLocaleState(savedLocale);
+    } else {
+      console.log(`LocaleProvider: No valid saved locale, using default: ${defaultLocale}`);
+      // Set default locale in localStorage
+      localStorage.setItem('locale', defaultLocale);
     }
   }, []);
 
@@ -41,6 +47,8 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       const employee = await import(`@/locales/${loc}/employee.json`);
       const facilitator = await import(`@/locales/${loc}/facilitator.json`);
       const admin = await import(`@/locales/${loc}/admin.json`);
+      const about = await import(`@/locales/${loc}/about.json`);
+      const contact = await import(`@/locales/${loc}/contact.json`);
 
       const loadedTranslations = {
         ...common.default,
@@ -50,6 +58,8 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
         ...employee.default,
         ...facilitator.default,
         ...admin.default,
+        ...about.default,
+        ...contact.default,
       };
 
       console.log(`Translations loaded for ${loc}:`, Object.keys(loadedTranslations));
@@ -66,6 +76,11 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   };
 
   const setLocale = (newLocale: Locale) => {
+    if (newLocale === locale) {
+      console.log(`Locale unchanged: ${newLocale}`);
+      return;
+    }
+    console.log(`Language switched from ${locale} to ${newLocale}`);
     setLocaleState(newLocale);
     localStorage.setItem('locale', newLocale);
   };

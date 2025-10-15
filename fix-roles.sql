@@ -1,0 +1,2 @@
+UPDATE users SET role = 'FACILITATOR' WHERE role = 'ORG_ADMIN';
+

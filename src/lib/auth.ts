@@ -1,22 +1,49 @@
 import { NextAuthOptions } from 'next-auth'
-import { PrismaAdapter } from '@auth/prisma-adapter'
-import EmailProvider from 'next-auth/providers/email'
+import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import { prisma } from './prisma'
+import * as bcrypt from 'bcryptjs'
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as any,
   providers: [
-    EmailProvider({
-      server: {
-        host: process.env.EMAIL_SERVER_HOST,
-        port: parseInt(process.env.EMAIL_SERVER_PORT || '587'),
-        auth: {
-          user: process.env.EMAIL_SERVER_USER,
-          pass: process.env.EMAIL_SERVER_PASSWORD,
-        },
+    CredentialsProvider({
+      name: 'Credentials',
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
       },
-      from: process.env.EMAIL_FROM,
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null
+        }
+
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+          include: { organization: true },
+        })
+
+        if (!user || !user.password) {
+          return null
+        }
+
+        const isPasswordValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        )
+
+        if (!isPasswordValid) {
+          return null
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          organizationId: user.organizationId,
+          organization: user.organization,
+        }
+      }
     }),
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
       ? [
@@ -28,35 +55,23 @@ export const authOptions: NextAuthOptions = {
       : []),
   ],
   callbacks: {
-    async session({ session, user }) {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
+        token.role = user.role
+        token.organizationId = user.organizationId
+        token.organization = user.organization
+      }
+      return token
+    },
+    async session({ session, token }) {
       if (session.user) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: session.user.email! },
-          include: { organization: true },
-        })
-        
-        if (dbUser) {
-          session.user.id = dbUser.id
-          session.user.role = dbUser.role
-          session.user.organizationId = dbUser.organizationId
-          session.user.organization = dbUser.organization
-        }
+        session.user.id = token.id as string
+        session.user.role = token.role as string
+        session.user.organizationId = token.organizationId as string | null
+        session.user.organization = token.organization as any
       }
       return session
-    },
-    async signIn({ user, account, profile }) {
-      if (account?.provider === 'google' && profile?.email) {
-        // Check if user exists in our database
-        const existingUser = await prisma.user.findUnique({
-          where: { email: profile.email },
-        })
-        
-        if (!existingUser) {
-          // Create user with default organization or require admin to assign
-          return false // Prevent auto-signup, require admin invitation
-        }
-      }
-      return true
     },
   },
   pages: {
@@ -64,6 +79,8 @@ export const authOptions: NextAuthOptions = {
     error: '/auth/error',
   },
   session: {
-    strategy: 'database',
+    strategy: 'jwt',
   },
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
 }

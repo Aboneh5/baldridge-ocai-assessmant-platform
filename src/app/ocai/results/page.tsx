@@ -26,7 +26,7 @@ import {
 } from 'chart.js';
 import { Radar } from 'react-chartjs-2';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 // Register ChartJS components
 ChartJS.register(
@@ -310,7 +310,7 @@ export default function OCAIResultsPage() {
     pdf.setFontSize(10);
     const aggregate = data.organizationAggregate;
 
-    (pdf as any).autoTable({
+    autoTable(pdf, {
       startY: 75,
       head: [['Dimension', 'Current', 'Preferred', 'Delta', 'Change']],
       body: [
@@ -346,7 +346,7 @@ export default function OCAIResultsPage() {
         result.nowScores.hierarchy.toFixed(1),
       ]);
 
-      (pdf as any).autoTable({
+      autoTable(pdf, {
         startY: 30,
         head: [['Name', 'Clan', 'Adhocracy', 'Market', 'Hierarchy']],
         body: individualData,

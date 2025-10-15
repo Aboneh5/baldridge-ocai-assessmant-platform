@@ -18,22 +18,16 @@ model Organization {
   country   String?
   logoUrl   String?
   settings  Json?
-  primaryColor String? @default("#3B82F6") // Brand primary color
-  dataRetentionDays Int @default(2555) // 7 years default
+  primaryColor String? @default("#3B82F6")
+  dataRetentionDays Int @default(2555)
   privacyPolicyUrl String?
   consentVersion String @default("1.0")
-
-  // Subscription & Access
-  subscribedAssessments String @default("OCAI,BALDRIGE") // Comma-separated: "OCAI,BALDRIGE"
+  subscribedAssessments String @default("OCAI,BALDRIGE")
   isActive  Boolean  @default(true)
-
-  // Creation tracking
   createdById String?
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
   users     User[]
   surveys   Survey[]
   reports   Report[]
@@ -47,19 +41,15 @@ model Organization {
 model User {
   id             String   @id @default(cuid())
   name           String
-  email          String?  @unique // Optional for employees using access keys
-  password       String?  // Hashed password for Admin and Facilitator
+  email          String?  @unique
+  password       String?
   role           Role     @default(EMPLOYEE)
-  organizationId String?  // Null for SYSTEM_ADMIN
-
-  // Employee access tracking
-  accessKeyUsed  String?  // Track which access key was used by employee
-
+  organizationId String?
+  accessKeyUsed  String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   lastLoginAt    DateTime?
 
-  // Relations
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   responses    Response[]
   comments     Comment[]
@@ -75,7 +65,7 @@ model Survey {
   id                     String    @id @default(cuid())
   organizationId         String
   title                  String
-  assessmentType         AssessmentType @default(OCAI) // "OCAI" or "BALDRIGE"
+  assessmentType         AssessmentType @default(OCAI)
   status                 SurveyStatus @default(DRAFT)
   openAt                 DateTime?
   closeAt                DateTime?
@@ -84,7 +74,6 @@ model Survey {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
-  // Relations
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   invitations  Invitation[]
   responses    Response[]
@@ -106,7 +95,6 @@ model Invitation {
   claimedAt DateTime?
   createdAt DateTime  @default(now())
 
-  // Relations
   survey Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
 
   @@map("invitations")
@@ -114,7 +102,7 @@ model Invitation {
 
 model Response {
   id              String    @id @default(cuid())
-  surveyId        String
+  surveyId        String?
   userId          String?
   demographics    Json?
   nowScores       Json
@@ -123,17 +111,14 @@ model Response {
   ipHash          String
   consentGiven    Boolean   @default(false)
   consentTimestamp DateTime?
-  consentVersion  String?   // Track consent version for legal compliance
-  anonymousMode   Boolean   @default(false) // User chose anonymous participation
-  
-  // Progress tracking for assessment credentials
-  credentialEmail String?   // Email if using credential auth (for admin view only)
-  isComplete      Boolean   @default(false) // Assessment completed
-  progressData    Json?     // Saved progress for incomplete assessments
-  lastSavedAt     DateTime?  // Last time progress was saved
+  consentVersion  String?
+  anonymousMode   Boolean   @default(false)
+  credentialEmail String?
+  isComplete      Boolean   @default(false)
+  progressData    Json?
+  lastSavedAt     DateTime?
 
-  // Relations
-  survey  Survey  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  survey  Survey?  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
   comments Comment[]
 
@@ -158,7 +143,6 @@ model Aggregate {
   n                     Int
   createdAt             DateTime @default(now())
 
-  // Relations
   survey Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
 
   @@map("aggregates")
@@ -170,13 +154,11 @@ model Comment {
   responseId String?
   text       String
   createdAt  DateTime @default(now())
+  userId   String?
 
-  // Relations
   survey   Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   response Response? @relation(fields: [responseId], references: [id], onDelete: Cascade)
   user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  userId   String?
 
   @@map("comments")
 }
@@ -187,61 +169,28 @@ model Report {
   kind           ReportKind
   payload        Json
   createdAt      DateTime    @default(now())
+  organizationId String
 
-  // Relations
   survey       Survey       @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  organizationId String
 
   @@map("reports")
 }
 
-enum Role {
-  SYSTEM_ADMIN  // Tenadam admin - full system access
-  FACILITATOR   // Client company admin - organization-scoped access
-  EMPLOYEE      // Assessment taker - access via access key
-}
-
-enum SurveyStatus {
-  DRAFT
-  OPEN
-  CLOSED
-}
-
-enum ReportKind {
-  ORG
-  TEAM
-  CUSTOM_SLICE
-}
-
-enum AssessmentType {
-  OCAI
-  BALDRIGE
-}
-
 model AccessKey {
   id             String   @id @default(cuid())
-  key            String   @unique // 6-8 character access code
+  key            String   @unique
   organizationId String
-
-  // Access control
-  assessmentTypes String @default("OCAI,BALDRIGE") // Comma-separated: "OCAI,BALDRIGE"
-  maxUses        Int?     // Maximum number of uses (null = unlimited)
+  assessmentTypes String @default("OCAI,BALDRIGE")
+  maxUses        Int?
   usageCount     Int      @default(0)
-
-  // Validity
   isActive       Boolean  @default(true)
   expiresAt      DateTime?
-
-  // Metadata
-  description    String?  // e.g., "Q1 2024 Survey", "Leadership Team"
-  createdBy      String?  // User ID who created this key
-
+  description    String?
+  createdBy      String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  // Relations
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@map("access_keys")
@@ -249,34 +198,23 @@ model AccessKey {
 
 model AssessmentCredential {
   id              String    @id @default(cuid())
-  email           String    // Email for login
-  password        String    // Hashed password
+  email           String
+  password        String
   organizationId  String
-  
-  // Access control
-  assessmentTypes String    @default("OCAI,BALDRIGE") // Comma-separated: "OCAI,BALDRIGE"
-  
-  // Validity
+  assessmentTypes String    @default("OCAI,BALDRIGE")
   isActive        Boolean   @default(true)
   expiresAt       DateTime
-  
-  // Batch tracking
-  batchId         String    // Groups credentials from same upload
-  batchName       String?   // Optional batch name
-  
-  // Usage tracking
+  batchId         String
+  batchName       String?
   lastUsedAt      DateTime?
   loginCount      Int       @default(0)
-  
-  // Metadata
-  createdBy       String?   // User ID who created this credential
+  createdBy       String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   
-  // Relations
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   
-  @@unique([email, batchId]) // Email unique per batch
+  @@unique([email, batchId])
   @@index([email])
   @@index([batchId])
   @@index([organizationId])
@@ -286,19 +224,19 @@ model AssessmentCredential {
 model Workshop {
   id            String   @id @default(cuid())
   surveyId      String
-  survey        Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   title         String
   description   String?
-  status        String   @default("draft") // "draft", "active", "completed"
+  status        String   @default("draft")
   facilitatorId String?
-  facilitator   User?    @relation(fields: [facilitatorId], references: [id])
   scheduledAt   DateTime?
   completedAt   DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
-  sessions      WorkshopSession[]
-  actions       Action[]
+  survey      Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  facilitator User?    @relation(fields: [facilitatorId], references: [id])
+  sessions    WorkshopSession[]
+  actions     Action[]
 
   @@map("workshops")
 }
@@ -306,18 +244,18 @@ model Workshop {
 model WorkshopSession {
   id          String    @id @default(cuid())
   workshopId  String
-  workshop    Workshop  @relation(fields: [workshopId], references: [id], onDelete: Cascade)
   title       String
   description String?
-  status      String    @default("planned") // "planned", "active", "completed"
+  status      String    @default("planned")
   startedAt   DateTime?
   completedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   
+  workshop     Workshop  @relation(fields: [workshopId], references: [id], onDelete: Cascade)
   pinnedCharts PinnedChart[]
-  themes      Theme[]
-  actions     Action[]
+  themes       Theme[]
+  actions      Action[]
 
   @@map("workshop_sessions")
 }
@@ -325,12 +263,13 @@ model WorkshopSession {
 model PinnedChart {
   id        String          @id @default(cuid())
   sessionId String
-  session   WorkshopSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  chartType String          // "radar", "bar", "heatmap", "delta"
+  chartType String
   title     String
-  data      Json            // Chart configuration and data
-  position  Int             // Order in the session
+  data      Json
+  position  Int
   createdAt DateTime        @default(now())
+
+  session   WorkshopSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@map("pinned_charts")
 }
@@ -338,14 +277,14 @@ model PinnedChart {
 model Theme {
   id          String          @id @default(cuid())
   sessionId   String
-  session     WorkshopSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   title       String
   description String
-  category    String?         // "strength", "challenge", "opportunity", "risk"
-  priority    String          @default("medium") // "low", "medium", "high", "critical"
+  category    String?
+  priority    String          @default("medium")
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
   
+  session     WorkshopSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   actions     Action[]
 
   @@map("themes")
@@ -354,21 +293,22 @@ model Theme {
 model Action {
   id          String    @id @default(cuid())
   workshopId  String
-  workshop    Workshop  @relation(fields: [workshopId], references: [id], onDelete: Cascade)
   sessionId   String?
-  session     WorkshopSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   themeId     String?
-  theme       Theme?    @relation(fields: [themeId], references: [id], onDelete: SetNull)
   title       String
   description String?
-  owner       String?   // Owner name/email
-  status      String    @default("planned") // "planned", "in_progress", "completed", "cancelled"
-  priority    String    @default("medium") // "low", "medium", "high", "critical"
+  owner       String?
+  status      String    @default("planned")
+  priority    String    @default("medium")
   dueDate     DateTime?
   completedAt DateTime?
-  successMetrics Json?  // Success criteria and metrics
+  successMetrics Json?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  workshop    Workshop  @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  session     WorkshopSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  theme       Theme?    @relation(fields: [themeId], references: [id], onDelete: SetNull)
 
   @@map("actions")
 }
@@ -377,28 +317,26 @@ model Intervention {
   id          String   @id @default(cuid())
   name        String
   description String
-  category    String   // "collaborate", "create", "compete", "control"
-  quadrant    String   // "clan", "adhocracy", "market", "hierarchy"
-  direction   String   // "increase", "decrease"
-  effort      String   @default("medium") // "low", "medium", "high"
-  impact      String   @default("medium") // "low", "medium", "high"
-  duration    String?  // "1-2 weeks", "1-3 months", "3-6 months", "6+ months"
-  resources   String?  // Resource requirements
-  examples    Json?    // Example implementations
+  category    String
+  quadrant    String
+  direction   String
+  effort      String   @default("medium")
+  impact      String   @default("medium")
+  duration    String?
+  resources   String?
+  examples    Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@map("interventions")
 }
 
-// ==================== BALDRIGE ASSESSMENT MODELS ====================
-
 model BaldrigeCategory {
   id            String                @id @default(cuid())
   name          String                @unique
   displayOrder  Int                   @unique
   description   String?
-  totalPoints   Int                   @default(0) // Total points for this category
+  totalPoints   Int                   @default(0)
   subcategories BaldrigeSubcategory[]
   createdAt     DateTime              @default(now())
   updatedAt     DateTime              @updatedAt
@@ -411,7 +349,7 @@ model BaldrigeSubcategory {
   name         String
   displayOrder Int
   description  String?
-  points       Int                @default(0) // Points allocated to this subcategory
+  points       Int                @default(0)
   categoryId   String
   category     BaldrigeCategory   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   questions    BaldrigeQuestion[]
@@ -424,7 +362,7 @@ model BaldrigeSubcategory {
 
 model BaldrigeQuestion {
   id            String              @id @default(cuid())
-  itemCode      String              @unique // e.g., "1.1a(1)", "P1.a(1)"
+  itemCode      String              @unique
   questionText  String
   orderIndex    Int
   instructions  String?
@@ -447,12 +385,13 @@ model BaldrigeResponse {
   question     BaldrigeQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
   surveyId     String?
   survey       Survey?          @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  responseText String           // Long-form text response
-  timeSpent    Int              @default(0) // Time spent in seconds
+  responseText String
+  timeSpent    Int              @default(0)
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 
   @@unique([userId, questionId, surveyId])
+  @@index([userId, surveyId])
   @@map("baldrige_responses")
 }
 
@@ -462,7 +401,7 @@ model BaldrigeProgress {
   user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   surveyId            String?
   survey              Survey?  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  completedQuestions  Json     @default("[]") // Array of question IDs stored as JSON
+  completedQuestions  Json     @default("[]")
   isCompleted         Boolean  @default(false)
   completedAt         DateTime?
   createdAt           DateTime @default(now())
@@ -474,17 +413,17 @@ model BaldrigeProgress {
 
 model BaldrigeSubmission {
   id                String   @id @default(cuid())
-  assessmentId      String   @unique // Human-readable ID like "BLD-2024-001"
+  assessmentId      String   @unique
   userId            String
   organizationId    String?
   surveyId          String?
-  accessKey         String?  // Track which access key was used
+  accessKey         String?
   startedAt         DateTime @default(now())
   submittedAt       DateTime?
   isCompleted       Boolean  @default(false)
   totalQuestions    Int      @default(0)
   answeredQuestions Int      @default(0)
-  metadata          Json?    // Store additional metadata
+  metadata          Json?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -493,3 +432,27 @@ model BaldrigeSubmission {
   @@index([assessmentId])
   @@map("baldrige_submissions")
 }
+
+enum Role {
+  SYSTEM_ADMIN
+  FACILITATOR
+  EMPLOYEE
+}
+
+enum SurveyStatus {
+  DRAFT
+  OPEN
+  CLOSED
+}
+
+enum ReportKind {
+  ORG
+  TEAM
+  CUSTOM_SLICE
+}
+
+enum AssessmentType {
+  OCAI
+  BALDRIGE
+}
+

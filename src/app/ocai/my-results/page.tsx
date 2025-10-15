@@ -19,8 +19,11 @@ import {
   Filler,
   Tooltip,
   Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
 } from 'chart.js';
-import { Radar } from 'react-chartjs-2';
+import { Radar, Bar } from 'react-chartjs-2';
 
 // Register ChartJS components
 ChartJS.register(
@@ -29,7 +32,10 @@ ChartJS.register(
   LineElement,
   Filler,
   Tooltip,
-  Legend
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement
 );
 
 interface OCAIScores {
@@ -159,6 +165,132 @@ export default function MyOCAIResultsPage() {
     plugins: {
       legend: {
         position: 'top' as const,
+      },
+    },
+  };
+
+  const getBarChartData = () => {
+    if (!myResult) return null;
+
+    return {
+      labels: ['Clan', 'Adhocracy', 'Market', 'Hierarchy'],
+      datasets: [
+        {
+          label: 'Current',
+          data: [
+            myResult.nowScores.clan,
+            myResult.nowScores.adhocracy,
+            myResult.nowScores.market,
+            myResult.nowScores.hierarchy,
+          ],
+          backgroundColor: 'rgba(59, 130, 246, 0.8)',
+          borderColor: 'rgba(59, 130, 246, 1)',
+          borderWidth: 1,
+        },
+        {
+          label: 'Preferred',
+          data: [
+            myResult.preferredScores.clan,
+            myResult.preferredScores.adhocracy,
+            myResult.preferredScores.market,
+            myResult.preferredScores.hierarchy,
+          ],
+          backgroundColor: 'rgba(16, 185, 129, 0.8)',
+          borderColor: 'rgba(16, 185, 129, 1)',
+          borderWidth: 1,
+        },
+      ],
+    };
+  };
+
+  const barOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+        labels: {
+          usePointStyle: true,
+          padding: 20,
+          font: {
+            size: 14,
+            weight: 'bold' as const,
+          },
+        },
+      },
+      title: {
+        display: true,
+        text: 'Current vs Preferred Culture Comparison',
+        font: {
+          size: 18,
+          weight: 'bold' as const,
+        },
+        color: '#374151',
+        padding: {
+          bottom: 30,
+        },
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: '#fff',
+        bodyColor: '#fff',
+        borderColor: '#ddd',
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true,
+        callbacks: {
+          label: function(context: any) {
+            const cultureType = context.label;
+            const value = context.parsed.y;
+            const datasetLabel = context.dataset.label;
+            return `${datasetLabel} ${cultureType}: ${value.toFixed(1)}`;
+          },
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        min: 0,
+        max: 100,
+        ticks: {
+          stepSize: 20,
+          font: {
+            size: 12,
+            weight: 'normal' as const,
+          },
+          color: '#6B7280',
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
+          drawBorder: false,
+        },
+        border: {
+          display: false,
+        },
+      },
+      x: {
+        ticks: {
+          font: {
+            size: 13,
+            weight: 'bold' as const,
+          },
+          color: '#374151',
+        },
+        grid: {
+          display: false,
+        },
+        border: {
+          display: false,
+        },
+      },
+    },
+    layout: {
+      padding: {
+        top: 20,
+        bottom: 20,
+        left: 20,
+        right: 20,
       },
     },
   };
@@ -299,6 +431,70 @@ export default function MyOCAIResultsPage() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Bar Chart Comparison */}
+        <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg border border-blue-100 p-8 mb-8">
+          <div className="mb-4">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Culture Comparison Analysis</h3>
+            <p className="text-gray-600">Compare your current vs preferred culture scores across all dimensions</p>
+          </div>
+          <div className="w-full bg-white rounded-lg p-4 shadow-sm" style={{ height: '450px' }}>
+            {getBarChartData() ? (
+              <Bar data={getBarChartData()!} options={barOptions} />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                  Loading chart...
+                </div>
+              </div>
+            )}
+          </div>
+          {myResult && (
+            <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { name: 'Clan', key: 'clan' as keyof OCAIScores, color: 'bg-blue-100 text-blue-800' },
+                { name: 'Adhocracy', key: 'adhocracy' as keyof OCAIScores, color: 'bg-green-100 text-green-800' },
+                { name: 'Market', key: 'market' as keyof OCAIScores, color: 'bg-orange-100 text-orange-800' },
+                { name: 'Hierarchy', key: 'hierarchy' as keyof OCAIScores, color: 'bg-red-100 text-red-800' },
+              ].map((culture) => {
+                const current = myResult.nowScores[culture.key];
+                const preferred = myResult.preferredScores[culture.key];
+                const delta = myResult.delta[culture.key];
+                const isHighChange = Math.abs(delta) > 10;
+                
+                return (
+                  <div key={culture.key} className={`rounded-lg p-3 ${isHighChange ? 'ring-2 ring-yellow-300' : ''}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-sm text-gray-900">{culture.name}</span>
+                      {isHighChange && (
+                        <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded-full font-medium">
+                          High Change
+                        </span>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-800 font-medium">Current:</span>
+                        <span className="font-bold text-gray-900">{current.toFixed(1)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-800 font-medium">Preferred:</span>
+                        <span className="font-bold text-gray-900">{preferred.toFixed(1)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-800 font-medium">Change:</span>
+                        <span className={`font-bold ${delta > 0 ? 'text-green-700' : delta < 0 ? 'text-red-700' : 'text-gray-900'}`}>
+                          {delta > 0 ? '+' : ''}{delta.toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Culture Type Cards */}

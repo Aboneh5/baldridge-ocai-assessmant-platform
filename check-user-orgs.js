@@ -42,7 +42,7 @@ async function checkUserOrgs() {
       data.users.forEach(u => {
         console.log(`   - ${u.name} | ${u.role} | ID: ${u.id}`);
       });
-      console.log('');
+      console.log(''); 
     });
 
     // Display users without organization

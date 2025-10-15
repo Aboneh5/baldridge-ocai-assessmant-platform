@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
@@ -12,7 +12,7 @@ import {
 } from '@/lib/assessment-progress';
 import { useLocale } from '@/lib/i18n/context';
 import { getLocalizedBaldrigeQuestionText } from '@/lib/baldrige-data';
-import LanguageSwitcher from '@/components/localization/LanguageSwitcher';
+// LanguageSwitcher removed to prevent accidental language switching during assessment
 
 interface BaldrigeQuestion {
   id: string;
@@ -62,6 +62,8 @@ export default function BaldrigeAssessmentPage() {
   const [submissionData, setSubmissionData] = useState<any>(null);
   const [isResuming, setIsResuming] = useState(false);
   const [resumedCount, setResumedCount] = useState(0);
+  const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const DEBOUNCE_MS = 500;
   
   // Memoize main categories (must be before any conditional returns per React Rules of Hooks)
   const mainCategories = useMemo(() => categories.filter(c => c.displayOrder > 0), [categories]);
@@ -238,8 +240,7 @@ export default function BaldrigeAssessmentPage() {
     }
   };
 
-  const saveResponse = async (questionId: string, responseText: string) => {
-    setSaving(true);
+  const saveResponseImmediate = async (questionId: string, responseText: string) => {
     try {
       await fetch('/api/baldrige/response', {
         method: 'POST',
@@ -248,16 +249,19 @@ export default function BaldrigeAssessmentPage() {
       });
     } catch (error) {
       console.error('Error saving response:', error);
-    } finally {
-      setSaving(false);
     }
   };
 
   const handleResponseChange = (questionId: string, value: string) => {
     setResponses(prev => ({ ...prev, [questionId]: value }));
 
-    // Save immediately for reliability
-    saveResponse(questionId, value);
+    // Debounce saves to avoid lag on every keystroke
+    const existing = saveTimers.current[questionId];
+    if (existing) clearTimeout(existing);
+    saveTimers.current[questionId] = setTimeout(() => {
+      saveResponseImmediate(questionId, value);
+      delete saveTimers.current[questionId];
+    }, DEBOUNCE_MS);
 
     // Update progress tracking in localStorage
     const storedUser = localStorage.getItem('user');
@@ -317,16 +321,18 @@ export default function BaldrigeAssessmentPage() {
     // Save all responses for this subcategory before proceeding
     setSaving(true);
     await Promise.all(
-      currentSubcategory.questions.map(q =>
-        fetch('/api/baldrige/response', {
-          method: 'POST',
-          headers: getHeaders(),
-          body: JSON.stringify({
-            questionId: q.id,
-            responseText: responses[q.id] || '',
-          }),
-        })
-      )
+      currentSubcategory.questions
+        .filter(q => responses[q.id]?.trim()) // Only save non-empty responses
+        .map(q =>
+          fetch('/api/baldrige/response', {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({
+              questionId: q.id,
+              responseText: responses[q.id],
+            }),
+          })
+        )
     );
     setSaving(false);
 
@@ -392,7 +398,21 @@ export default function BaldrigeAssessmentPage() {
         setSubmissionData(data.data);
         setShowResults(true);
       } else {
-        alert(data.message || t('assessment.pleaseCompleteAll'));
+        // Show detailed error message with missing questions
+        let errorMessage = data.message || t('assessment.pleaseCompleteAll');
+
+        if (data.data?.unansweredQuestions && data.data.unansweredQuestions.length > 0) {
+          errorMessage += '\n\nMissing answers for:\n';
+          data.data.unansweredQuestions.forEach((q: any) => {
+            errorMessage += `\n• ${q.itemCode} (${q.category} - ${q.subcategory})`;
+          });
+
+          if (data.data.remainingQuestions > data.data.unansweredQuestions.length) {
+            errorMessage += `\n\n...and ${data.data.remainingQuestions - data.data.unansweredQuestions.length} more questions.`;
+          }
+        }
+
+        alert(errorMessage);
       }
     } catch (error) {
       console.error('Error submitting assessment:', error);
@@ -673,16 +693,18 @@ export default function BaldrigeAssessmentPage() {
                   setSaving(true);
                   const allQuestions = orgProfileCategory.subcategories.flatMap(sub => sub.questions);
                   await Promise.all(
-                    allQuestions.map(q =>
-                      fetch('/api/baldrige/response', {
-                        method: 'POST',
-                        headers: getHeaders(),
-                        body: JSON.stringify({
-                          questionId: q.id,
-                          responseText: responses[q.id] || '',
-                        }),
-                      })
-                    )
+                    allQuestions
+                      .filter(q => responses[q.id]?.trim()) // Only save non-empty responses
+                      .map(q =>
+                        fetch('/api/baldrige/response', {
+                          method: 'POST',
+                          headers: getHeaders(),
+                          body: JSON.stringify({
+                            questionId: q.id,
+                            responseText: responses[q.id],
+                          }),
+                        })
+                      )
                   );
                   setSaving(false);
 
@@ -757,7 +779,7 @@ export default function BaldrigeAssessmentPage() {
               {t('assessment.title')}
             </h1>
             <div className="flex items-center gap-4">
-              <LanguageSwitcher />
+              {/* Language switcher removed during assessment to prevent accidental changes */}
               <div className="text-right">
                 <p className="text-sm text-gray-600">{t('assessment.progress')}</p>
                 <p className="text-lg font-semibold text-emerald-600">

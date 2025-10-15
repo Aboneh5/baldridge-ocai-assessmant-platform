@@ -4,10 +4,14 @@ import bcrypt from 'bcryptjs'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('[Credential Login API] Starting POST request');
     const body = await request.json()
     const { email, password } = body
 
+    console.log('[Credential Login API] Login attempt for email:', email);
+
     if (!email || !password) {
+      console.log('[Credential Login API] Missing email or password');
       return NextResponse.json(
         { error: 'Email and password are required' },
         { status: 400 }
@@ -15,6 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find active credential
+    console.log('[Credential Login API] Looking up credential...');
     const credential = await prisma.assessmentCredential.findFirst({
       where: {
         email: email.toLowerCase().trim(),
@@ -30,6 +35,8 @@ export async function POST(request: NextRequest) {
         }
       }
     })
+    
+    console.log('[Credential Login API] Credential found:', !!credential);
 
     if (!credential) {
       return NextResponse.json(
@@ -119,9 +126,14 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error in credential login:', error)
+    console.error('[Credential Login API] ERROR:', error)
+    console.error('[Credential Login API] Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
-      { error: 'Login failed' },
+      { error: 'Login failed', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

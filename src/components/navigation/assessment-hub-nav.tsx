@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import LanguageSwitcher from '@/components/localization/LanguageSwitcher'
+// LanguageSwitcher removed from assessment navigation to prevent language changes during active assessments
 
 export function AssessmentHubNav() {
   const pathname = usePathname()
@@ -35,7 +35,7 @@ export function AssessmentHubNav() {
                  pathname?.includes('/assessment') ? 'Assessment' : 'OCAI Hub'}
               </span>
             </span>
-            <LanguageSwitcher />
+            {/* Language switcher removed to prevent language changes during active assessments */}
           </div>
         </div>
       </div>

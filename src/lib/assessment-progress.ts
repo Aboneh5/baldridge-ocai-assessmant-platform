@@ -46,7 +46,7 @@ export function saveAssessmentProgress(progress: AssessmentProgress): void {
     const key = getStorageKey(progress.assessmentType, progress.organizationId, progress.userId);
     localStorage.setItem(key, JSON.stringify(progressData));
 
-    // Also save to server if credential user
+    // Also save to server if credential user (OCAI only)
     saveProgressToServer(progressData);
   } catch (error) {
     console.error('Failed to save assessment progress:', error);
@@ -54,6 +54,7 @@ export function saveAssessmentProgress(progress: AssessmentProgress): void {
 }
 
 // Helper to save progress to server for credential users
+const progressTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 async function saveProgressToServer(progress: AssessmentProgress): Promise<void> {
   try {
     const userStr = localStorage.getItem('user');
@@ -62,23 +63,41 @@ async function saveProgressToServer(progress: AssessmentProgress): Promise<void>
     const user = JSON.parse(userStr);
     if (user.role !== 'CREDENTIAL_USER') return;
 
+    // Only the OCAI flow uses /api/assessments/progress persistence
+    if (progress.assessmentType !== 'OCAI') return;
+
     // Get or create survey ID for this assessment
     const surveyId = localStorage.getItem(`currentSurveyId_${progress.assessmentType}`) || '';
 
-    await fetch('/api/assessments/progress', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        credentialEmail: user.email,
-        surveyId: surveyId || progress.organizationId, // Use orgId if no survey
-        progressData: progress.progress.data,
-        demographics: {},
-        nowScores: {},
-        preferredScores: {},
-        isComplete: progress.status === 'completed',
-        ipHash: 'credential-user'
-      })
-    });
+    // If no valid surveyId, skip server persistence to avoid FK errors
+    if (!surveyId) return;
+
+    const key = `${progress.assessmentType}:${progress.organizationId}:${progress.userId}`;
+    if (progressTimers[key]) {
+      clearTimeout(progressTimers[key]);
+    }
+    progressTimers[key] = setTimeout(async () => {
+      try {
+        await fetch('/api/assessments/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            credentialEmail: user.email,
+            surveyId, // must be a real survey id
+            progressData: progress.progress.data,
+            demographics: {},
+            nowScores: {},
+            preferredScores: {},
+            isComplete: progress.status === 'completed',
+            ipHash: 'credential-user'
+          })
+        });
+      } catch (e) {
+        // swallow; localStorage remains source of truth for resume UX
+      } finally {
+        delete progressTimers[key];
+      }
+    }, 800);
   } catch (error) {
     console.error('Failed to save progress to server:', error);
     // Fail silently - localStorage still works

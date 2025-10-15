@@ -41,17 +41,17 @@ export async function GET(request: NextRequest) {
           assessmentType: 'OCAI',
         },
       }),
-      prisma.survey.count({
+      // Baldrige count - get submissions for this organization
+      prisma.baldrigeSubmission.count({
         where: {
           organizationId,
-          assessmentType: 'BALDRIGE',
         },
       }),
     ])
 
     return NextResponse.json({
-      totalSurveys,
-      totalResponses,
+      totalSurveys: totalSurveys + baldrigeCount, // Include Baldrige submissions
+      totalResponses: totalResponses + baldrigeCount, // Include Baldrige submissions
       activeAccessKeys,
       assessmentBreakdown: {
         OCAI: ocaiCount,

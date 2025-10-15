@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma, ensurePrismaConnected } from '@/lib/prisma';
 import { getUserId } from '@/lib/get-user-id';
 
 // Generate unique assessment ID for organization
@@ -26,9 +26,14 @@ async function generateAssessmentId(organizationId: string | null): Promise<stri
 // Submit completed Baldrige assessment
 export async function POST(request: NextRequest) {
   try {
+    await ensurePrismaConnected();
+    console.log('[Baldrige Submit API] Starting POST request');
     const userId = await getUserId(request);
 
+    console.log('[Baldrige Submit API] User ID:', userId);
+
     if (!userId) {
+      console.log('[Baldrige Submit API] No user ID - returning 401');
       return NextResponse.json(
         {
           success: false,
@@ -44,14 +49,18 @@ export async function POST(request: NextRequest) {
     // Normalize surveyId to null if undefined or empty string
     const normalizedSurveyId = surveyId || null;
 
+    console.log('[Baldrige Submit API] Survey ID:', normalizedSurveyId);
+
     // Get total question count (ALL questions including Organizational Profile)
     const totalQuestions = await prisma.baldrigeQuestion.count();
+    console.log('[Baldrige Submit API] Total questions in system:', totalQuestions);
 
     // Get user's answered questions count with non-empty responses
+    // Note: Explicitly handle null surveyId for proper Prisma query matching
     const answeredQuestions = await prisma.baldrigeResponse.count({
       where: {
         userId: userId,
-        surveyId: normalizedSurveyId,
+        ...(normalizedSurveyId ? { surveyId: normalizedSurveyId } : { surveyId: null }),
         responseText: {
           not: '',
         },
@@ -59,10 +68,89 @@ export async function POST(request: NextRequest) {
     });
 
     console.log(
-      `User ${userId} attempting submission: ${answeredQuestions}/${totalQuestions} questions answered`
+      `[Baldrige Submit API] User ${userId} attempting submission: ${answeredQuestions}/${totalQuestions} questions answered`
     );
 
+    // Debug: Log all responses for this user
+    const allUserResponses = await prisma.baldrigeResponse.findMany({
+      where: {
+        userId: userId,
+      },
+      select: {
+        id: true,
+        surveyId: true,
+        responseText: true,
+        questionId: true,
+      },
+    });
+    console.log(`[Baldrige Submit API] DEBUG - Total responses for user: ${allUserResponses.length}`);
+    console.log(`[Baldrige Submit API] DEBUG - Responses with null surveyId: ${allUserResponses.filter(r => r.surveyId === null).length}`);
+    console.log(`[Baldrige Submit API] DEBUG - Responses with empty text: ${allUserResponses.filter(r => r.responseText === '').length}`);
+    console.log(`[Baldrige Submit API] DEBUG - Valid responses (non-empty, null surveyId): ${allUserResponses.filter(r => r.surveyId === null && r.responseText !== '').length}`);
+
     if (answeredQuestions < totalQuestions) {
+      // Get all questions
+      const allQuestions = await prisma.baldrigeQuestion.findMany({
+        select: {
+          id: true,
+          itemCode: true,
+          subcategory: {
+            select: {
+              name: true,
+              category: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: [
+          {
+            subcategory: {
+              category: {
+                displayOrder: 'asc',
+              },
+            },
+          },
+          {
+            subcategory: {
+              displayOrder: 'asc',
+            },
+          },
+          {
+            orderIndex: 'asc',
+          },
+        ],
+      });
+
+      // Get answered question IDs
+      const answeredQuestionIds = await prisma.baldrigeResponse.findMany({
+        where: {
+          userId: userId,
+          ...(normalizedSurveyId ? { surveyId: normalizedSurveyId } : { surveyId: null }),
+          responseText: {
+            not: '',
+          },
+        },
+        select: {
+          questionId: true,
+        },
+      });
+
+      const answeredIds = new Set(answeredQuestionIds.map((r) => r.questionId));
+
+      // Find unanswered questions
+      const unansweredQuestions = allQuestions
+        .filter((q) => !answeredIds.has(q.id))
+        .map((q) => ({
+          itemCode: q.itemCode,
+          category: q.subcategory.category.name,
+          subcategory: q.subcategory.name,
+        }));
+
+      console.log('[Baldrige Submit API] Unanswered questions:', JSON.stringify(unansweredQuestions, null, 2));
+
       return NextResponse.json(
         {
           success: false,
@@ -71,6 +159,7 @@ export async function POST(request: NextRequest) {
             answeredQuestions,
             totalQuestions,
             remainingQuestions: totalQuestions - answeredQuestions,
+            unansweredQuestions: unansweredQuestions.slice(0, 10), // Return first 10 for display
           },
         },
         { status: 400 }
@@ -126,7 +215,7 @@ export async function POST(request: NextRequest) {
     const existingProgress = await prisma.baldrigeProgress.findFirst({
       where: {
         userId: userId,
-        surveyId: normalizedSurveyId,
+        ...(normalizedSurveyId ? { surveyId: normalizedSurveyId } : { surveyId: null }),
       },
     });
 
@@ -169,11 +258,17 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error submitting assessment:', error);
+    console.error('[Baldrige Submit API] ERROR:', error);
+    console.error('[Baldrige Submit API] Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
       {
         success: false,
         message: 'Failed to submit assessment',
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
