@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
     // Only check within the SAME organization to prevent false positives
     const response = await prisma.response.findFirst({
       where: {
+        isComplete: true, // IMPORTANT: Only check completed responses
         OR: [
           {
             userId: userId,
