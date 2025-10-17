@@ -341,7 +341,9 @@ export default function AboutPage() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-900 mb-1">{t('about.contact.email.title')}</h4>
-                      <p className="text-gray-600">{t('about.contact.email.value')}</p>
+                      <a href={`mailto:${t('about.contact.email.value')}`} className="text-blue-600 hover:text-blue-700 hover:underline">
+                        {t('about.contact.email.value')}
+                      </a>
                     </div>
                   </div>
                   <div className="flex items-start space-x-4">

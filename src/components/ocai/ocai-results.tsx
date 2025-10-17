@@ -157,14 +157,15 @@ export function OCAIResults({ scores, onRestart }: OCAIResultsProps) {
 
       {/* Actions */}
       <div className="flex justify-center space-x-4">
-        {onRestart && (
+        {/* Retake Assessment button commented out - retakes not allowed for now */}
+        {/* {onRestart && (
           <button
             onClick={onRestart}
             className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
           >
             Retake Assessment
           </button>
-        )}
+        )} */}
         <button
           onClick={() => window.print()}
           className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"

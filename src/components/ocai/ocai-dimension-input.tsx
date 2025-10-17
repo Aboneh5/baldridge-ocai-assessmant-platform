@@ -22,26 +22,49 @@ export function OCAIDimensionInput({ dimension, phase, response, onChange }: OCA
 
   const updateValue = (key: 'A' | 'B' | 'C' | 'D', newValue: number) => {
     const clampedValue = Math.max(0, Math.min(100, newValue))
+
+    // Calculate how much we need to distribute among other keys
+    const remainingPoints = 100 - clampedValue
+    const otherKeys = (['A', 'B', 'C', 'D'] as const).filter(k => k !== key)
+
+    // Get current total of other keys
+    const otherTotal = otherKeys.reduce((sum, k) => sum + values[k], 0)
+
     const newValues = { ...values, [key]: clampedValue }
-    
-    // Adjust other values to maintain sum of 100
-    const currentSum = Object.values(newValues).reduce((sum, val) => sum + val, 0)
-    const difference = 100 - currentSum
-    
-    if (difference !== 0) {
-      const otherKeys = (['A', 'B', 'C', 'D'] as const).filter(k => k !== key)
-      const adjustmentPerKey = Math.floor(difference / otherKeys.length)
-      const remainder = difference % otherKeys.length
-      
+
+    // Proportionally distribute remaining points based on current ratios
+    if (remainingPoints > 0 && otherTotal > 0) {
+      // Calculate proportional values based on current distribution
+      let assignedTotal = 0
       otherKeys.forEach((otherKey, index) => {
-        const adjustment = adjustmentPerKey + (index < remainder ? 1 : 0)
-        newValues[otherKey] = Math.max(0, Math.min(100, newValues[otherKey] + adjustment))
+        if (index === otherKeys.length - 1) {
+          // Last key gets the remainder to ensure exactly 100
+          newValues[otherKey] = remainingPoints - assignedTotal
+        } else {
+          // Proportional distribution
+          const proportion = values[otherKey] / otherTotal
+          const newVal = Math.round(remainingPoints * proportion)
+          newValues[otherKey] = newVal
+          assignedTotal += newVal
+        }
+      })
+    } else if (remainingPoints > 0 && otherTotal === 0) {
+      // If all other values are 0, distribute equally
+      const equalShare = Math.floor(remainingPoints / otherKeys.length)
+      const remainder = remainingPoints % otherKeys.length
+      otherKeys.forEach((otherKey, index) => {
+        newValues[otherKey] = equalShare + (index < remainder ? 1 : 0)
+      })
+    } else if (remainingPoints === 0) {
+      // If new value is 100, set all others to 0
+      otherKeys.forEach(otherKey => {
+        newValues[otherKey] = 0
       })
     }
-    
+
     setValues(newValues)
     onChange(newValues)
-    
+
     // Validate
     const validation = validateOCAIResponse({
       dimensionId: dimension.id,

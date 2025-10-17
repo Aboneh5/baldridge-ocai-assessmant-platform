@@ -63,6 +63,7 @@ export default function BaldrigeAssessmentPage() {
   const [isResuming, setIsResuming] = useState(false);
   const [resumedCount, setResumedCount] = useState(0);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const questionsContainerRef = useRef<HTMLDivElement>(null);
   const DEBOUNCE_MS = 500;
   
   // Memoize main categories (must be before any conditional returns per React Rules of Hooks)
@@ -88,6 +89,13 @@ export default function BaldrigeAssessmentPage() {
     // Only use fallback if translation not found
     return fallbackText;
   }, [translations]);
+
+  // Scroll to top of questions container when category or subcategory changes
+  useEffect(() => {
+    if (questionsContainerRef.current && !showOrgProfile) {
+      questionsContainerRef.current.scrollTop = 0;
+    }
+  }, [currentCategoryIndex, currentSubcategoryIndex, showOrgProfile]);
 
   useEffect(() => {
     // Check for localStorage authentication first (both access key and credential users)
@@ -360,8 +368,13 @@ export default function BaldrigeAssessmentPage() {
       setCurrentSubcategoryIndex(0);
     }
 
-    // End transition after animation
-    setTimeout(() => setIsTransitioning(false), 300);
+    // Scroll questions container to top after navigation
+    setTimeout(() => {
+      if (questionsContainerRef.current) {
+        questionsContainerRef.current.scrollTop = 0;
+      }
+      setIsTransitioning(false);
+    }, 300);
 
     // Save progress in background (non-blocking)
     fetch('/api/baldrige/progress', {
@@ -843,7 +856,7 @@ export default function BaldrigeAssessmentPage() {
             </div>
 
             {/* Questions */}
-            <div className="max-h-[600px] overflow-y-auto space-y-6 mb-8 pr-2 border-2 border-emerald-100 rounded-lg p-4 bg-gradient-to-br from-gray-50 to-emerald-50 shadow-inner">
+            <div ref={questionsContainerRef} className="max-h-[600px] overflow-y-auto space-y-6 mb-8 pr-2 border-2 border-emerald-100 rounded-lg p-4 bg-gradient-to-br from-gray-50 to-emerald-50 shadow-inner">
               {currentSubcategory.questions.map((question) => (
                 <div key={question.id} className="border-l-4 border-emerald-500 pl-6 bg-white p-4 rounded-lg">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
