@@ -61,8 +61,8 @@ export async function POST(request: NextRequest) {
       where: {
         userId: userId,
         ...(normalizedSurveyId ? { surveyId: normalizedSurveyId } : { surveyId: null }),
-        NOT: {
-          responseText: null,
+        responseText: {
+          not: null as any,
         },
       },
     });
@@ -74,13 +74,13 @@ export async function POST(request: NextRequest) {
         ...(normalizedSurveyId ? { surveyId: normalizedSurveyId } : { surveyId: null }),
         AND: [
           {
-            NOT: {
-              responseText: null,
+            responseText: {
+              not: null as any,
             },
           },
           {
-            NOT: {
-              responseText: '',
+            responseText: {
+              not: '',
             },
           },
         ],
