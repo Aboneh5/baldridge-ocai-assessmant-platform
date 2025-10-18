@@ -137,15 +137,9 @@ export default function BaldrigeAnswersPage() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
             <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('baldrigeAnswers.noResponses')}</h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600">
               {t('baldrigeAnswers.noResponsesDesc')}
             </p>
-            <Link
-              href="/assessments/baldrige"
-              className="inline-flex items-center px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-            >
-              {t('baldrigeIntro.startAssessment')}
-            </Link>
           </div>
         ) : (
           <div className="space-y-6">

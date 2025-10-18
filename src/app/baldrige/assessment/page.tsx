@@ -317,30 +317,19 @@ export default function BaldrigeAssessmentPage() {
 
     if (!currentSubcategory) return;
 
-    const allQuestionsAnswered = currentSubcategory.questions.every(
-      q => responses[q.id]?.trim()
-    );
-
-    if (!allQuestionsAnswered) {
-      alert(t('assessment.pleaseAnswerAllQuestions'));
-      return;
-    }
-
-    // Save all responses for this subcategory before proceeding
+    // Save all responses for this subcategory before proceeding (including empty ones)
     setSaving(true);
     await Promise.all(
-      currentSubcategory.questions
-        .filter(q => responses[q.id]?.trim()) // Only save non-empty responses
-        .map(q =>
-          fetch('/api/baldrige/response', {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({
-              questionId: q.id,
-              responseText: responses[q.id],
-            }),
-          })
-        )
+      currentSubcategory.questions.map(q =>
+        fetch('/api/baldrige/response', {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({
+            questionId: q.id,
+            responseText: responses[q.id] || '',
+          }),
+        })
+      )
     );
     setSaving(false);
 
@@ -452,16 +441,25 @@ export default function BaldrigeAssessmentPage() {
   };
 
   const getCompletedPoints = () => {
-    let points = 0;
+    // Calculate total answered questions across all categories
+    let answeredCount = 0;
+    let totalCount = 0;
+
     categories.forEach(cat => {
       cat.subcategories.forEach(sub => {
-        const allAnswered = sub.questions.every(q => responses[q.id]?.trim());
-        if (allAnswered) {
-          points += sub.points;
-        }
+        sub.questions.forEach(q => {
+          totalCount++;
+          if (responses[q.id]?.trim()) {
+            answeredCount++;
+          }
+        });
       });
     });
-    return points;
+
+    // Calculate proportional points based on answered vs total questions
+    const totalPoints = getTotalPoints();
+    if (totalCount === 0) return 0;
+    return Math.round((answeredCount / totalCount) * totalPoints);
   };
 
   if (loading || (!hasAccessKey && status === 'loading')) {
@@ -502,7 +500,7 @@ export default function BaldrigeAssessmentPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border-2 border-blue-200">
                   <p className="text-sm font-medium text-blue-700 mb-2">{t('assessment.questionsAnswered')}</p>
-                  <p className="text-4xl font-bold text-blue-900">{submissionData.totalQuestions}</p>
+                  <p className="text-4xl font-bold text-blue-900">{submissionData.answeredQuestions} / {submissionData.totalQuestions}</p>
                 </div>
                 <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-6 border-2 border-emerald-200">
                   <p className="text-sm font-medium text-emerald-700 mb-2">{t('assessment.completionRate')}</p>
@@ -669,21 +667,41 @@ export default function BaldrigeAssessmentPage() {
                       {getSubcategoryName(subcategory.name)}
                     </h3>
 
-                    {subcategory.questions.map((question) => (
-                      <div key={question.id} className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          {question.itemCode}
-                        </label>
-                        <p className="text-gray-600 mb-3 text-sm">{getQuestionText(question.itemCode, question.questionText)}</p>
-                        <textarea
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none text-gray-900 placeholder:text-gray-400"
-                          rows={4}
-                          value={responses[question.id] || ''}
-                          onChange={(e) => handleResponseChange(question.id, e.target.value)}
-                          placeholder={t('assessment.enterResponse')}
-                        />
-                      </div>
-                    ))}
+                    {subcategory.questions.map((question) => {
+                      const isAnswered = responses[question.id]?.trim();
+                      return (
+                        <div key={question.id} className="mb-6">
+                          <div className="flex justify-between items-start mb-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              {question.itemCode}
+                            </label>
+                            {isAnswered ? (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-300">
+                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                                Answered
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-300">
+                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Not answered
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-gray-600 mb-3 text-sm">{getQuestionText(question.itemCode, question.questionText)}</p>
+                          <textarea
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none text-gray-900 placeholder:text-gray-400"
+                            rows={4}
+                            value={responses[question.id] || ''}
+                            onChange={(e) => handleResponseChange(question.id, e.target.value)}
+                            placeholder={t('assessment.enterResponse')}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 ))}
               </div>
@@ -692,45 +710,29 @@ export default function BaldrigeAssessmentPage() {
             <div className="flex justify-end items-center">
               <button
                 onClick={async () => {
-                  // Check if all organizational profile questions are answered
-                  const allAnswered = orgProfileCategory.subcategories.every(sub =>
-                    sub.questions.every(q => responses[q.id]?.trim())
-                  );
-
-                  if (!allAnswered) {
-                    alert(t('assessment.pleaseAnswerAll'));
-                    return;
-                  }
-
-                  // Save all organizational profile responses
+                  // Save all organizational profile responses (including empty ones)
                   setSaving(true);
                   const allQuestions = orgProfileCategory.subcategories.flatMap(sub => sub.questions);
                   await Promise.all(
-                    allQuestions
-                      .filter(q => responses[q.id]?.trim()) // Only save non-empty responses
-                      .map(q =>
-                        fetch('/api/baldrige/response', {
-                          method: 'POST',
-                          headers: getHeaders(),
-                          body: JSON.stringify({
-                            questionId: q.id,
-                            responseText: responses[q.id],
-                          }),
-                        })
-                      )
+                    allQuestions.map(q =>
+                      fetch('/api/baldrige/response', {
+                        method: 'POST',
+                        headers: getHeaders(),
+                        body: JSON.stringify({
+                          questionId: q.id,
+                          responseText: responses[q.id] || '',
+                        }),
+                      })
+                    )
                   );
                   setSaving(false);
 
                   setShowOrgProfile(false);
                 }}
-                disabled={
-                  !orgProfileCategory.subcategories.every(sub =>
-                    sub.questions.every(q => responses[q.id]?.trim())
-                  )
-                }
+                disabled={saving}
                 className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
               >
-                {t('assessment.continueToAssessment')}
+                {saving ? t('assessment.saving') : t('assessment.continueToAssessment')}
               </button>
             </div>
           </div>
@@ -857,21 +859,41 @@ export default function BaldrigeAssessmentPage() {
 
             {/* Questions */}
             <div ref={questionsContainerRef} className="max-h-[600px] overflow-y-auto space-y-6 mb-8 pr-2 border-2 border-emerald-100 rounded-lg p-4 bg-gradient-to-br from-gray-50 to-emerald-50 shadow-inner">
-              {currentSubcategory.questions.map((question) => (
-                <div key={question.id} className="border-l-4 border-emerald-500 pl-6 bg-white p-4 rounded-lg">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {question.itemCode}
-                  </label>
-                  <p className="text-gray-700 mb-4">{getQuestionText(question.itemCode, question.questionText)}</p>
-                  <textarea
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none text-gray-900 placeholder:text-gray-400"
-                    rows={6}
-                    value={responses[question.id] || ''}
-                    onChange={(e) => handleResponseChange(question.id, e.target.value)}
-                    placeholder={t('assessment.describeApproach')}
-                  />
-                </div>
-              ))}
+              {currentSubcategory.questions.map((question) => {
+                const isAnswered = responses[question.id]?.trim();
+                return (
+                  <div key={question.id} className="border-l-4 border-emerald-500 pl-6 bg-white p-4 rounded-lg relative">
+                    <div className="flex justify-between items-start mb-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        {question.itemCode}
+                      </label>
+                      {isAnswered ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-300">
+                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          Answered
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-300">
+                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Not answered
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gray-700 mb-4">{getQuestionText(question.itemCode, question.questionText)}</p>
+                    <textarea
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none text-gray-900 placeholder:text-gray-400"
+                      rows={6}
+                      value={responses[question.id] || ''}
+                      onChange={(e) => handleResponseChange(question.id, e.target.value)}
+                      placeholder={t('assessment.describeApproach')}
+                    />
+                  </div>
+                );
+              })}
             </div>
 
             {/* Navigation Buttons */}
@@ -889,8 +911,7 @@ export default function BaldrigeAssessmentPage() {
                 onClick={handleSubcategoryComplete}
                 disabled={
                   saving ||
-                  isTransitioning ||
-                  !currentSubcategory.questions.every(q => responses[q.id]?.trim())
+                  isTransitioning
                 }
                 className="group px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-medium hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center space-x-2"
               >

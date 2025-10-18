@@ -38,16 +38,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate that responseText is not empty
-    const trimmedResponse = responseText?.trim() || '';
-    if (!trimmedResponse) {
-      console.log('[Baldrige Response API] Empty response text, skipping save');
-      return NextResponse.json({
-        success: true,
-        message: 'Empty response, not saved',
-        data: { skipped: true },
-      });
-    }
+    // Allow empty responses (user can skip questions)
+    const trimmedResponse = responseText?.trim() || null;
 
     // Verify question exists
     const question = await prisma.baldrigeQuestion.findUnique({

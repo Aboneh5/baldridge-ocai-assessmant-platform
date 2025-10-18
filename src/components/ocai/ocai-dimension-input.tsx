@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { OCAIDimension, OCAIResponse, validateOCAIResponse } from '@/lib/ocai-data'
+import { useLocale } from '@/lib/i18n/context'
 
 interface OCAIDimensionInputProps {
   dimension: OCAIDimension
@@ -11,6 +12,7 @@ interface OCAIDimensionInputProps {
 }
 
 export function OCAIDimensionInput({ dimension, phase, response, onChange }: OCAIDimensionInputProps) {
+  const { t } = useLocale()
   const [values, setValues] = useState({ A: 25, B: 25, C: 25, D: 25 })
   const [errors, setErrors] = useState<string[]>([])
 
@@ -128,37 +130,37 @@ export function OCAIDimensionInput({ dimension, phase, response, onChange }: OCA
       {/* Total and Validation */}
       <div className="bg-gray-50 rounded-lg p-4">
         <div className="flex items-center justify-between">
-          <span className="font-medium text-gray-900">Total:</span>
+          <span className="font-medium text-gray-900">{t('ocaiAssessment.totalLabel')}</span>
           <div className="flex items-center space-x-2">
             <span className={`text-lg font-semibold ${isValid ? 'text-green-600' : 'text-red-600'}`}>
               {total}%
             </span>
-            {isValid && <span className="text-green-600">✓</span>}
+            {isValid && <span className="text-green-600">{t('ocaiAssessment.checkmark')}</span>}
           </div>
         </div>
-        
+
         {!isValid && (
           <div className="mt-2 text-sm text-red-600">
-            {total !== 100 && <p>Total must equal 100%</p>}
+            {total !== 100 && <p>{t('ocaiAssessment.instruction4')}</p>}
             {errors.map((error, index) => (
               <p key={index}>{error}</p>
             ))}
           </div>
         )}
-        
+
         <div className="mt-2 text-xs text-gray-500">
-          Use arrow keys to adjust values quickly
+          {t('ocaiAssessment.arrowKeysHint')}
         </div>
       </div>
 
       {/* Instructions */}
       <div className="bg-blue-50 rounded-lg p-4">
-        <h3 className="font-medium text-blue-900 mb-2">Instructions:</h3>
+        <h3 className="font-medium text-blue-900 mb-2">{t('ocaiAssessment.instructionsTitle')}</h3>
         <ul className="text-sm text-blue-800 space-y-1">
-          <li>• Distribute 100 points across the four options based on how well each describes your organization</li>
-          <li>• You can give all 100 points to one option or distribute them across multiple options</li>
-          <li>• Use the number inputs or arrow keys to adjust values</li>
-          <li>• The total must equal exactly 100%</li>
+          <li>• {t('ocaiAssessment.instruction1')}</li>
+          <li>• {t('ocaiAssessment.instruction2')}</li>
+          <li>• {t('ocaiAssessment.instruction3')}</li>
+          <li>• {t('ocaiAssessment.instruction4')}</li>
         </ul>
       </div>
     </div>

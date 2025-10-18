@@ -55,116 +55,41 @@ export async function POST(request: NextRequest) {
     const totalQuestions = await prisma.baldrigeQuestion.count();
     console.log('[Baldrige Submit API] Total questions in system:', totalQuestions);
 
-    // Get user's answered questions count with non-empty responses
+    // Get user's answered questions count (including empty responses - count all viewed questions)
     // Note: Explicitly handle null surveyId for proper Prisma query matching
     const answeredQuestions = await prisma.baldrigeResponse.count({
       where: {
         userId: userId,
         ...(normalizedSurveyId ? { surveyId: normalizedSurveyId } : { surveyId: null }),
         responseText: {
-          not: '',
+          not: null,
         },
+      },
+    });
+
+    // Get count of questions with non-empty responses for reporting
+    const nonEmptyResponses = await prisma.baldrigeResponse.count({
+      where: {
+        userId: userId,
+        ...(normalizedSurveyId ? { surveyId: normalizedSurveyId } : { surveyId: null }),
+        AND: [
+          {
+            responseText: {
+              not: null,
+            },
+          },
+          {
+            responseText: {
+              not: '',
+            },
+          },
+        ],
       },
     });
 
     console.log(
-      `[Baldrige Submit API] User ${userId} attempting submission: ${answeredQuestions}/${totalQuestions} questions answered`
+      `[Baldrige Submit API] User ${userId} attempting submission: ${nonEmptyResponses}/${totalQuestions} questions answered (${answeredQuestions} total responses including skipped)`
     );
-
-    // Debug: Log all responses for this user
-    const allUserResponses = await prisma.baldrigeResponse.findMany({
-      where: {
-        userId: userId,
-      },
-      select: {
-        id: true,
-        surveyId: true,
-        responseText: true,
-        questionId: true,
-      },
-    });
-    console.log(`[Baldrige Submit API] DEBUG - Total responses for user: ${allUserResponses.length}`);
-    console.log(`[Baldrige Submit API] DEBUG - Responses with null surveyId: ${allUserResponses.filter(r => r.surveyId === null).length}`);
-    console.log(`[Baldrige Submit API] DEBUG - Responses with empty text: ${allUserResponses.filter(r => r.responseText === '').length}`);
-    console.log(`[Baldrige Submit API] DEBUG - Valid responses (non-empty, null surveyId): ${allUserResponses.filter(r => r.surveyId === null && r.responseText !== '').length}`);
-
-    if (answeredQuestions < totalQuestions) {
-      // Get all questions
-      const allQuestions = await prisma.baldrigeQuestion.findMany({
-        select: {
-          id: true,
-          itemCode: true,
-          subcategory: {
-            select: {
-              name: true,
-              category: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
-        },
-        orderBy: [
-          {
-            subcategory: {
-              category: {
-                displayOrder: 'asc',
-              },
-            },
-          },
-          {
-            subcategory: {
-              displayOrder: 'asc',
-            },
-          },
-          {
-            orderIndex: 'asc',
-          },
-        ],
-      });
-
-      // Get answered question IDs
-      const answeredQuestionIds = await prisma.baldrigeResponse.findMany({
-        where: {
-          userId: userId,
-          ...(normalizedSurveyId ? { surveyId: normalizedSurveyId } : { surveyId: null }),
-          responseText: {
-            not: '',
-          },
-        },
-        select: {
-          questionId: true,
-        },
-      });
-
-      const answeredIds = new Set(answeredQuestionIds.map((r) => r.questionId));
-
-      // Find unanswered questions
-      const unansweredQuestions = allQuestions
-        .filter((q) => !answeredIds.has(q.id))
-        .map((q) => ({
-          itemCode: q.itemCode,
-          category: q.subcategory.category.name,
-          subcategory: q.subcategory.name,
-        }));
-
-      console.log('[Baldrige Submit API] Unanswered questions:', JSON.stringify(unansweredQuestions, null, 2));
-
-      return NextResponse.json(
-        {
-          success: false,
-          message: `Assessment incomplete. Please answer all questions before submitting. ${answeredQuestions}/${totalQuestions} questions completed.`,
-          data: {
-            answeredQuestions,
-            totalQuestions,
-            remainingQuestions: totalQuestions - answeredQuestions,
-            unansweredQuestions: unansweredQuestions.slice(0, 10), // Return first 10 for display
-          },
-        },
-        { status: 400 }
-      );
-    }
 
     // Get user details with organization
     const user = await prisma.user.findUnique({
@@ -202,11 +127,13 @@ export async function POST(request: NextRequest) {
         submittedAt: new Date(),
         isCompleted: true,
         totalQuestions,
-        answeredQuestions,
+        answeredQuestions: nonEmptyResponses,
         metadata: {
           userName: user.name,
           userEmail: user.email,
           submissionTimestamp: new Date().toISOString(),
+          totalResponses: answeredQuestions,
+          skippedQuestions: totalQuestions - answeredQuestions,
         },
       },
     });
@@ -248,8 +175,9 @@ export async function POST(request: NextRequest) {
         assessmentId: submission.assessmentId,
         submittedAt: submission.submittedAt,
         totalQuestions,
-        answeredQuestions,
-        completionRate: 100,
+        answeredQuestions: nonEmptyResponses,
+        skippedQuestions: totalQuestions - answeredQuestions,
+        completionRate: Math.round((nonEmptyResponses / totalQuestions) * 100),
         user: {
           id: user.id,
           name: user.name,

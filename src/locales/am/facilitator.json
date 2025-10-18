@@ -35,7 +35,7 @@
     "createdDate": "የተፈጠረ",
     "expiryDate": "ጊዜው ያበቃል",
     "usedBy": "የተጠቀመው",
-    "usedDate": "ጥቅም ላይ የዋለበት",
+    "usedDate": "ጥቅም ላይ የዋለበት ቀን",
     "status": "ሁኔታ",
     "copy": "ቁልፍ ቅዳ",
     "revoke": "ቁልፍ ሰርዝ",
@@ -64,7 +64,7 @@
     "mostUtilized": "{{type}} በብዛት የሚጠቀሙበት የግምገማ ዓይነት ነው",
     "noDataAvailable": "ምንም መረጃ የለም",
     "noDataDesc": "የዳሰሳ ምላሾች ከተሰበሰቡ በኋላ ሪፖርቶች ይፈጠራሉ",
-    "contactAdmin": "የባልድሪጅ ምላሾችን ወደ ውጭ ለመላክ አስተዳዳሪዎን ያነጋግሩ"
+    "contactAdmin": "የባልድሪጅ ምላሾችን ወደ ውጭ ለመላክ ጤናዳምን ያነጋግሩ"
   },
   "settings": {
     "title": "ቅንብሮች",

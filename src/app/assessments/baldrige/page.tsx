@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Clock, FileText, Award, CheckCircle, Info, BarChart3 } from 'lucide-react'
@@ -9,6 +10,27 @@ import LanguageSwitcher from '@/components/localization/LanguageSwitcher'
 export default function BaldrigeIntroPage() {
   const router = useRouter()
   const { t } = useLocale()
+  const [isCompleted, setIsCompleted] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    // Check if user has already completed the Baldrige assessment
+    const checkCompletion = async () => {
+      try {
+        const response = await fetch('/api/baldrige/progress')
+        if (response.ok) {
+          const data = await response.json()
+          setIsCompleted(data.progress?.isCompleted || false)
+        }
+      } catch (error) {
+        console.error('Error checking assessment completion:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    checkCompletion()
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50">
@@ -257,13 +279,21 @@ export default function BaldrigeIntroPage() {
           >
             {t('baldrigeIntro.backToAssessments')}
           </Link>
-          <button
-            onClick={() => router.push('/baldrige/assessment')}
-            className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl font-medium text-lg"
-          >
-            {t('baldrigeIntro.startAssessment')}
-            <ArrowRight className="ml-2 w-5 h-5" />
-          </button>
+          {!isCompleted && !isLoading && (
+            <button
+              onClick={() => router.push('/baldrige/assessment')}
+              className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl font-medium text-lg"
+            >
+              {t('baldrigeIntro.startAssessment')}
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </button>
+          )}
+          {isCompleted && (
+            <div className="inline-flex items-center justify-center px-8 py-4 bg-green-100 text-green-800 rounded-lg border-2 border-green-300 font-medium text-lg">
+              <CheckCircle className="mr-2 w-5 h-5" />
+              Assessment Completed
+            </div>
+          )}
         </div>
       </main>
 

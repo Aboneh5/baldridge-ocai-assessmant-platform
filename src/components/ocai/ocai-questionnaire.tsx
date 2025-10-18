@@ -23,7 +23,7 @@ interface OCAIQuestionnaireProps {
 }
 
 export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnaireProps) {
-  const { t, locale } = useLocale()
+  const { t, locale, setLocale } = useLocale()
   const OCAI_DIMENSIONS = useMemo(() => {
     console.log(`OCAI: Generating dimensions for locale: ${locale}`)
     const dims = getLocalizedOCAIDimensions(t)
@@ -210,11 +210,11 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-semibold text-amber-800">Important Notice</h3>
+            <h3 className="text-sm font-semibold text-amber-800">{t('ocaiAssessment.importantNoticeTitle')}</h3>
             <div className="mt-1 text-sm text-amber-700">
-              <p>• Your progress is automatically saved as you go, so you can return later if needed.</p>
-              <p>• Please review your answers carefully before proceeding to the next question.</p>
-              <p>• Once submitted, you cannot modify your responses.</p>
+              <p>• {t('ocaiAssessment.autoSaveNotice')}</p>
+              <p>• {t('ocaiAssessment.reviewNotice')}</p>
+              <p>• {t('ocaiAssessment.noModifyNotice')}</p>
             </div>
           </div>
         </div>
@@ -224,17 +224,43 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-3xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            OCAI Culture Assessment
+            {t('ocaiAssessment.title')}
           </h1>
-          <button
-            onClick={() => setShowHelp(!showHelp)}
-            className="group px-5 py-2.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all duration-200 font-medium transform hover:scale-105 active:scale-95 flex items-center space-x-2 shadow-sm hover:shadow-md"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>{showHelp ? 'Hide Help' : 'Show Help'}</span>
-          </button>
+          <div className="flex items-center space-x-3">
+            {/* Language Switcher */}
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setLocale('en')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  locale === 'en'
+                    ? 'bg-white text-blue-700 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                EN
+              </button>
+              <button
+                onClick={() => setLocale('am')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  locale === 'am'
+                    ? 'bg-white text-blue-700 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                አማ
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowHelp(!showHelp)}
+              className="group px-5 py-2.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all duration-200 font-medium transform hover:scale-105 active:scale-95 flex items-center space-x-2 shadow-sm hover:shadow-md"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{showHelp ? t('ocaiAssessment.hideHelp') : t('ocaiAssessment.showHelp')}</span>
+            </button>
+          </div>
         </div>
         
         {/* Progress Bar */}
@@ -249,11 +275,11 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
         
         <div className="flex justify-between text-sm text-gray-600">
           <span>
-            {currentPhase === 'now' && `Now: Dimension ${currentDimension + 1} of ${OCAI_DIMENSIONS.length}`}
-            {currentPhase === 'preferred' && `Preferred: Dimension ${currentDimension + 1} of ${OCAI_DIMENSIONS.length}`}
-            {currentPhase === 'demographics' && 'Demographics (Optional)'}
+            {currentPhase === 'now' && t('ocaiAssessment.nowPhase', { current: currentDimension + 1, total: OCAI_DIMENSIONS.length })}
+            {currentPhase === 'preferred' && t('ocaiAssessment.preferredPhase', { current: currentDimension + 1, total: OCAI_DIMENSIONS.length })}
+            {currentPhase === 'demographics' && t('ocaiAssessment.demographicsPhase')}
           </span>
-          <span>{Math.round(getProgress())}% Complete</span>
+          <span>{t('ocaiAssessment.percentComplete', { percent: Math.round(getProgress()) })}</span>
         </div>
       </div>
 
@@ -264,101 +290,101 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
         }`}>
           {currentPhase === 'demographics' ? (
             <div className="space-y-6 animate-fadeIn">
-              <h2 className="text-2xl font-semibold text-gray-900">Demographics (Optional)</h2>
-              <p className="text-gray-600">This information is used only for aggregated reporting and analysis.</p>
-              
+              <h2 className="text-2xl font-semibold text-gray-900">{t('ocaiAssessment.demographicsTitle')}</h2>
+              <p className="text-gray-600">{t('ocaiAssessment.demographicsDesc')}</p>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('ocaiAssessment.department')}</label>
                   <input
                     type="text"
                     value={demographics.department || ''}
                     onChange={(e) => setDemographics(prev => ({ ...prev, department: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-medium placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g., Engineering, Marketing"
+                    placeholder={t('ocaiAssessment.departmentPlaceholder')}
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Team</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('ocaiAssessment.team')}</label>
                   <input
                     type="text"
                     value={demographics.team || ''}
                     onChange={(e) => setDemographics(prev => ({ ...prev, team: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-medium placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g., Frontend Team, Sales Team"
+                    placeholder={t('ocaiAssessment.teamPlaceholder')}
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tenure</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('ocaiAssessment.tenure')}</label>
                   <select
                     value={demographics.tenure || ''}
                     onChange={(e) => setDemographics(prev => ({ ...prev, tenure: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">Select tenure</option>
-                    <option value="less-than-1">Less than 1 year</option>
-                    <option value="1-2">1-2 years</option>
-                    <option value="3-5">3-5 years</option>
-                    <option value="6-10">6-10 years</option>
-                    <option value="more-than-10">More than 10 years</option>
+                    <option value="">{t('ocaiAssessment.selectTenure')}</option>
+                    <option value="less-than-1">{t('ocaiAssessment.tenureLessThan1')}</option>
+                    <option value="1-2">{t('ocaiAssessment.tenure1to2')}</option>
+                    <option value="3-5">{t('ocaiAssessment.tenure3to5')}</option>
+                    <option value="6-10">{t('ocaiAssessment.tenure6to10')}</option>
+                    <option value="more-than-10">{t('ocaiAssessment.tenureMoreThan10')}</option>
                   </select>
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('ocaiAssessment.location')}</label>
                   <input
                     type="text"
                     value={demographics.location || ''}
                     onChange={(e) => setDemographics(prev => ({ ...prev, location: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-medium placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g., New York, Remote"
+                    placeholder={t('ocaiAssessment.locationPlaceholder')}
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('ocaiAssessment.gender')}</label>
                   <select
                     value={demographics.gender || ''}
                     onChange={(e) => setDemographics(prev => ({ ...prev, gender: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">Select gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="non-binary">Non-binary</option>
-                    <option value="prefer-not-to-say">Prefer not to say</option>
+                    <option value="">{t('ocaiAssessment.selectGender')}</option>
+                    <option value="male">{t('ocaiAssessment.genderMale')}</option>
+                    <option value="female">{t('ocaiAssessment.genderFemale')}</option>
+                    <option value="non-binary">{t('ocaiAssessment.genderNonBinary')}</option>
+                    <option value="prefer-not-to-say">{t('ocaiAssessment.genderPreferNotToSay')}</option>
                   </select>
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Labor Unit</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('ocaiAssessment.laborUnit')}</label>
                   <input
                     type="text"
                     value={demographics.laborUnit || ''}
                     onChange={(e) => setDemographics(prev => ({ ...prev, laborUnit: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-medium placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g., Management, Individual Contributor"
+                    placeholder={t('ocaiAssessment.laborUnitPlaceholder')}
                   />
                 </div>
-                
+
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Race/Ethnicity</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('ocaiAssessment.raceEthnicity')}</label>
                   <select
                     value={demographics.raceEthnicity || ''}
                     onChange={(e) => setDemographics(prev => ({ ...prev, raceEthnicity: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">Select race/ethnicity</option>
-                    <option value="american-indian">American Indian or Alaska Native</option>
-                    <option value="asian">Asian</option>
-                    <option value="black">Black or African American</option>
-                    <option value="hispanic">Hispanic or Latino</option>
-                    <option value="native-hawaiian">Native Hawaiian or Other Pacific Islander</option>
-                    <option value="white">White</option>
-                    <option value="two-or-more">Two or More Races</option>
-                    <option value="prefer-not-to-say">Prefer not to say</option>
+                    <option value="">{t('ocaiAssessment.selectRaceEthnicity')}</option>
+                    <option value="american-indian">{t('ocaiAssessment.raceAmericanIndian')}</option>
+                    <option value="asian">{t('ocaiAssessment.raceAsian')}</option>
+                    <option value="black">{t('ocaiAssessment.raceBlack')}</option>
+                    <option value="hispanic">{t('ocaiAssessment.raceHispanic')}</option>
+                    <option value="native-hawaiian">{t('ocaiAssessment.raceNativeHawaiian')}</option>
+                    <option value="white">{t('ocaiAssessment.raceWhite')}</option>
+                    <option value="two-or-more">{t('ocaiAssessment.raceTwoOrMore')}</option>
+                    <option value="prefer-not-to-say">{t('ocaiAssessment.racePreferNotToSay')}</option>
                   </select>
                 </div>
               </div>
@@ -391,7 +417,7 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
           <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          <span>Previous</span>
+          <span>{t('ocaiAssessment.previous')}</span>
         </button>
 
         <button
@@ -399,7 +425,7 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
           disabled={!canProceed() || isTransitioning}
           className="group px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center space-x-2"
         >
-          <span>{currentPhase === 'demographics' ? 'View Results' : 'Next'}</span>
+          <span>{currentPhase === 'demographics' ? t('ocaiAssessment.viewResults') : t('ocaiAssessment.next')}</span>
           <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
