@@ -321,3 +321,4 @@ class APIOnlyUser(HttpUser):
         """Check assessment progress"""
         self.client.get("/api/assessments/progress")
 
+
