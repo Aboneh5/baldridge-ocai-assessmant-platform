@@ -141,15 +141,17 @@ export default function AssessmentCredentialsPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        console.error('Upload failed:', data)
+        // Only log if there's actual data to show
+        if (data && Object.keys(data).length > 0) {
+          console.error('Upload failed:', data)
+        }
         if (data.validationErrors) {
           setValidationErrors(data.validationErrors)
-          console.error('Validation errors:', data.validationErrors)
         }
-        setUploadResult({ 
-          success: false, 
-          error: data.error || 'Upload failed',
-          details: data.validationErrors ? `${data.invalidCount} validation error(s) found` : undefined
+        setUploadResult({
+          success: false,
+          error: data?.error || 'Upload failed',
+          details: data?.validationErrors ? `${data.invalidCount} validation error(s) found` : undefined
         })
       } else {
         setUploadResult({ 

@@ -194,7 +194,7 @@ export default function SurveyRespondPage() {
               <p className="text-gray-600">Complete the OCAI culture assessment below</p>
             </div>
             <button
-              onClick={() => router.push('/surveys')}
+              onClick={() => router.push('/employee/assessments')}
               className="px-4 py-2 text-gray-600 hover:text-gray-900"
             >
               Cancel

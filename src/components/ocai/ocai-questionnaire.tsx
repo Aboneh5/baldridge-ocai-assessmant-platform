@@ -14,7 +14,6 @@ interface Demographics {
   location?: string
   gender?: string
   laborUnit?: string
-  raceEthnicity?: string
 }
 
 interface OCAIQuestionnaireProps {
@@ -283,9 +282,9 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className={`grid grid-cols-1 gap-8 ${showHelp ? 'lg:grid-cols-5' : ''}`}>
         {/* Main Content */}
-        <div className={`lg:col-span-3 transition-all duration-300 ease-in-out ${
+        <div className={`${showHelp ? 'lg:col-span-4' : ''} transition-all duration-300 ease-in-out ${
           isTransitioning ? 'opacity-0 transform translate-x-4' : 'opacity-100 transform translate-x-0'
         }`}>
           {currentPhase === 'demographics' ? (
@@ -353,8 +352,6 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
                     <option value="">{t('ocaiAssessment.selectGender')}</option>
                     <option value="male">{t('ocaiAssessment.genderMale')}</option>
                     <option value="female">{t('ocaiAssessment.genderFemale')}</option>
-                    <option value="non-binary">{t('ocaiAssessment.genderNonBinary')}</option>
-                    <option value="prefer-not-to-say">{t('ocaiAssessment.genderPreferNotToSay')}</option>
                   </select>
                 </div>
 
@@ -367,25 +364,6 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-medium placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder={t('ocaiAssessment.laborUnitPlaceholder')}
                   />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('ocaiAssessment.raceEthnicity')}</label>
-                  <select
-                    value={demographics.raceEthnicity || ''}
-                    onChange={(e) => setDemographics(prev => ({ ...prev, raceEthnicity: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">{t('ocaiAssessment.selectRaceEthnicity')}</option>
-                    <option value="american-indian">{t('ocaiAssessment.raceAmericanIndian')}</option>
-                    <option value="asian">{t('ocaiAssessment.raceAsian')}</option>
-                    <option value="black">{t('ocaiAssessment.raceBlack')}</option>
-                    <option value="hispanic">{t('ocaiAssessment.raceHispanic')}</option>
-                    <option value="native-hawaiian">{t('ocaiAssessment.raceNativeHawaiian')}</option>
-                    <option value="white">{t('ocaiAssessment.raceWhite')}</option>
-                    <option value="two-or-more">{t('ocaiAssessment.raceTwoOrMore')}</option>
-                    <option value="prefer-not-to-say">{t('ocaiAssessment.racePreferNotToSay')}</option>
-                  </select>
                 </div>
               </div>
             </div>

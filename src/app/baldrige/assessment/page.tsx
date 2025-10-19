@@ -12,7 +12,6 @@ import {
 } from '@/lib/assessment-progress';
 import { useLocale } from '@/lib/i18n/context';
 import { getLocalizedBaldrigeQuestionText } from '@/lib/baldrige-data';
-// LanguageSwitcher removed to prevent accidental language switching during assessment
 
 interface BaldrigeQuestion {
   id: string;
@@ -46,7 +45,7 @@ interface BaldrigeCategory {
 export default function BaldrigeAssessmentPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { t, locale, translations } = useLocale();
+  const { t, locale, translations, setLocale } = useLocale();
   const [categories, setCategories] = useState<BaldrigeCategory[]>([]);
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [currentSubcategoryIndex, setCurrentSubcategoryIndex] = useState(0);
@@ -62,6 +61,8 @@ export default function BaldrigeAssessmentPage() {
   const [submissionData, setSubmissionData] = useState<any>(null);
   const [isResuming, setIsResuming] = useState(false);
   const [resumedCount, setResumedCount] = useState(0);
+  const [showLowPointsWarning, setShowLowPointsWarning] = useState(false);
+  const [lowPointsData, setLowPointsData] = useState({ points: 0, total: 0, percentage: 0 });
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const questionsContainerRef = useRef<HTMLDivElement>(null);
   const DEBOUNCE_MS = 500;
@@ -376,6 +377,21 @@ export default function BaldrigeAssessmentPage() {
   };
 
   const submitAssessment = async () => {
+    // Check if points are below 500/1000
+    const completedPoints = getCompletedPoints();
+    const totalPoints = getTotalPoints();
+    const completionPercentage = (completedPoints / totalPoints) * 100;
+
+    if (completedPoints < 500) {
+      setLowPointsData({
+        points: completedPoints,
+        total: totalPoints,
+        percentage: Math.round(completionPercentage)
+      });
+      setShowLowPointsWarning(true);
+      return; // Block submission and return to assessment
+    }
+
     try {
       const res = await fetch('/api/baldrige/submit', {
         method: 'POST',
@@ -644,12 +660,39 @@ export default function BaldrigeAssessmentPage() {
 
           <div className="bg-white rounded-lg shadow-lg p-8">
             <div className="mb-6">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {t('assessment.title')}
-              </h1>
-              <p className="text-gray-600">
-                {t('assessment.totalPoints')} | {t('assessment.duration')}
-              </p>
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                    {t('assessment.title')}
+                  </h1>
+                  <p className="text-gray-600">
+                    {t('assessment.totalPoints')} | {t('assessment.duration')}
+                  </p>
+                </div>
+                {/* Language Switcher */}
+                <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setLocale('en')}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      locale === 'en'
+                        ? 'bg-white text-emerald-700 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    EN
+                  </button>
+                  <button
+                    onClick={() => setLocale('am')}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      locale === 'am'
+                        ? 'bg-white text-emerald-700 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    አማ
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="mb-8">
@@ -794,7 +837,30 @@ export default function BaldrigeAssessmentPage() {
               {t('assessment.title')}
             </h1>
             <div className="flex items-center gap-4">
-              {/* Language switcher removed during assessment to prevent accidental changes */}
+              {/* Language Switcher */}
+              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setLocale('en')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    locale === 'en'
+                      ? 'bg-white text-emerald-700 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  EN
+                </button>
+                <button
+                  onClick={() => setLocale('am')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    locale === 'am'
+                      ? 'bg-white text-emerald-700 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  አማ
+                </button>
+              </div>
+
               <div className="text-right">
                 <p className="text-sm text-gray-600">{t('assessment.progress')}</p>
                 <p className="text-lg font-semibold text-emerald-600">
@@ -898,7 +964,16 @@ export default function BaldrigeAssessmentPage() {
 
             {/* Navigation Buttons */}
             <div className="flex justify-between items-center pt-6 border-t">
-              <div className="w-32"></div>
+              <button
+                onClick={handlePrevious}
+                disabled={currentCategoryIndex === 0 && currentSubcategoryIndex === 0 || isTransitioning}
+                className="group px-6 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span>{t('assessment.previous')}</span>
+              </button>
 
               <div className="text-center">
                 <p className="text-sm text-gray-600 font-medium">
@@ -940,6 +1015,79 @@ export default function BaldrigeAssessmentPage() {
             <li>• {t('assessment.guideline5')}</li>
           </ul>
         </div>
+
+        {/* Low Points Warning Modal */}
+        {showLowPointsWarning && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all animate-fadeIn">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4 rounded-t-2xl">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-white rounded-full p-2">
+                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Insufficient Points</h3>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-4">
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-red-800">
+                        You have answered questions worth <span className="font-bold">{lowPointsData.points}</span> out of <span className="font-bold">{lowPointsData.total}</span> points ({lowPointsData.percentage}%)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-gray-700 font-medium">
+                    This is below the required minimum of <span className="text-red-600 font-bold">500 points</span>.
+                  </p>
+                  <p className="text-gray-600 text-sm">
+                    Please answer more questions before submitting your assessment to ensure a comprehensive evaluation.
+                  </p>
+                </div>
+
+                {/* Progress visualization */}
+                <div className="bg-gray-100 rounded-lg p-4">
+                  <div className="flex justify-between text-xs text-gray-600 mb-2">
+                    <span>Current: {lowPointsData.points} pts</span>
+                    <span>Required: 500 pts</span>
+                  </div>
+                  <div className="w-full bg-gray-300 rounded-full h-3 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-red-500 to-red-600 h-3 rounded-full transition-all"
+                      style={{ width: `${(lowPointsData.points / 500) * 100}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    You need <span className="font-semibold text-red-600">{500 - lowPointsData.points} more points</span> to meet the minimum requirement
+                  </p>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 bg-gray-50 rounded-b-2xl">
+                <button
+                  onClick={() => setShowLowPointsWarning(false)}
+                  className="w-full px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+                >
+                  Continue Answering Questions
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

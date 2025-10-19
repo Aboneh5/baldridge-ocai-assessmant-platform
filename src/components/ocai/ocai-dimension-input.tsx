@@ -15,6 +15,7 @@ export function OCAIDimensionInput({ dimension, phase, response, onChange }: OCA
   const { t } = useLocale()
   const [values, setValues] = useState({ A: 25, B: 25, C: 25, D: 25 })
   const [errors, setErrors] = useState<string[]>([])
+  const [lastModifiedKey, setLastModifiedKey] = useState<'A' | 'B' | 'C' | 'D' | null>(null)
 
   useEffect(() => {
     if (response) {
@@ -24,44 +25,56 @@ export function OCAIDimensionInput({ dimension, phase, response, onChange }: OCA
 
   const updateValue = (key: 'A' | 'B' | 'C' | 'D', newValue: number) => {
     const clampedValue = Math.max(0, Math.min(100, newValue))
+    setLastModifiedKey(key)
 
     // Calculate how much we need to distribute among other keys
     const remainingPoints = 100 - clampedValue
-    const otherKeys = (['A', 'B', 'C', 'D'] as const).filter(k => k !== key)
-
-    // Get current total of other keys
-    const otherTotal = otherKeys.reduce((sum, k) => sum + values[k], 0)
+    const allKeys = ['A', 'B', 'C', 'D'] as const
+    const otherKeys = allKeys.filter(k => k !== key)
 
     const newValues = { ...values, [key]: clampedValue }
 
-    // Proportionally distribute remaining points based on current ratios
-    if (remainingPoints > 0 && otherTotal > 0) {
-      // Calculate proportional values based on current distribution
-      let assignedTotal = 0
-      otherKeys.forEach((otherKey, index) => {
-        if (index === otherKeys.length - 1) {
-          // Last key gets the remainder to ensure exactly 100
-          newValues[otherKey] = remainingPoints - assignedTotal
-        } else {
-          // Proportional distribution
-          const proportion = values[otherKey] / otherTotal
-          const newVal = Math.round(remainingPoints * proportion)
-          newValues[otherKey] = newVal
-          assignedTotal += newVal
-        }
-      })
-    } else if (remainingPoints > 0 && otherTotal === 0) {
-      // If all other values are 0, distribute equally
-      const equalShare = Math.floor(remainingPoints / otherKeys.length)
-      const remainder = remainingPoints % otherKeys.length
-      otherKeys.forEach((otherKey, index) => {
-        newValues[otherKey] = equalShare + (index < remainder ? 1 : 0)
-      })
-    } else if (remainingPoints === 0) {
+    if (remainingPoints === 0) {
       // If new value is 100, set all others to 0
       otherKeys.forEach(otherKey => {
         newValues[otherKey] = 0
       })
+    } else if (remainingPoints > 0) {
+      // Adjust only the keys that come after the current key in order
+      const currentIndex = allKeys.indexOf(key)
+      const keysToAdjust = allKeys.filter((k, idx) => idx > currentIndex)
+
+      if (keysToAdjust.length > 0) {
+        // Get current total of keys to adjust
+        const adjustTotal = keysToAdjust.reduce((sum, k) => sum + values[k], 0)
+
+        if (adjustTotal > 0) {
+          // Proportionally distribute among keys to adjust
+          let assignedTotal = 0
+          keysToAdjust.forEach((adjustKey, index) => {
+            if (index === keysToAdjust.length - 1) {
+              // Last key gets the remainder to ensure total is correct
+              const keysBeforeTotal = allKeys
+                .filter((k, idx) => idx <= currentIndex || !keysToAdjust.includes(k))
+                .reduce((sum, k) => sum + (k === key ? clampedValue : newValues[k] || values[k]), 0)
+              newValues[adjustKey] = 100 - keysBeforeTotal - assignedTotal
+            } else {
+              // Proportional distribution
+              const proportion = values[adjustKey] / adjustTotal
+              const newVal = Math.round((100 - clampedValue - allKeys.filter((k, idx) => idx <= currentIndex && k !== key).reduce((sum, k) => sum + values[k], 0)) * proportion)
+              newValues[adjustKey] = Math.max(0, newVal)
+              assignedTotal += newValues[adjustKey]
+            }
+          })
+        } else {
+          // If keys to adjust are all 0, distribute equally
+          const equalShare = Math.floor(remainingPoints / keysToAdjust.length)
+          const remainder = remainingPoints % keysToAdjust.length
+          keysToAdjust.forEach((adjustKey, index) => {
+            newValues[adjustKey] = equalShare + (index < remainder ? 1 : 0)
+          })
+        }
+      }
     }
 
     setValues(newValues)
@@ -93,7 +106,7 @@ export function OCAIDimensionInput({ dimension, phase, response, onChange }: OCA
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-          {dimension.title} - {phase === 'now' ? 'Current State' : 'Preferred State'}
+          {dimension.title} - {phase === 'now' ? t('ocaiAssessment.currentState') : t('ocaiAssessment.preferredState')}
         </h2>
         <p className="text-gray-600 mb-4">{dimension.description}</p>
       </div>

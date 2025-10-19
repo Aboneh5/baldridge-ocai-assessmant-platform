@@ -113,6 +113,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if user already has a submission for this survey
+    const existingSubmission = await prisma.baldrigeSubmission.findFirst({
+      where: {
+        userId: user.id,
+        ...(normalizedSurveyId ? { surveyId: normalizedSurveyId } : { surveyId: null }),
+      },
+    });
+
+    if (existingSubmission) {
+      console.log('[Baldrige Submit API] User already has a submission - returning existing submission');
+      return NextResponse.json({
+        success: true,
+        message: 'Assessment already submitted',
+        data: {
+          submissionId: existingSubmission.id,
+          assessmentId: existingSubmission.assessmentId,
+          submittedAt: existingSubmission.submittedAt,
+          totalQuestions: existingSubmission.totalQuestions,
+          answeredQuestions: existingSubmission.answeredQuestions,
+          alreadySubmitted: true,
+        },
+      });
+    }
+
     // Generate unique assessment ID
     const assessmentId = await generateAssessmentId(user.organizationId);
 
