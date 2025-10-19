@@ -311,12 +311,24 @@ export default function BaldrigeAssessmentPage() {
   };
 
   const handleSubcategoryComplete = async () => {
+    console.log('🔘 Submit/Continue button clicked');
+
     // Get main categories (excluding organizational profile)
     const mainCategories = categories.filter(c => c.displayOrder > 0);
     const currentCategory = mainCategories[currentCategoryIndex];
     const currentSubcategory = currentCategory?.subcategories[currentSubcategoryIndex];
 
-    if (!currentSubcategory) return;
+    console.log('📍 Navigation state:', {
+      currentCategoryIndex,
+      currentSubcategoryIndex,
+      totalCategories: mainCategories.length,
+      totalSubcategoriesInCategory: currentCategory?.subcategories.length
+    });
+
+    if (!currentSubcategory) {
+      console.error('❌ No current subcategory found');
+      return;
+    }
 
     // Save all responses for this subcategory before proceeding (including empty ones)
     setSaving(true);
@@ -348,7 +360,9 @@ export default function BaldrigeAssessmentPage() {
 
     if (isLastSubcategory && isLastCategory) {
       // Assessment complete - submit it
-      submitAssessment();
+      console.log('🎯 Attempting to submit assessment...');
+      await submitAssessment();
+      return; // Don't set isTransitioning to false if submitting
     } else if (currentSubcategoryIndex < currentCategory.subcategories.length - 1) {
       // Move to next subcategory in same category
       setCurrentSubcategoryIndex(currentSubcategoryIndex + 1);
@@ -382,7 +396,18 @@ export default function BaldrigeAssessmentPage() {
     const totalPoints = getTotalPoints();
     const completionPercentage = (completedPoints / totalPoints) * 100;
 
+    console.log('📊 Assessment submission check:', {
+      completedPoints,
+      totalPoints,
+      completionPercentage: Math.round(completionPercentage),
+      meetsMinimum: completedPoints >= 500
+    });
+
     if (completedPoints < 500) {
+      console.warn('⚠️ Submission blocked: Points below minimum (500)', {
+        current: completedPoints,
+        required: 500
+      });
       setLowPointsData({
         points: completedPoints,
         total: totalPoints,
@@ -393,13 +418,16 @@ export default function BaldrigeAssessmentPage() {
     }
 
     try {
+      console.log('🚀 Calling /api/baldrige/submit...');
       const res = await fetch('/api/baldrige/submit', {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({}),
       });
 
+      console.log('📡 API Response status:', res.status);
       const data = await res.json();
+      console.log('📦 API Response data:', data);
 
       if (data.success) {
         // Mark assessment as permanently completed
@@ -433,7 +461,12 @@ export default function BaldrigeAssessmentPage() {
         alert(errorMessage);
       }
     } catch (error) {
-      console.error('Error submitting assessment:', error);
+      console.error('❌ Error submitting assessment:', error);
+      console.error('Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       alert(t('assessment.submitFailed'));
     }
   };
