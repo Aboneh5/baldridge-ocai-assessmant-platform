@@ -321,14 +321,6 @@ function SignInContent() {
                     )}
                   </button>
                 </div>
-
-                <div className="mt-6 bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-                  <p className="text-xs font-semibold text-emerald-900 mb-2">Demo Access Keys:</p>
-                  <div className="space-y-1 text-xs text-emerald-800">
-                    <div>• <strong>ACME2024</strong> - Full access (OCAI + Baldrige)</div>
-                    <div>• <strong>OCAI001</strong> - OCAI only</div>
-                  </div>
-                </div>
               </form>
             )}
           </div>

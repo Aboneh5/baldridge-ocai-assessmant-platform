@@ -172,3 +172,4 @@ This fix is part of the overall mobile optimization strategy:
 **Affects:** OCAI Assessment, Baldrige Assessment  
 **Impact:** Significantly improved mobile user experience
 
+

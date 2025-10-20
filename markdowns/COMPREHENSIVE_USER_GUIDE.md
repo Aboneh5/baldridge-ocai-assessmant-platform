@@ -116,20 +116,26 @@ The platform has three distinct user roles, each with specific permissions:
 
 **What They Can Do:**
 - ✅ View their organization's aggregate results
-- ✅ Export reports for their organization
-- ✅ See response statistics
+- ✅ Export reports for their organization (PDF, CSV, Excel)
+- ✅ See response statistics and participation rates
 - ✅ View participation rates
 - ✅ Download charts and visualizations
 - ✅ Take assessments themselves
+- ✅ View workshops for their organization (read-only)
 
 **What They CANNOT Do:**
-- ❌ Create surveys or access keys
-- ❌ See individual employee emails (privacy protected)
+- ❌ Create surveys, access keys, or assessment credentials
+- ❌ See individual employee emails (shown as `***HIDDEN***` for privacy)
 - ❌ Modify organization settings
 - ❌ Access other organizations' data
-- ❌ Create workshops
+- ❌ Create workshops or action items (SYSTEM_ADMIN only)
+- ❌ Upload assessment credentials or manage users
+- ❌ Modify any platform settings
 
 **Authentication:** Email and Password
+
+**Privacy Protection:**
+All employee emails are automatically hidden and displayed as `***HIDDEN***` to protect participant privacy and encourage honest feedback.
 
 ---
 
@@ -558,9 +564,26 @@ You'll see your progress:
 
 You can:
 - ✅ Close browser and come back later
-- ✅ Switch devices (responses saved to server)
+- ✅ Switch devices (responses saved to server for credential users)
 - ✅ Take breaks between categories
 - ✅ Edit previous responses before submitting
+- ✅ Auto-save triggers as you type (look for "Saved" indicator)
+- ✅ On mobile devices, page automatically scrolls to top when navigating questions
+
+**Progress Saving Methods:**
+
+| Authentication Method | Save Location | Resume Capability |
+|----------------------|---------------|-------------------|
+| **Assessment Credentials** (email/password) | Server | ✅ Any device, anywhere |
+| **Access Key** | Browser localStorage | ⚠️ Same device & browser only |
+| **Admin/Facilitator Account** | Server | ✅ Any device, anywhere |
+
+**Mobile Experience:**
+- Optimized for mobile and tablet devices
+- Smooth scroll to top when navigating between questions
+- Touch-friendly interface for point allocation (OCAI)
+- Responsive text areas for Baldrige questions
+- Best experience on tablet or larger screens
 
 **Step 7: Submit Assessment**
 
@@ -792,86 +815,359 @@ Access keys allow employees to participate anonymously without individual accoun
 
 ### Managing Assessment Credentials
 
-Assessment credentials provide individual email/password access for employees with full tracking.
+Assessment credentials provide individual email/password access for employees with **full tracking, progress auto-save, and accountability**. This is the most secure and trackable method for employee participation.
+
+#### What are Assessment Credentials?
+
+**Assessment Credentials** are individual email/password pairs that:
+- ✅ Give each employee unique login credentials
+- ✅ Auto-save progress to the server (resume from any device)
+- ✅ Track who completed which assessment with timestamps
+- ✅ Provide better accountability than shared access keys
+- ✅ Expire after a set date for security
+- ✅ Can be managed in batches for bulk operations
+
+**Key Differences from Access Keys:**
+
+| Feature | Assessment Credentials | Access Keys |
+|---------|----------------------|-------------|
+| **Authentication** | Email + Password (unique per employee) | Shared code (multiple employees) |
+| **Progress Save** | Server-side (any device) | Browser only (same device) |
+| **Tracking** | Individual user tracked | Group tracking only |
+| **Accountability** | High (know who completed) | Low (shared key) |
+| **Privacy** | Moderate (admin sees email) | High (optional name) |
+| **Expiration** | Per batch | Per key |
+| **Best For** | Individual tracking, accountability | Anonymous participation |
+
+---
 
 #### Upload Credentials in Bulk
 
 **Step 1: Prepare CSV File**
 
-Create a file named `credentials.csv`:
+Create a file named `credentials.csv` with exactly 2 columns:
 
 ```csv
 email,password
-john.doe@company.com,temp123
-jane.smith@company.com,temp456
-bob.johnson@company.com,temp789
+john.doe@company.com,TempPass123
+jane.smith@company.com,SecureP@ss456
+bob.johnson@company.com,MyPass789
+alice.williams@company.com,Cred2025!
 ```
 
-**Requirements:**
-- ✅ First row MUST be: `email,password`
-- ✅ Valid email format
-- ✅ Password minimum 6 characters
-- ✅ No duplicate emails in same file
+**CSV Requirements:**
+- ✅ **First row** MUST be headers: `email,password`
+- ✅ **Email format** must be valid (user@domain.com)
+- ✅ **Password** minimum 6 characters (no maximum)
+- ✅ **No duplicate emails** in the same file
+- ✅ **Save as CSV** (UTF-8 encoding recommended)
+- ✅ **No empty rows** or extra columns
 
-**Download Sample:** Click "Sample CSV" button on upload page
+**Common CSV Errors to Avoid:**
+- ❌ Missing header row
+- ❌ Wrong column names (must be exactly `email,password`)
+- ❌ Invalid email format (missing @ or domain)
+- ❌ Passwords shorter than 6 characters
+- ❌ Duplicate emails in the same batch
+- ❌ Extra spaces in emails or passwords
 
-**Step 2: Upload**
+**Download Sample:** Click **"Download Sample CSV"** button on the upload page to get a template.
 
-1. Go to **Admin Dashboard**
-2. Click **"Upload Credentials"** or navigate to **Assessment Credentials**
-3. Select **Organization** from dropdown
-4. Check assessment types:
-   - ☑ OCAI
-   - ☑ Baldrige
-5. Choose your CSV file
-6. Set **Expiration Date**
-7. Enter **Batch Name** (optional, e.g., "Q1 2025 Leadership Team")
-8. Click **"Upload & Create Credentials"**
+---
 
-**Step 3: Review Results**
+**Step 2: Upload to Platform**
 
-You'll see:
-- ✅ **Success count** - How many credentials created
-- ⚠️ **Errors** - Any validation failures (with row numbers)
-- 📊 **Summary** - Total, used, unused counts
+1. **Navigate** to Admin Dashboard
+2. Click **"Assessment Credentials"** in the sidebar OR click **"Upload Credentials"** quick action
+3. You'll see the **Assessment Credentials Upload** page
+
+4. **Fill out the form:**
+
+   **a) Select Organization:**
+   - Choose which organization these credentials are for
+   - Required field
+
+   **b) Select Assessment Types:**
+   - ☑ **OCAI** - Grant access to OCAI culture assessment
+   - ☑ **Baldrige** - Grant access to Baldrige excellence assessment
+   - ☑ Both (recommended for comprehensive assessment)
+   - At least one must be selected
+
+   **c) Choose CSV File:**
+   - Click **"Choose File"** or drag and drop
+   - File must be .csv format
+   - Maximum file size: typically 5MB (handles thousands of credentials)
+
+   **d) Set Expiration Date:**
+   - Select when credentials should expire
+   - Format: YYYY-MM-DD
+   - Recommended: 30-90 days from upload
+   - After expiration, employees cannot log in (but can be extended)
+
+   **e) Batch Name (Optional):**
+   - Give this batch a descriptive name
+   - Examples: "Q1 2025 All Employees", "Leadership Team - Jan 2025"
+   - Helps identify batches later
+   - If left blank, auto-generated name will be used
+
+5. **Click "Upload & Create Credentials"**
+
+---
+
+**Step 3: Review Upload Results**
+
+After uploading, you'll see a summary:
+
+**Success Summary:**
+```
+✅ Successfully created 47 assessment credentials
+   Organization: Acme Corporation
+   Assessment Types: OCAI, Baldrige
+   Expiration Date: 2025-03-31
+   Batch Name: Q1 2025 All Employees
+```
+
+**Breakdown:**
+- 📊 **Total in file:** 50 rows
+- ✅ **Successfully created:** 47 credentials
+- ⚠️ **Errors:** 3 (see below)
+
+**Error Details (if any):**
+```
+❌ Row 12: Invalid email format - "john.smith.company.com" (missing @)
+❌ Row 25: Password too short - "pass" (minimum 6 characters)
+❌ Row 38: Duplicate email - "alice@company.com" already in batch
+```
+
+**What Happens to Errors:**
+- Rows with errors are **skipped** (not created)
+- Valid rows are **created successfully**
+- Fix errors in your CSV and re-upload if needed
+
+---
 
 #### View Credential Batches
 
-1. Go to **Assessment Credentials** page
-2. See all batches with:
-   - Organization
-   - Created date
-   - Expiration date
-   - Assessment types
-   - Total credentials
-   - Used / Unused count
-   - Status (Active/Expired)
+1. Go to **Assessment Credentials** page from admin sidebar
+2. See all credential batches in a table:
 
-#### Extend Expiration
+**Batch List Columns:**
 
-1. Find the batch
-2. Click **"Extend Expiration"**
-3. Select new expiration date
-4. Click **"Save"**
-5. All credentials in batch updated
+| Column | Description |
+|--------|-------------|
+| **Batch Name** | Name given during upload |
+| **Organization** | Which organization |
+| **Assessment Types** | OCAI, Baldrige, or both |
+| **Created Date** | When batch was uploaded |
+| **Expiration Date** | When credentials expire |
+| **Total Credentials** | How many in batch |
+| **Used** | How many have logged in at least once |
+| **Unused** | How many never logged in |
+| **Status** | Active, Expired, or Deleted |
+| **Actions** | View, Extend, Delete buttons |
+
+**Example Batch:**
+```
+Batch: Q1 2025 All Employees
+Organization: Acme Corporation
+Assessment Types: OCAI, Baldrige
+Created: 2025-01-15
+Expires: 2025-03-31
+Total: 47 | Used: 32 | Unused: 15
+Status: Active ✅
+```
+
+---
+
+#### Extend Expiration Date
+
+If employees need more time to complete assessments:
+
+1. Find the batch in the list
+2. Click **"Extend Expiration"** button
+3. A modal appears with current expiration date
+4. Select **new expiration date** (must be in the future)
+5. Click **"Save"**
+6. **All credentials in the batch** are updated instantly
+7. Employees can now log in until the new date
+
+**Use Cases:**
+- Low participation rate, need more time
+- Delayed assessment campaign
+- Employees on leave returning
+- Follow-up assessments
+
+---
 
 #### View Individual Credentials in Batch
 
+To see detailed information about each credential:
+
 1. Click **"View Details"** on a batch
-2. See list of all emails:
-   - Email address
-   - Last used date
-   - Login count
-   - Status
+2. You'll see a table of all credentials in that batch:
+
+**Individual Credential Details:**
+
+| Email | Last Used | Login Count | Status | Actions |
+|-------|-----------|-------------|--------|---------|
+| john.doe@company.com | 2025-01-20 10:30 AM | 3 | Active | View |
+| jane.smith@company.com | Never | 0 | Unused | - |
+| bob.johnson@company.com | 2025-01-18 2:15 PM | 1 | Active | View |
+
+**Information Shown:**
+- **Email Address** - The employee's credential email
+- **Last Used** - Last login timestamp (or "Never")
+- **Login Count** - How many times they've logged in
+- **Status** - Active, Unused, or Expired
+- **Assessments Completed** - Which assessments they've finished
+
+**Privacy Note:**
+- **SYSTEM_ADMIN** can see all email addresses
+- **FACILITATOR** will see emails as `***HIDDEN***` for privacy
+
+---
 
 #### Delete a Credential Batch
 
-⚠️ **Warning:** This deletes ALL credentials in the batch
+⚠️ **Warning:** This permanently deletes ALL credentials in the batch!
 
-1. Find the batch
-2. Click **"Delete Batch"**
-3. Type batch name to confirm
-4. Click **"Confirm Delete"**
+**Before Deleting:**
+- Ensure no employees still need access
+- Export any data/reports you need
+- Consider extending expiration instead
+
+**To Delete:**
+
+1. Find the batch in the list
+2. Click **"Delete Batch"** button (red)
+3. A confirmation modal appears
+4. Type the **exact batch name** to confirm
+5. Click **"Confirm Delete"**
+6. All credentials in the batch are permanently deleted
+
+**What Gets Deleted:**
+- ✅ All credentials in the batch
+- ✅ Login records for those credentials
+- ✅ Batch metadata
+
+**What Is NOT Deleted:**
+- ❌ Assessment responses (those are preserved!)
+- ❌ User result data
+- ❌ Organization data
+
+**Important:** Deleting credentials does NOT delete the assessment responses already submitted. Those remain in the system for reporting.
+
+---
+
+#### Security Best Practices
+
+**For Administrators:**
+
+1. **Use Temporary Passwords:**
+   - Generate simple, temporary passwords (e.g., "TempPass2025")
+   - Instruct employees to change after first login (if that feature is enabled)
+
+2. **Set Reasonable Expiration Dates:**
+   - 30-60 days for standard campaigns
+   - 90 days for longer initiatives
+   - Don't set years in the future
+
+3. **Monitor Usage:**
+   - Check "Used" vs "Unused" counts regularly
+   - Send reminders to employees who haven't logged in
+   - Extend expiration if needed before it expires
+
+4. **Delete Expired Batches:**
+   - Clean up old batches after assessment campaigns
+   - Keep system organized
+
+5. **Track Participation:**
+   - Export credential usage reports
+   - Identify low participation
+   - Follow up with unused credentials
+
+**For Employees:**
+
+When receiving credentials:
+- Keep email/password secure
+- Don't share with others
+- Complete assessment before expiration
+- Contact admin if forgotten password
+
+---
+
+#### Communicating Credentials to Employees
+
+**Email Template:**
+
+```
+Subject: Your Assessment Credentials - Complete by [DATE]
+
+Dear [Employee Name],
+
+You have been invited to participate in our organizational assessment using the Tenadam Assessment Hub.
+
+YOUR CREDENTIALS:
+Email: [employee.email@company.com]
+Password: [TempPassword123]
+Expiration Date: [2025-03-31]
+
+WHAT TO DO:
+1. Go to: [https://assessment.company.com]
+2. Click "Sign In"
+3. Use the Email & Password tab
+4. Enter your credentials above
+5. Complete the assessment(s): OCAI and/or Baldrige
+
+TIME REQUIRED:
+- OCAI: 15-20 minutes
+- Baldrige: 45-60 minutes
+
+Your responses are confidential and will help us improve our organization.
+
+Please complete by: [Deadline Date]
+
+Questions? Contact: [admin@company.com]
+
+Thank you for your participation!
+```
+
+---
+
+#### Troubleshooting Credentials
+
+**Issue: "Invalid email or password"**
+
+Solutions:
+1. Check email spelling (case-sensitive)
+2. Check password (case-sensitive, no extra spaces)
+3. Verify credential hasn't expired
+4. Confirm batch is still active
+5. Contact admin to verify credential exists
+
+**Issue: "Credential has expired"**
+
+Solutions:
+1. Contact administrator
+2. Ask to extend expiration date
+3. Administrator can extend the batch expiration
+
+**Issue: "CSV upload failed"**
+
+Solutions:
+1. Check CSV format (email,password headers)
+2. Verify all emails are valid format
+3. Ensure passwords are 6+ characters
+4. Remove duplicate emails
+5. Save file as CSV (not Excel)
+6. Check for special characters or encoding issues
+
+**Issue: "Some credentials weren't created"**
+
+This is normal! Review the error summary:
+- Fix errors in your CSV
+- Re-upload (only new, valid credentials will be created)
+- Or manually create the few that failed
 
 ---
 
@@ -1000,6 +1296,7 @@ Hierarchy Preferred, Demographics
 
 **Step 2: Select Organization**
 - Choose organization from dropdown
+- Or view all organizations
 
 **Step 3: View Data**
 
@@ -1007,40 +1304,535 @@ You'll see:
 
 **Organization Card:**
 - Organization name
-- Total assessments
-- Latest submission
-- Export buttons
+- Total assessments completed
+- Latest submission date
+- Export buttons (CSV, Excel)
+- Quick statistics
 
 **Assessment List:**
 - Assessment ID (e.g., BLD-ACME-2025-001)
 - User name
-- User email ✅ (Admins can see this)
-- Completion date
-- Questions answered
+- User email ✅ (Admins can see this, Facilitators see `***HIDDEN***`)
+- Completion date and time
+- Questions answered (e.g., 97/97)
+- Assessment status
 
-**Step 4: View Responses**
+**Step 4: View Responses (Hierarchical Structure)**
 
-1. Click on assessment ID
-2. See all 97 questions with responses
-3. Each question shows:
-   - Item code (e.g., 1.1a(1))
-   - Question text
-   - User's response
-   - Time spent on question
+The Baldrige data is organized in a **6-table hierarchical structure** for comprehensive tracking:
+
+**Database Architecture:**
+
+1. **BaldrigeCategory** (7 categories)
+   - Leadership, Strategy, Customers, Measurement & Knowledge, Workforce, Operations, Results
+   - Each category has a point value (e.g., Leadership = 120 points)
+
+2. **BaldrigeSubcategory** (e.g., 1.1, 1.2, 2.1, 2.2, etc.)
+   - Organized under categories
+   - Each subcategory has specific focus areas
+
+3. **BaldrigeQuestion** (100+ individual questions)
+   - Item codes (e.g., 1.1a(1), 1.1a(2), 1.2b(1), etc.)
+   - Full question text
+   - Linked to subcategories
+
+4. **BaldrigeResponse** (Individual user answers)
+   - User's text response for each question
+   - Time spent on each question
+   - Auto-save timestamps
+
+5. **BaldrigeProgress** (Completion tracking)
+   - Tracks which questions user has answered
+   - Real-time progress percentage
+   - Last saved timestamp
+
+6. **BaldrigeSubmission** (Final submission record)
+   - Unique assessment ID (e.g., BLD-ACME-2025-001)
+   - Submission timestamp
+   - User identification
+   - Complete/Incomplete status
+
+**To View Individual Assessment:**
+
+1. Click on **assessment ID** (e.g., BLD-ACME-2025-001)
+2. See hierarchical view:
+
+```
+📁 Organizational Profile
+   ❓ P.1a: What are your main products/services?
+      📝 Response: [User's answer]
+   ❓ P.1b: What is your organizational culture?
+      📝 Response: [User's answer]
+   ...
+
+📁 Category 1: Leadership (120 points)
+   📄 1.1 Senior Leadership
+      ❓ 1.1a(1): How do senior leaders set vision and values?
+         📝 Response: [User's answer]
+         ⏱️ Time spent: 2 min 35 sec
+      ❓ 1.1a(2): How do leaders communicate?
+         📝 Response: [User's answer]
+         ⏱️ Time spent: 1 min 48 sec
+
+   📄 1.2 Governance and Societal Contributions
+      ❓ 1.2a(1): Governance structure?
+         📝 Response: [User's answer]
+      ...
+
+📁 Category 2: Strategy (85 points)
+   📄 2.1 Strategy Development
+      ❓ 2.1a(1): Strategic planning process?
+         📝 Response: [User's answer]
+   ...
+
+[And so on for all 7 categories + Organizational Profile]
+```
+
+**What You See:**
+- ✅ Complete question hierarchy
+- ✅ All 97+ question responses
+- ✅ Time spent per question
+- ✅ Category and subcategory organization
+- ✅ Item codes for reference
+- ✅ Timestamp of submission
+- ✅ User identification (email for admins)
 
 **Step 5: Export Data**
 
-**Single Organization:**
-- Click **"Export CSV"** or **"Export Excel"** on org card
+**Single Organization Export:**
+- Click **"Export CSV"** or **"Export Excel"** on organization card
+- Choose format:
+  - **CSV** - Best for data analysis in Excel/Google Sheets
+  - **Excel (XLSX)** - Formatted with multiple sheets
 
-**All Organizations:**
-- Click **"Export All"** buttons at top
+**All Organizations Export:**
+- Click **"Export All as CSV"** or **"Export All as Excel"** at top of page
+- Exports data for all organizations into one file
 
-**Export Includes:**
+**Export Format (Wide Format):**
+
+The export uses **wide format** where:
+- **One row per assessment** (user)
+- **One column per question** (100+ columns)
+- Easy to analyze in spreadsheet software
+
 ```csv
-Assessment ID, Organization, User Name, User Email,
-Access Key, Completed At, Survey, [100+ question columns]
+Assessment ID, Organization, User Name, User Email, Credential Email, Access Key, Completed At, Survey,
+P.1a, P.1b, P.2a, P.2b, ..., 1.1a(1), 1.1a(2), ..., 2.1a(1), ..., 7.5a(1), ...
+BLD-ACME-001, Acme Corp, John Doe, john@acme.com, ***, KEY123, 2025-01-15, Q1 2025,
+"Our main products are...", "Our culture emphasizes...", ..., "Senior leaders set vision by...", ...
 ```
+
+**Export Columns Include:**
+- **Metadata:** Assessment ID, Organization, User Name, User Email, Access Key, Completion Date, Survey
+- **Privacy:** Facilitators see `***HIDDEN***` for user emails
+- **All Questions:** P.1a, P.1b, P.2a, ..., 1.1a(1), 1.1a(2), ..., 7.5a(1)
+- **100+ question columns** - One column per Baldrige question
+- **Full text responses** - Complete user answers for each question
+
+**Export File Naming:**
+- Single org: `baldrige_responses_[OrgName]_[Date].csv`
+- All orgs: `baldrige_responses_all_organizations_[Date].csv`
+- Excel files: Same naming with `.xlsx` extension
+
+**Using Exported Data:**
+
+1. **Open in Excel/Google Sheets:**
+   - Analyze individual responses
+   - Compare across employees
+   - Identify common themes
+
+2. **Filter and Sort:**
+   - By organization
+   - By completion date
+   - By specific question responses
+
+3. **Create Reports:**
+   - Category-level summaries
+   - Strength and opportunity analysis
+   - Gap identification
+
+4. **Share with Stakeholders:**
+   - Executive summaries
+   - Board reports
+   - Department reviews
+
+**Privacy Controls in Exports:**
+
+- **SYSTEM_ADMIN exports:**
+  - ✅ Full access to all data
+  - ✅ User emails visible
+  - ✅ All organizations included
+
+- **FACILITATOR exports:**
+  - ✅ Only their organization
+  - ❌ User emails shown as `***HIDDEN***`
+  - ✅ All question responses visible (aggregate patterns)
+
+---
+
+### Managing Workshops & Action Items
+
+Workshops are collaborative sessions for discussing assessment results and creating action plans. This feature helps organizations turn insights into actionable improvements.
+
+#### What are Workshops?
+
+**Workshops** in the Tenadam Assessment Hub allow you to:
+- 📊 **Pin important charts** from OCAI and Baldrige results
+- 💬 **Create discussion themes** for team conversations
+- ✅ **Track action items** with owners, due dates, and priorities
+- 📈 **Monitor progress** on organizational improvements
+- 🎯 **Link results to action** - from assessment to implementation
+
+**Who Can Manage Workshops:**
+- ✅ **SYSTEM_ADMIN** - Full access (create, edit, delete)
+- ⚠️ **FACILITATOR** - View-only access to their organization's workshops
+- ❌ **EMPLOYEE** - No access to workshops
+
+---
+
+#### Create a Workshop
+
+**Step 1: Navigate**
+1. Go to **Admin Dashboard**
+2. Click **"Workshops"** in sidebar
+3. Click **"Create Workshop"** button
+
+**Step 2: Fill Workshop Details**
+
+**Basic Information:**
+- **Title*** - Workshop name (e.g., "Q1 2025 Culture Transformation Workshop")
+- **Organization*** - Select which organization
+- **Description** - Purpose and goals (optional)
+- **Scheduled Date** - When the workshop will take place
+- **Facilitator** - Who will lead the workshop (can be different from user creating it)
+
+**Status Options:**
+- **Draft** - Workshop is being planned, not visible to participants
+- **Active** - Workshop is happening or in progress
+- **Completed** - Workshop is finished, results are final
+
+**Step 3: Save**
+- Click **"Create Workshop"**
+- Workshop is now created and you can add sessions
+
+---
+
+#### Create Workshop Sessions
+
+Workshops can have multiple sessions (e.g., Day 1, Day 2, or Morning/Afternoon sessions).
+
+**Step 1: Access Workshop**
+1. Go to **Workshops** page
+2. Click on the workshop you created
+3. Go to **"Sessions"** tab
+
+**Step 2: Create Session**
+1. Click **"Add Session"** button
+2. Fill session details:
+   - **Session Title** - (e.g., "Session 1: Culture Analysis")
+   - **Session Date** - When this session occurs
+   - **Duration** - How long (e.g., "2 hours")
+   - **Objectives** - What this session aims to achieve
+
+3. Click **"Create Session"**
+
+---
+
+#### Pin Charts to Workshops
+
+Pinning charts allows you to save important visualizations for discussion during workshops.
+
+**Step 1: View Results**
+1. Go to **OCAI Results** or **Baldrige Results** page
+2. Find a chart you want to discuss in the workshop
+3. Click the **"Pin to Workshop"** icon/button (usually a pin or bookmark icon)
+
+**Step 2: Select Workshop and Session**
+1. Choose which **workshop** to pin to
+2. Choose which **session** within that workshop
+3. Add optional **notes** about why this chart is important
+4. Click **"Pin Chart"**
+
+**Supported Chart Types:**
+- ✅ OCAI radar/spider charts (current vs preferred culture)
+- ✅ OCAI dimension breakdowns
+- ✅ Baldrige category summaries
+- ✅ Comparative charts across time periods
+
+**Step 3: View Pinned Charts**
+1. Go to the workshop
+2. Navigate to the session
+3. See all pinned charts in the **"Charts"** section
+4. Charts display with original data and your notes
+
+---
+
+#### Create Discussion Themes
+
+Themes help organize workshop conversations around key topics.
+
+**Step 1: Access Session**
+1. Go to workshop → session
+2. Find **"Themes"** section
+
+**Step 2: Add Theme**
+1. Click **"Add Theme"** button
+2. Fill theme details:
+   - **Theme Title** - (e.g., "Increase Collaboration Culture")
+   - **Description** - What this theme is about
+   - **Priority** - High, Medium, or Low
+   - **Related Results** - Link to specific OCAI/Baldrige findings
+   - **Discussion Notes** - Key points from team discussion
+
+3. Click **"Create Theme"**
+
+**Example Themes:**
+- "Shift from Market to Clan culture"
+- "Improve strategic planning processes"
+- "Enhance customer engagement"
+- "Develop leadership communication"
+- "Strengthen workforce engagement"
+
+---
+
+#### Create and Track Action Items
+
+Action items are specific tasks that result from workshop discussions.
+
+**Step 1: Access Workshop/Session**
+1. Navigate to the workshop
+2. Go to the session (or workshop level for general actions)
+3. Find **"Action Items"** section
+
+**Step 2: Create Action Item**
+1. Click **"Add Action Item"** or **"Create Action"** button
+
+2. **Fill Action Details:**
+
+   **a) Action Description***
+   - Clear, specific description of what needs to be done
+   - Example: "Implement monthly team-building activities for all departments"
+
+   **b) Owner/Assignee***
+   - Person responsible for completing this action
+   - Can be name, email, or department
+   - Example: "HR Director" or "john.smith@company.com"
+
+   **c) Due Date***
+   - When this action should be completed
+   - Format: YYYY-MM-DD
+   - Example: 2025-03-31
+
+   **d) Priority**
+   - **High** - Critical, must be done soon
+   - **Medium** - Important, normal timeline
+   - **Low** - Nice to have, when time permits
+
+   **e) Related Theme** (Optional)
+   - Link to a discussion theme if applicable
+   - Helps track actions by theme
+
+   **f) Success Metrics** (Optional)
+   - How you'll measure if this action succeeded
+   - Example: "80% employee participation in team-building activities"
+
+   **g) Notes** (Optional)
+   - Additional context, resources needed, etc.
+
+3. Click **"Create Action Item"**
+
+**Example Action Items:**
+```
+Action: Implement quarterly all-hands meetings
+Owner: CEO
+Due Date: 2025-02-28
+Priority: High
+Success Metric: 90% employee attendance
+Notes: Book auditorium, prepare presentation template
+
+Action: Train managers on collaborative leadership
+Owner: HR Training Manager
+Due Date: 2025-04-15
+Priority: Medium
+Success Metric: All 15 managers complete 2-day training
+
+Action: Create employee feedback survey
+Owner: Communications Team
+Due Date: 2025-03-01
+Priority: High
+Success Metric: 75% response rate on first survey
+```
+
+---
+
+#### Track Action Item Status
+
+**View All Action Items:**
+1. Go to workshop
+2. See **"Action Items"** dashboard with all actions
+3. Filter by:
+   - Status (Pending, In Progress, Completed)
+   - Priority (High, Medium, Low)
+   - Owner
+   - Due date
+
+**Action Item Statuses:**
+- **Pending** - Not started yet
+- **In Progress** - Currently being worked on
+- **Completed** - Finished successfully
+- **Overdue** - Past due date and not completed
+
+**Update Status:**
+1. Click on action item
+2. Change **Status** dropdown
+3. Add **Progress Notes** (optional)
+4. Update **Completion Date** if completed
+5. Click **"Save Changes"**
+
+**Action Item Dashboard Shows:**
+- ✅ Total actions: 25
+- ⏳ Pending: 10
+- 🔄 In Progress: 8
+- ✅ Completed: 7
+- ⚠️ Overdue: 3
+
+---
+
+#### Workshop Reports
+
+**Generate Workshop Summary:**
+1. Go to workshop
+2. Click **"Generate Report"** or **"Export Workshop Summary"**
+
+**Workshop Report Includes:**
+- Workshop details (title, date, organization, facilitator)
+- Session summaries
+- Pinned charts with discussion notes
+- All themes identified
+- Complete action item list with owners and due dates
+- Progress statistics
+- Next steps
+
+**Export Formats:**
+- **PDF** - Professional report for stakeholders
+- **CSV** - Action items only, for project management tools
+- **Excel** - Comprehensive data with multiple sheets
+
+---
+
+#### Workshop Best Practices
+
+**Before the Workshop:**
+1. ✅ Create workshop in the system
+2. ✅ Review OCAI and Baldrige results in advance
+3. ✅ Pin relevant charts before the meeting
+4. ✅ Prepare discussion themes
+5. ✅ Invite participants
+6. ✅ Set clear objectives
+
+**During the Workshop:**
+1. ✅ Share pinned charts with participants
+2. ✅ Facilitate discussion around themes
+3. ✅ Capture action items in real-time
+4. ✅ Assign owners and due dates immediately
+5. ✅ Set priorities collaboratively
+6. ✅ Define success metrics
+
+**After the Workshop:**
+1. ✅ Finalize action items
+2. ✅ Send workshop summary to participants
+3. ✅ Set workshop status to "Completed"
+4. ✅ Track action item progress
+5. ✅ Follow up with owners
+6. ✅ Monitor completion rates
+
+---
+
+#### Facilitator Access to Workshops
+
+**What Facilitators Can See:**
+- ✅ Workshops for their organization only
+- ✅ All sessions and themes
+- ✅ Pinned charts and discussion notes
+- ✅ Action items and progress
+- ✅ Workshop reports
+
+**What Facilitators CANNOT Do:**
+- ❌ Create new workshops
+- ❌ Edit workshop details
+- ❌ Delete workshops
+- ❌ Create or modify action items
+- ❌ Access other organizations' workshops
+
+**Purpose:** Facilitators can view workshops to stay informed about organizational initiatives and action plans, but modification is restricted to SYSTEM_ADMIN to maintain data integrity.
+
+---
+
+#### Workshop Example Workflow
+
+**Scenario:** Acme Corporation completed OCAI assessment showing desire to shift from Market to Clan culture.
+
+**Step 1: Create Workshop**
+```
+Title: "Q1 2025 Culture Transformation Initiative"
+Organization: Acme Corporation
+Date: 2025-02-15
+Facilitator: Jane Doe (HR Director)
+Status: Active
+```
+
+**Step 2: Pin Key Charts**
+- OCAI radar chart (current vs preferred)
+- Clan dimension breakdown (shows +8 desired increase)
+- Market dimension breakdown (shows -10 desired decrease)
+
+**Step 3: Create Themes**
+```
+Theme 1: "Increase Team Collaboration"
+Priority: High
+Related: Clan dimension (+8 change)
+
+Theme 2: "Reduce Excessive Competition"
+Priority: Medium
+Related: Market dimension (-10 change)
+
+Theme 3: "Develop Mentorship Culture"
+Priority: High
+Related: Leadership characteristics
+```
+
+**Step 4: Create Action Items**
+```
+Action 1: Implement monthly cross-departmental team-building
+Owner: HR Manager
+Due: 2025-03-31
+Priority: High
+Theme: Increase Team Collaboration
+
+Action 2: Launch internal mentorship program
+Owner: L&D Director
+Due: 2025-04-30
+Priority: High
+Theme: Develop Mentorship Culture
+
+Action 3: Revise performance metrics to include collaboration
+Owner: Performance Management Team
+Due: 2025-05-15
+Priority: Medium
+Theme: Reduce Excessive Competition
+
+Action 4: Train managers on collaborative leadership
+Owner: HR Training
+Due: 2025-04-15
+Priority: Medium
+Theme: Increase Team Collaboration
+```
+
+**Step 5: Track Progress**
+- Weekly check-ins on action items
+- Monthly progress reports
+- Quarterly re-assessment to measure culture shift
 
 ---
 
@@ -2253,9 +3045,11 @@ Whether you're an **administrator** managing the entire platform, a **facilitato
 
 ---
 
-**Version:** 1.0  
-**Last Updated:** October 2025  
+**Version:** 2.0
+**Last Updated:** October 20, 2025
 **Created by:** Tenadam Training, Consultancy & Research PLC
+
+**Platform Version:** Next.js 15.5.4 | React 19.1.0 | Prisma 6.16.3
 
 ---
 
@@ -2264,6 +3058,62 @@ Whether you're an **administrator** managing the entire platform, a **facilitato
 | Date | Version | Changes |
 |------|---------|---------|
 | Oct 2025 | 1.0 | Initial comprehensive user guide created |
+| Oct 20, 2025 | 2.0 | **Major Update** - Comprehensive refinement based on platform enhancements:<br>• Added **Assessment Credentials** feature documentation (bulk upload, batch management, CSV format)<br>• Updated **Facilitator role** to reflect view-only permissions and privacy controls (`***HIDDEN***` emails)<br>• Added **Baldrige data architecture** section (6-table hierarchical structure)<br>• Enhanced **Workshops & Action Items** section (complete workflow, chart pinning, themes, tracking)<br>• Added **Mobile optimization** notes (smooth scroll behavior)<br>• Updated **Progress saving** methods (server-side vs localStorage)<br>• Added **Privacy controls** documentation throughout<br>• Enhanced **Export functionality** details (CSV, Excel formats)<br>• Updated **Authentication** methods comparison table<br>• Added **Security best practices** sections<br>• Updated all role permissions and capabilities |
+
+---
+
+## 🆕 What's New in Version 2.0
+
+### Major Features Added
+
+1. **Assessment Credentials System** (October 7-20, 2025)
+   - Individual email/password authentication for employees
+   - Bulk CSV upload capability
+   - Batch management with expiration dates
+   - Server-side progress auto-save
+   - Usage tracking and statistics
+
+2. **Enhanced Privacy Controls** (October 15-20, 2025)
+   - Facilitator emails shown as `***HIDDEN***`
+   - Role-based data visibility
+   - Privacy protection throughout the system
+
+3. **Baldrige Data Architecture** (October 2025)
+   - 6-table hierarchical structure
+   - Category → Subcategory → Question organization
+   - Time tracking per question
+   - Enhanced export capabilities
+
+4. **Workshops & Action Items** (Documented October 2025)
+   - Create workshops with multiple sessions
+   - Pin charts from OCAI/Baldrige results
+   - Create discussion themes
+   - Track action items with owners and due dates
+   - Progress monitoring and reporting
+
+5. **Mobile Optimizations** (October 2025)
+   - Smooth scroll to top when navigating questions
+   - Touch-friendly interfaces
+   - Responsive design enhancements
+
+6. **Updated Role Permissions** (January-October 2025)
+   - Facilitator role changed to view-only
+   - SYSTEM_ADMIN exclusive creation rights
+   - Clear separation of duties
+
+### Bug Fixes
+
+- ✅ Fixed Baldrige facilitator report counting (October 15, 2025)
+- ✅ Fixed authentication header issues on CSV uploads (October 20, 2025)
+- ✅ Added security to Organizations API (October 20, 2025)
+- ✅ Fixed mobile scroll behavior (October 2025)
+
+### Technical Improvements
+
+- Enhanced API security with authentication headers
+- Improved data export formats (wide format for Baldrige)
+- Better progress tracking and auto-save mechanisms
+- Optimized database queries for performance
 
 ---
 

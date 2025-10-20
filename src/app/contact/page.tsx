@@ -36,6 +36,7 @@ export default function ContactPage() {
     setErrorMessage('');
 
     try {
+      console.log('Submitting contact form...', formData);
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
@@ -44,7 +45,12 @@ export default function ContactPage() {
         body: JSON.stringify(formData),
       });
 
+      console.log('Response status:', response.status, response.statusText);
+      const responseData = await response.json();
+      console.log('Response data:', responseData);
+
       if (response.ok) {
+        console.log('✅ Email sent successfully!', responseData);
         setSubmitStatus('success');
         setFormData({
           firstName: '',
@@ -56,11 +62,12 @@ export default function ContactPage() {
           message: ''
         });
       } else {
-        const errorData = await response.json();
+        console.error('❌ Failed to send email:', responseData);
         setSubmitStatus('error');
-        setErrorMessage(errorData.error || 'Failed to send message');
+        setErrorMessage(responseData.error || responseData.details || 'Failed to send message');
       }
     } catch (error) {
+      console.error('❌ Network error:', error);
       setSubmitStatus('error');
       setErrorMessage('Network error. Please try again.');
     } finally {
