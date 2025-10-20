@@ -36,9 +36,15 @@ export async function POST(request: NextRequest) {
 
     // Send notification email to Tenadam team
     const notificationEmail = await resend.emails.send({
-      from: 'Tenadam Assessment Hub <onboarding@resend.dev>', // You'll change this to your domain later
+      from: 'Tenadam Assessment Hub <noreply@hub.tenadamconsulting.com>',
       to: ['info@tenadamconsulting.com'],
+      reply_to: email, // Allow direct reply to the contact person
       subject: `New Contact Form Submission - ${service || 'General Inquiry'}`,
+      headers: {
+        'X-Priority': '1',
+        'X-MSMail-Priority': 'High',
+        'Importance': 'high',
+      },
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #0f766e, #10b981); padding: 20px; text-align: center;">
@@ -92,7 +98,7 @@ Received at: ${new Date().toLocaleString()}
 
     // Send confirmation email to the user
     const confirmationEmail = await resend.emails.send({
-      from: 'Tenadam Training, Consultancy & Research <onboarding@resend.dev>', // You'll change this to your domain later
+      from: 'Tenadam Training, Consultancy & Research <noreply@hub.tenadamconsulting.com>',
       to: [email],
       subject: 'Thank you for contacting Tenadam Training, Consultancy & Research PLC',
       html: `
