@@ -5,6 +5,7 @@ import { QueryProvider } from '@/components/providers/query-provider'
 import { LocaleProvider } from '@/lib/i18n/context'
 import { AssessmentHubNav } from '@/components/navigation/assessment-hub-nav'
 import './globals.css'
+import ClientConsentGate from '@/components/client-consent-gate'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -47,7 +48,9 @@ export default function RootLayout({
             <QueryProvider>
               <AssessmentHubNav />
               <div className="min-h-full">
-                {children}
+                <ClientConsentGate>
+                  {children}
+                </ClientConsentGate>
               </div>
             </QueryProvider>
           </AuthSessionProvider>

@@ -125,10 +125,10 @@ function SignInContent() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50 flex flex-col">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex justify-between items-center">
-            <Link href="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 flex items-center justify-center">
+            <Link href="/" className="flex items-center space-x-2 sm:space-x-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
                 <img
                   src="/tenadam-logo.png"
                   alt="Tenadam Logo"
@@ -138,8 +138,8 @@ function SignInContent() {
                 />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">{t('app.name')}</h1>
-                <p className="text-xs text-teal-700 font-medium">by Tenadam Training, Consultancy & Research PLC</p>
+                <h1 className="text-base sm:text-xl font-bold text-gray-900">{t('app.name')}</h1>
+                <p className="text-xs text-teal-700 font-medium hidden sm:block">by Tenadam Training, Consultancy & Research PLC</p>
               </div>
             </Link>
             <LanguageSwitcher />
@@ -148,9 +148,9 @@ function SignInContent() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="flex-1 flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h2 className="text-center text-3xl font-extrabold text-gray-900 mb-2">
+          <h2 className="text-center text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2">
             {t('signin.title')}
           </h2>
           <p className="text-center text-sm text-gray-600">
@@ -158,39 +158,41 @@ function SignInContent() {
           </p>
         </div>
 
-        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="mt-6 sm:mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           {/* Login Mode Tabs */}
           <div className="bg-white rounded-t-lg shadow-sm border-t border-l border-r border-gray-200">
             <div className="grid grid-cols-2">
               <button
                 onClick={() => setMode('credentials')}
-                className={`py-4 px-4 text-sm font-medium rounded-tl-lg transition-colors ${
+                className={`py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm font-medium rounded-tl-lg transition-colors ${
                   mode === 'credentials'
                     ? 'bg-teal-700 text-white'
                     : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <Mail className="w-4 h-4 inline mr-2" />
-                {t('signin.tabEmailPassword')}
+                <Mail className="w-4 h-4 inline mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">{t('signin.tabEmailPassword')}</span>
+                <span className="sm:hidden">Email</span>
               </button>
               <button
                 onClick={() => setMode('accesskey')}
-                className={`py-4 px-4 text-sm font-medium rounded-tr-lg transition-colors ${
+                className={`py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm font-medium rounded-tr-lg transition-colors ${
                   mode === 'accesskey'
                     ? 'bg-teal-700 text-white'
                     : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <Key className="w-4 h-4 inline mr-2" />
-                {t('signin.tabAccessKey')}
+                <Key className="w-4 h-4 inline mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">{t('signin.tabAccessKey')}</span>
+                <span className="sm:hidden">Key</span>
               </button>
             </div>
           </div>
 
           {/* Login Forms */}
-          <div className="bg-white py-8 px-4 shadow-lg sm:rounded-b-lg sm:px-10 border border-gray-200">
+          <div className="bg-white py-6 sm:py-8 px-4 sm:px-6 lg:px-10 shadow-lg sm:rounded-b-lg border border-gray-200">
             {mode === 'credentials' ? (
-              <form onSubmit={handleCredentialLogin} className="space-y-6">
+              <form onSubmit={handleCredentialLogin} className="space-y-5 sm:space-y-6">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                     {t('signin.email')}
@@ -204,9 +206,9 @@ function SignInContent() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+                      className="appearance-none block w-full px-3 py-2.5 sm:py-2 pl-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-teal-500 focus:border-teal-500 text-base sm:text-sm"
                     />
-                    <Mail className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
+                    <Mail className="w-5 h-5 text-gray-400 absolute left-3 top-2.5 sm:top-2.5" />
                   </div>
                 </div>
 
@@ -223,16 +225,16 @@ function SignInContent() {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+                      className="appearance-none block w-full px-3 py-2.5 sm:py-2 pl-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-teal-500 focus:border-teal-500 text-base sm:text-sm"
                     />
-                    <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
+                    <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-2.5 sm:top-2.5" />
                   </div>
                 </div>
 
                 {error && (
                   <div className="flex items-start space-x-2 text-sm text-red-600 bg-red-50 p-3 rounded-md">
                     <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                    <span>{error}</span>
+                    <span className="text-sm">{error}</span>
                   </div>
                 )}
 
@@ -240,7 +242,7 @@ function SignInContent() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-700 hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="w-full flex justify-center items-center py-3 sm:py-2.5 px-4 border border-transparent rounded-md shadow-sm text-base sm:text-sm font-medium text-white bg-teal-700 hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {isLoading ? (
                       <>
@@ -254,7 +256,7 @@ function SignInContent() {
                 </div>
               </form>
             ) : (
-              <form onSubmit={handleAccessKeyLogin} className="space-y-6">
+              <form onSubmit={handleAccessKeyLogin} className="space-y-5 sm:space-y-6">
                 <div>
                   <label htmlFor="accessKey" className="block text-sm font-medium text-gray-700">
                     {t('accessKey.title')}
@@ -267,11 +269,11 @@ function SignInContent() {
                       required
                       value={accessKey}
                       onChange={(e) => setAccessKey(e.target.value.toUpperCase())}
-                      className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm uppercase font-mono tracking-wider"
+                      className="appearance-none block w-full px-3 py-2.5 sm:py-2 pl-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-teal-500 focus:border-teal-500 text-base sm:text-sm uppercase font-mono tracking-wider"
                       placeholder="ACME2024"
                       maxLength={20}
                     />
-                    <Key className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
+                    <Key className="w-5 h-5 text-gray-400 absolute left-3 top-2.5 sm:top-2.5" />
                   </div>
                   <p className="mt-1 text-xs text-gray-500">
                     {t('accessKey.description')}
@@ -289,7 +291,7 @@ function SignInContent() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+                      className="appearance-none block w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-teal-500 focus:border-teal-500 text-base sm:text-sm"
                       placeholder="John Doe"
                     />
                   </div>
@@ -301,7 +303,7 @@ function SignInContent() {
                 {error && (
                   <div className="flex items-start space-x-2 text-sm text-red-600 bg-red-50 p-3 rounded-md">
                     <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                    <span>{error}</span>
+                    <span className="text-sm">{error}</span>
                   </div>
                 )}
 
@@ -309,7 +311,7 @@ function SignInContent() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-700 hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="w-full flex justify-center items-center py-3 sm:py-2.5 px-4 border border-transparent rounded-md shadow-sm text-base sm:text-sm font-medium text-white bg-teal-700 hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {isLoading ? (
                       <>
@@ -326,8 +328,8 @@ function SignInContent() {
           </div>
 
           {/* Back to home */}
-          <div className="mt-6 text-center">
-            <Link href="/" className="text-sm text-teal-700 hover:text-teal-800 font-medium">
+          <div className="mt-5 sm:mt-6 text-center">
+            <Link href="/" className="text-sm sm:text-base text-teal-700 hover:text-teal-800 font-medium inline-block">
               ← {t('signin.backToHome')}
             </Link>
           </div>

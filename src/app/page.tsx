@@ -27,10 +27,10 @@ export default function HomePage() {
                 />
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                   Assessment Hub
                 </h1>
-                <p className="text-sm text-gray-600 font-medium">
+                <p className="text-xs sm:text-sm text-gray-600 font-medium hidden sm:block">
                   by <span className="text-teal-600 font-semibold">Tenadam Training, Consultancy & Research PLC</span>
                 </p>
               </div>
@@ -78,25 +78,25 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-20">
+      <section className="py-12 sm:py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold text-gray-900 mb-6 animate-fade-in-up">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 sm:mb-6 animate-fade-in-up">
               {t('home.hero.title1')}
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-teal-700 to-emerald-600 mt-2 animate-gradient animate-float">
                 {t('home.hero.title2')}
               </span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed animate-fade-in-up animation-delay-200">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed animate-fade-in-up animation-delay-200">
               {t('home.hero.description')}
             </p>
-            <div className="mt-10 animate-fade-in-up animation-delay-400">
+            <div className="mt-8 sm:mt-10 animate-fade-in-up animation-delay-400">
               <Link
                 href="/auth/signin"
-                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-teal-700 to-emerald-600 text-white text-lg font-medium rounded-lg hover:from-teal-800 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 transform"
+                className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-teal-700 to-emerald-600 text-white text-base sm:text-lg font-medium rounded-lg hover:from-teal-800 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 transform"
               >
                 {t('home.hero.cta')}
-                <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="ml-2 w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </Link>
@@ -106,12 +106,12 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-16 bg-white">
+      <section className="py-12 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h3 className="text-3xl font-bold text-center text-gray-900 mb-12 animate-fade-in-up">
+          <h3 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-8 sm:mb-12 animate-fade-in-up">
             {t('home.features.title')}
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
             {/* Feature 1 */}
             <div className="bg-white p-8 rounded-xl border border-gray-200 shadow hover:shadow-2xl hover:border-teal-400 hover:-translate-y-2 transition-all duration-300 ease-out cursor-pointer animate-fade-in-up animation-delay-200 hover:rotate-1 hover:bg-gradient-to-br hover:from-teal-50 hover:to-white group">
               <div className="w-12 h-12 bg-teal-800 rounded-lg flex items-center justify-center mb-4 group-hover:bg-teal-900 transition-all duration-300 hover:rotate-12 hover:scale-110 transform">
@@ -182,12 +182,12 @@ export default function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section className="py-16 bg-gradient-to-br from-teal-50 to-emerald-50">
+      <section className="py-12 sm:py-16 bg-gradient-to-br from-teal-50 to-emerald-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h3 className="text-3xl font-bold text-center text-gray-900 mb-12 animate-fade-in-up">
+          <h3 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-8 sm:mb-12 animate-fade-in-up">
             {t('home.howItWorks.title')}
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
             <div className="text-center animate-fade-in-up animation-delay-200 hover:scale-105 transition-transform duration-300">
               <div className="w-16 h-16 bg-teal-700 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4 hover:bg-teal-800 transition-colors duration-300 hover:rotate-12 transform">
                 1
@@ -220,20 +220,20 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-white">
+      <section className="py-12 sm:py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h3 className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in-up">
+          <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 animate-fade-in-up">
             {t('home.cta.title')}
           </h3>
-          <p className="text-xl text-gray-600 mb-8 animate-fade-in-up animation-delay-200">
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-6 sm:mb-8 animate-fade-in-up animation-delay-200">
             {t('home.cta.description')}
           </p>
           <Link
             href="/auth/signin"
-            className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-teal-700 to-emerald-600 text-white text-lg font-medium rounded-lg hover:from-teal-800 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 transform animate-fade-in-up animation-delay-400"
+            className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-teal-700 to-emerald-600 text-white text-base sm:text-lg font-medium rounded-lg hover:from-teal-800 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 transform animate-fade-in-up animation-delay-400"
           >
             {t('home.cta.button')}
-            <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="ml-2 w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </Link>
@@ -241,9 +241,9 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-white py-12 animate-fade-in-up">
+      <footer className="bg-slate-900 text-white py-8 sm:py-12 animate-fade-in-up">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
             <div className="animate-fade-in-up animation-delay-200">
               <div className="flex items-center space-x-2 mb-4">
                 <div className="w-10 h-10 flex items-center justify-center">

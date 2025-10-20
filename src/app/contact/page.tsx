@@ -91,18 +91,18 @@ export default function ContactPage() {
                 />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{t('app.name')}</h1>
-                <p className="text-sm text-teal-700 font-medium">by Tenadam Training, Consultancy & Research PLC</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('app.name')}</h1>
+                <p className="text-xs sm:text-sm text-teal-700 font-medium hidden sm:block">by Tenadam Training, Consultancy & Research PLC</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <LanguageSwitcher />
               <Link
                 href="/"
-                className="flex items-center space-x-2 px-4 py-2 text-teal-700 hover:text-teal-800 transition-colors"
+                className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 text-teal-700 hover:text-teal-800 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>{t('contact.backToHome')}</span>
+                <span className="hidden sm:inline">{t('contact.backToHome')}</span>
               </Link>
             </div>
           </div>
@@ -110,40 +110,40 @@ export default function ContactPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Hero Section */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-teal-100 rounded-full mb-8">
-            <MessageCircle className="w-10 h-10 text-teal-700" />
+        <div className="text-center mb-12 sm:mb-16">
+          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-teal-100 rounded-full mb-6 sm:mb-8">
+            <MessageCircle className="w-8 h-8 sm:w-10 sm:h-10 text-teal-700" />
           </div>
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
             {t('contact.title')}
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             {t('contact.subtitle')}
           </p>
         </div>
 
         {/* Contact Information Grid */}
-        <section className="mb-16">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <section className="mb-12 sm:mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
             {/* Address */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center hover:shadow-lg transition-shadow">
-              <div className="w-16 h-16 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <MapPin className="w-8 h-8 text-teal-600" />
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8 text-center hover:shadow-lg transition-shadow">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <MapPin className="w-7 h-7 sm:w-8 sm:h-8 text-teal-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">{t('contact.info.address.title')}</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">{t('contact.info.address.title')}</h3>
               <p className="text-gray-600 leading-relaxed" style={{ whiteSpace: 'pre-line' }}>
                 {t('contact.info.address.value')}
               </p>
             </div>
 
             {/* Phone */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center hover:shadow-lg transition-shadow">
-              <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Phone className="w-8 h-8 text-emerald-600" />
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8 text-center hover:shadow-lg transition-shadow">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <Phone className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">{t('contact.info.phone.title')}</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">{t('contact.info.phone.title')}</h3>
               <div className="space-y-2 text-gray-600">
                 {(translations.contact?.info?.phone?.values || []).map((phone: string, idx: number) => (
                   <p key={idx} className="font-medium">{phone}</p>
@@ -152,11 +152,11 @@ export default function ContactPage() {
             </div>
 
             {/* Email */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center hover:shadow-lg transition-shadow">
-              <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Mail className="w-8 h-8 text-blue-600" />
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8 text-center hover:shadow-lg transition-shadow">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <Mail className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">{t('contact.info.email.title')}</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">{t('contact.info.email.title')}</h3>
               <p className="text-gray-600">
                 <a href={`mailto:${t('contact.info.email.value')}`} className="text-blue-600 hover:text-blue-700 font-medium">
                   {t('contact.info.email.value')}
@@ -167,11 +167,11 @@ export default function ContactPage() {
         </section>
 
         {/* Working Hours */}
-        <section className="mb-16">
-          <div className="bg-gradient-to-br from-slate-900 to-gray-800 rounded-2xl p-8 lg:p-12 text-white">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <section className="mb-12 sm:mb-16">
+          <div className="bg-gradient-to-br from-slate-900 to-gray-800 rounded-2xl p-6 sm:p-8 lg:p-12 text-white">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
               <div>
-                <h2 className="text-3xl font-bold mb-6">{t('contact.workingHours.heading')}</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">{t('contact.workingHours.heading')}</h2>
                 <div className="flex items-center space-x-4 mb-6">
                   <div className="w-12 h-12 bg-teal-500 rounded-lg flex items-center justify-center">
                     <Clock className="w-6 h-6 text-white" />
@@ -224,11 +224,11 @@ export default function ContactPage() {
         </section>
 
         {/* Contact Form */}
-        <section className="mb-16">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 lg:p-12">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('contact.form.heading')}</h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+        <section className="mb-12 sm:mb-16">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8 lg:p-12">
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">{t('contact.form.heading')}</h2>
+              <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
                 {t('contact.form.subtitle')}
               </p>
             </div>
@@ -263,7 +263,7 @@ export default function ContactPage() {
             )}
 
             <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-6 sm:mb-8">
                 <div>
                   <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
                     {t('contact.form.firstName')} {t('contact.form.required')}
@@ -298,7 +298,7 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-6 sm:mb-8">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                     {t('contact.form.email')} {t('contact.form.required')}
@@ -332,7 +332,7 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <div className="mb-8">
+              <div className="mb-6 sm:mb-8">
                 <label htmlFor="organization" className="block text-sm font-medium text-gray-700 mb-2">
                   {t('contact.form.organization')}
                 </label>
@@ -348,7 +348,7 @@ export default function ContactPage() {
                 />
               </div>
 
-              <div className="mb-8">
+              <div className="mb-6 sm:mb-8">
                 <label htmlFor="service" className="block text-sm font-medium text-gray-700 mb-2">
                   {t('contact.form.service')}
                 </label>
@@ -371,7 +371,7 @@ export default function ContactPage() {
                 </select>
               </div>
 
-              <div className="mb-8">
+              <div className="mb-6 sm:mb-8">
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
                   {t('contact.form.message')} {t('contact.form.required')}
                 </label>
@@ -412,21 +412,21 @@ export default function ContactPage() {
         </section>
 
         {/* Service Areas */}
-        <section className="mb-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('contact.services.heading')}</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+        <section className="mb-12 sm:mb-16">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">{t('contact.services.heading')}</h2>
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
               {t('contact.services.subtitle')}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
             {/* Training Services */}
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8 border border-blue-200">
-              <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-6">
-                <Users className="w-8 h-8 text-white" />
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 sm:p-8 border border-blue-200">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 sm:mb-6">
+                <Users className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-blue-900 mb-4">{t('contact.services.training.title')}</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-blue-900 mb-3 sm:mb-4">{t('contact.services.training.title')}</h3>
               <ul className="space-y-2 text-blue-800 text-sm">
                 {(translations.contact?.services?.training?.items || []).map((item: string, idx: number) => (
                   <li key={idx}>• {item}</li>
@@ -435,11 +435,11 @@ export default function ContactPage() {
             </div>
 
             {/* Consultancy Services */}
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-8 border border-emerald-200">
-              <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center mb-6">
-                <Building2 className="w-8 h-8 text-white" />
+            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 sm:p-8 border border-emerald-200">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-emerald-600 rounded-2xl flex items-center justify-center mb-4 sm:mb-6">
+                <Building2 className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-emerald-900 mb-4">{t('contact.services.consultancy.title')}</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-emerald-900 mb-3 sm:mb-4">{t('contact.services.consultancy.title')}</h3>
               <ul className="space-y-2 text-emerald-800 text-sm">
                 {(translations.contact?.services?.consultancy?.items || []).map((item: string, idx: number) => (
                   <li key={idx}>• {item}</li>
@@ -448,11 +448,11 @@ export default function ContactPage() {
             </div>
 
             {/* Research Services */}
-            <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-2xl p-8 border border-teal-200">
-              <div className="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center mb-6">
-                <Globe className="w-8 h-8 text-white" />
+            <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-2xl p-6 sm:p-8 border border-teal-200">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-teal-600 rounded-2xl flex items-center justify-center mb-4 sm:mb-6">
+                <Globe className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-teal-900 mb-4">{t('contact.services.research.title')}</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-teal-900 mb-3 sm:mb-4">{t('contact.services.research.title')}</h3>
               <ul className="space-y-2 text-teal-800 text-sm">
                 {(translations.contact?.services?.research?.items || []).map((item: string, idx: number) => (
                   <li key={idx}>• {item}</li>
@@ -463,17 +463,17 @@ export default function ContactPage() {
         </section>
 
         {/* Client Testimonials */}
-        <section className="mb-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('contact.testimonials.heading')}</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+        <section className="mb-12 sm:mb-16">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">{t('contact.testimonials.heading')}</h2>
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
               {t('contact.testimonials.subtitle')}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             {(translations.contact?.testimonials?.reviews || []).map((review: any, idx: number) => (
-              <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+              <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
                 <div className="flex items-center mb-4">
                   <div className="flex text-yellow-400">
                     <span>★★★★★</span>
@@ -497,24 +497,24 @@ export default function ContactPage() {
         </section>
 
         {/* Call to Action */}
-        <section className="mb-16">
-          <div className="bg-gradient-to-br from-teal-600 to-emerald-600 rounded-2xl p-8 lg:p-12 text-white text-center">
-            <h2 className="text-3xl font-bold mb-4">{t('contact.cta.heading')}</h2>
-            <p className="text-xl text-teal-100 mb-8 max-w-2xl mx-auto">
+        <section className="mb-12 sm:mb-16">
+          <div className="bg-gradient-to-br from-teal-600 to-emerald-600 rounded-2xl p-6 sm:p-8 lg:p-12 text-white text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">{t('contact.cta.heading')}</h2>
+            <p className="text-base sm:text-lg md:text-xl text-teal-100 mb-6 sm:mb-8 max-w-2xl mx-auto">
               {t('contact.cta.subtitle')}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Link
                 href="/auth/signin"
-                className="inline-flex items-center px-8 py-4 bg-white text-teal-700 rounded-lg hover:bg-gray-100 transition-colors font-medium text-lg shadow-lg hover:shadow-xl"
+                className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-white text-teal-700 rounded-lg hover:bg-gray-100 transition-colors font-medium text-base sm:text-lg shadow-lg hover:shadow-xl"
               >
                 {t('contact.cta.accessHub')}
               </Link>
               <a
                 href={`mailto:${t('contact.info.email.value')}`}
-                className="inline-flex items-center px-8 py-4 border-2 border-white text-white rounded-lg hover:bg-white hover:text-teal-700 transition-colors font-medium text-lg"
+                className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 border-2 border-white text-white rounded-lg hover:bg-white hover:text-teal-700 transition-colors font-medium text-base sm:text-lg"
               >
-                <Mail className="w-5 h-5 mr-2" />
+                <Mail className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 {t('contact.cta.contactDirect')}
               </a>
             </div>
@@ -523,7 +523,7 @@ export default function ContactPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-white py-12">
+      <footer className="bg-slate-900 text-white py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <div className="flex items-center justify-center space-x-3 mb-4">
