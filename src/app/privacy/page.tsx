@@ -5,8 +5,25 @@ import { ArrowLeft, Shield, Lock, Eye, Database, Users, FileText, CheckCircle } 
 import LanguageSwitcher from "@/components/localization/LanguageSwitcher";
 import { useLocale } from "@/lib/i18n/context";
 
+// Force dynamic rendering to prevent hydration issues
+export const dynamic = 'force-dynamic';
+
 export default function PrivacyPolicyPage() {
   const { t, translations } = useLocale();
+
+  // Wait for translations to load
+  if (!translations || !translations.privacy) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-t-4 border-teal-600"></div>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800">Loading...</h2>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50">
