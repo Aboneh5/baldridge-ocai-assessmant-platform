@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const notificationEmail = await resend.emails.send({
       from: 'Tenadam Assessment Hub <noreply@hub.tenadamconsulting.com>',
       to: ['info@tenadamconsulting.com'],
-      reply_to: email, // Allow direct reply to the contact person
+      replyTo: email, // Allow direct reply to the contact person
       subject: `New Contact Form Submission - ${service || 'General Inquiry'}`,
       headers: {
         'X-Priority': '1',
