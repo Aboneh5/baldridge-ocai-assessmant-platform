@@ -38,6 +38,11 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
   const [showHelp, setShowHelp] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
 
+  // Scroll to top when component mounts (important for mobile)
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [])
+
   // Initialize responses and load from localStorage
   useEffect(() => {
     const storageKey = `ocai_progress_${surveyId}`
@@ -118,6 +123,9 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
   const handleNext = () => {
     setIsTransitioning(true)
 
+    // Scroll to top of page for better mobile experience
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+
     if (currentPhase === 'now') {
       if (currentDimension < OCAI_DIMENSIONS.length - 1) {
         setCurrentDimension(prev => prev + 1)
@@ -150,6 +158,9 @@ export function OCAIQuestionnaire({ surveyId, onComplete }: OCAIQuestionnairePro
 
   const handlePrevious = () => {
     setIsTransitioning(true)
+
+    // Scroll to top of page for better mobile experience
+    window.scrollTo({ top: 0, behavior: 'smooth' })
 
     if (currentPhase === 'preferred') {
       if (currentDimension > 0) {
