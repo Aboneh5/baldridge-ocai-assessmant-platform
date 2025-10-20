@@ -71,6 +71,10 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
         'nav.about': loadedTranslations.nav?.about,
         'home.hero.title1': loadedTranslations.home?.hero?.title1
       });
+      console.log('Privacy translations check:', {
+        'hasPrivacy': !!loadedTranslations.privacy,
+        'privacyTitle': loadedTranslations.privacy?.title
+      });
       setTranslations(loadedTranslations);
     } catch (error) {
       console.error('Failed to load translations:', error);
