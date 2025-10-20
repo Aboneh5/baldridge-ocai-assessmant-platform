@@ -1114,7 +1114,11 @@ export default function BaldrigeAssessmentPage() {
               {/* Footer */}
               <div className="px-6 py-4 bg-gray-50 rounded-b-2xl">
                 <button
-                  onClick={() => setShowLowPointsWarning(false)}
+                  onClick={() => {
+                    setShowLowPointsWarning(false);
+                    // Force re-render by re-fetching categories to ensure questions display
+                    fetchCategories();
+                  }}
                   className="w-full px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
                 >
                   Continue Answering Questions
