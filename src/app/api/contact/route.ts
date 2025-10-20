@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,19 +25,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create transporter using Gmail SMTP (you can change this to your preferred email service)
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.SMTP_USER || 'your-email@gmail.com',
-        pass: process.env.SMTP_PASS || 'your-app-password',
-      },
-    });
+    // Check if Resend API key is configured
+    if (!process.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY is not configured');
+      return NextResponse.json(
+        { error: 'Email service not configured' },
+        { status: 500 }
+      );
+    }
 
-    // Email content for Tenadam
-    const mailOptions = {
-      from: process.env.SMTP_USER || 'your-email@gmail.com',
-      to: 'info@tenadamconsulting.com',
+    // Send notification email to Tenadam team
+    const notificationEmail = await resend.emails.send({
+      from: 'Tenadam Assessment Hub <onboarding@resend.dev>', // You'll change this to your domain later
+      to: ['info@tenadamconsulting.com'],
       subject: `New Contact Form Submission - ${service || 'General Inquiry'}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -84,15 +86,14 @@ ${message}
 This message was sent from the Tenadam Assessment Hub contact form.
 Received at: ${new Date().toLocaleString()}
       `,
-    };
+    });
 
-    // Send email
-    await transporter.sendMail(mailOptions);
+    console.log('Notification email sent:', notificationEmail.data?.id);
 
     // Send confirmation email to the user
-    const confirmationMailOptions = {
-      from: process.env.SMTP_USER || 'your-email@gmail.com',
-      to: email,
+    const confirmationEmail = await resend.emails.send({
+      from: 'Tenadam Training, Consultancy & Research <onboarding@resend.dev>', // You'll change this to your domain later
+      to: [email],
       subject: 'Thank you for contacting Tenadam Training, Consultancy & Research PLC',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -137,19 +138,48 @@ Received at: ${new Date().toLocaleString()}
           </div>
         </div>
       `,
-    };
+      text: `
+Dear ${firstName},
 
-    await transporter.sendMail(confirmationMailOptions);
+Thank you for reaching out to Tenadam Training, Consultancy & Research PLC.
+We have received your message and will get back to you within 24 hours.
+
+Your Message Summary:
+Service Interest: ${service || 'General Inquiry'}
+Message: ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}
+
+What happens next?
+- Our team will review your inquiry
+- We'll respond within 24 hours during business hours
+- We may schedule a consultation call if needed
+
+Need immediate assistance?
+Call us at: +251-911-58-4260, +251-912-44-2502, or +251-993-51-8990
+Email: info@tenadamconsulting.com
+Working Hours: Monday - Friday, 8:30 AM - 5:30 PM
+
+---
+Tenadam Training, Consultancy & Research PLC
+Lem-Hotel Area, Addis Ababa, Ethiopia
+Transforming Potential into Performance
+      `,
+    });
+
+    console.log('Confirmation email sent:', confirmationEmail.data?.id);
 
     return NextResponse.json(
-      { message: 'Email sent successfully' },
+      { 
+        message: 'Emails sent successfully',
+        notificationId: notificationEmail.data?.id,
+        confirmationId: confirmationEmail.data?.id
+      },
       { status: 200 }
     );
 
   } catch (error) {
     console.error('Error sending email:', error);
     return NextResponse.json(
-      { error: 'Failed to send email' },
+      { error: 'Failed to send email', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

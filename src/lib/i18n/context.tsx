@@ -49,6 +49,8 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       const admin = await import(`@/locales/${loc}/admin.json`);
       const about = await import(`@/locales/${loc}/about.json`);
       const contact = await import(`@/locales/${loc}/contact.json`);
+      const privacy = await import(`@/locales/${loc}/privacy.json`);
+      const terms = await import(`@/locales/${loc}/terms.json`);
 
       const loadedTranslations = {
         ...common.default,
@@ -60,12 +62,18 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
         ...admin.default,
         ...about.default,
         ...contact.default,
+        ...privacy.default,
+        ...terms.default,
       };
 
       console.log(`Translations loaded for ${loc}:`, Object.keys(loadedTranslations));
       console.log('Sample translation check:', {
         'nav.about': loadedTranslations.nav?.about,
         'home.hero.title1': loadedTranslations.home?.hero?.title1
+      });
+      console.log('Privacy translations check:', {
+        'hasPrivacy': !!loadedTranslations.privacy,
+        'privacyTitle': loadedTranslations.privacy?.title
       });
       setTranslations(loadedTranslations);
     } catch (error) {
