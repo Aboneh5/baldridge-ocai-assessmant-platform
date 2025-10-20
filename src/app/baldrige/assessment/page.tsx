@@ -96,6 +96,8 @@ export default function BaldrigeAssessmentPage() {
     if (questionsContainerRef.current && !showOrgProfile) {
       questionsContainerRef.current.scrollTop = 0;
     }
+    // Also scroll window to top for better mobile experience
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentCategoryIndex, currentSubcategoryIndex, showOrgProfile]);
 
   useEffect(() => {
