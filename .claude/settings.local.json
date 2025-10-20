@@ -3,7 +3,12 @@
     "allow": [
       "Bash(dir:*)",
       "Bash(mkdir:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(ssh root@75.119.156.107)",
+      "Bash(sudo ss -tlnp)",
+      "Bash(ss -tlnp)",
+      "Bash(netstat -tlnp)",
+      "Bash(lsof -i :3000)"
     ],
     "deny": [],
     "ask": []

@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
         userId: userId,
         ...(normalizedSurveyId ? { surveyId: normalizedSurveyId } : { surveyId: null }),
         responseText: {
-          not: null as any,
+          not: null,
         },
       },
     });
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
         AND: [
           {
             responseText: {
-              not: null as any,
+              not: null,
             },
           },
           {
