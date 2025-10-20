@@ -8,7 +8,9 @@
       "Bash(sudo ss -tlnp)",
       "Bash(ss -tlnp)",
       "Bash(netstat -tlnp)",
-      "Bash(lsof -i :3000)"
+      "Bash(lsof -i :3000)",
+      "Bash(git add \"src/app/api/baldrige/submit/route.ts\")",
+      "Bash(git commit -m \"Fix Prisma validation error: remove ''as any'' type assertion from responseText queries\n\n- Changed ''not: null as any'' to ''not: null'' in Prisma queries\n- Fixes 500 errors when saving Baldrige responses\n- Resolves Prisma argument validation error\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")"
     ],
     "deny": [],
     "ask": []

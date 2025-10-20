@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Allow empty responses (user can skip questions)
-    const trimmedResponse = responseText?.trim() || null;
+    const trimmedResponse = responseText?.trim() || '';
 
     // Verify question exists
     const question = await prisma.baldrigeQuestion.findUnique({
