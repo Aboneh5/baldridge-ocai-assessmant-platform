@@ -74,6 +74,14 @@ export default function ConsentManagementPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'name' | 'size' | 'category'>('name')
+  
+  // Analytics verification
+  const [analyticsStatus, setAnalyticsStatus] = useState({
+    gtagLoaded: false,
+    dataLayerExists: false,
+    measurementId: '',
+    eventsTracked: 0
+  })
 
   // Check authorization
   useEffect(() => {
@@ -203,6 +211,21 @@ export default function ConsentManagementPage() {
       const parsed = parseConsentCookie(consentValue)
       setConsentState(parsed)
     }
+    
+    // Check analytics integration
+    const checkAnalytics = () => {
+      const win = window as any
+      setAnalyticsStatus({
+        gtagLoaded: typeof win.gtag === 'function',
+        dataLayerExists: Array.isArray(win.dataLayer),
+        measurementId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'Not configured',
+        eventsTracked: Array.isArray(win.dataLayer) ? win.dataLayer.length : 0
+      })
+    }
+    
+    checkAnalytics()
+    const interval = setInterval(checkAnalytics, 2000)
+    return () => clearInterval(interval)
   }, [isAuthorized])
 
   const refresh = () => {
@@ -221,6 +244,63 @@ export default function ConsentManagementPage() {
       document.cookie = `${name}=; Path=/; Max-Age=0`
     })
     window.location.reload()
+  }
+
+  const updateConsent = (category: keyof ConsentState['categories'], enabled: boolean) => {
+    if (!consentState) return
+    
+    const updated: ConsentState = {
+      ...consentState,
+      timestamp: Date.now(),
+      categories: {
+        ...consentState.categories,
+        [category]: enabled
+      }
+    }
+    
+    setConsentState(updated)
+    
+    // Serialize and write to cookie
+    const serialized = encodeURIComponent(JSON.stringify(updated))
+    document.cookie = `${CONSENT_COOKIE}=${serialized}; Path=/; Max-Age=31536000; SameSite=Lax`
+    
+    // Note: Analytics requires reload to initialize
+    if (category === 'analytics' && enabled) {
+      setTimeout(() => {
+        if (confirm('Analytics enabled! Page will reload to initialize tracking. Continue?')) {
+          window.location.reload()
+        }
+      }, 500)
+    }
+  }
+
+  const setAllConsent = (enabled: boolean) => {
+    if (!consentState) return
+    
+    const updated: ConsentState = {
+      ...consentState,
+      given: true,
+      timestamp: Date.now(),
+      categories: {
+        essential: true, // Always true
+        analytics: enabled,
+        marketing: enabled,
+        preferences: enabled
+      }
+    }
+    
+    setConsentState(updated)
+    
+    const serialized = encodeURIComponent(JSON.stringify(updated))
+    document.cookie = `${CONSENT_COOKIE}=${serialized}; Path=/; Max-Age=31536000; SameSite=Lax`
+    
+    if (enabled) {
+      setTimeout(() => {
+        if (confirm('All permissions enabled! Page will reload to initialize tracking. Continue?')) {
+          window.location.reload()
+        }
+      }, 500)
+    }
   }
 
   const exportCookieReport = () => {
@@ -446,6 +526,142 @@ export default function ConsentManagementPage() {
           </div>
         </div>
 
+        {/* Analytics Integration Status */}
+        <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 rounded-lg p-6 shadow-md mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Activity className="w-5 h-5 text-purple-600" />
+            Google Analytics Integration Status
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-lg p-4 border-2 border-gray-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-600">gtag() Function</span>
+                {analyticsStatus.gtagLoaded ? (
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                ) : (
+                  <XCircle className="w-5 h-5 text-red-600" />
+                )}
+              </div>
+              <p className={`text-lg font-bold ${analyticsStatus.gtagLoaded ? 'text-green-700' : 'text-red-700'}`}>
+                {analyticsStatus.gtagLoaded ? 'Loaded' : 'Not Loaded'}
+              </p>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 border-2 border-gray-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-600">dataLayer</span>
+                {analyticsStatus.dataLayerExists ? (
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                ) : (
+                  <XCircle className="w-5 h-5 text-red-600" />
+                )}
+              </div>
+              <p className={`text-lg font-bold ${analyticsStatus.dataLayerExists ? 'text-green-700' : 'text-red-700'}`}>
+                {analyticsStatus.dataLayerExists ? 'Active' : 'Inactive'}
+              </p>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 border-2 border-gray-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-600">Measurement ID</span>
+                {analyticsStatus.measurementId !== 'Not configured' ? (
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 text-amber-600" />
+                )}
+              </div>
+              <p className="text-xs font-mono text-gray-700 truncate">
+                {analyticsStatus.measurementId}
+              </p>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 border-2 border-gray-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-600">Events Tracked</span>
+                <BarChart3 className="w-5 h-5 text-purple-600" />
+              </div>
+              <p className="text-lg font-bold text-purple-700">
+                {analyticsStatus.eventsTracked}
+              </p>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-4 bg-white rounded-lg border border-purple-200">
+            <div className="flex items-start gap-3">
+              {analyticsStatus.gtagLoaded && consentState?.categories.analytics ? (
+                <>
+                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-green-700">Analytics is Active ✓</p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Google Analytics is loaded and tracking. User events are being collected.
+                    </p>
+                  </div>
+                </>
+              ) : consentState?.categories.analytics && !analyticsStatus.gtagLoaded ? (
+                <>
+                  <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-amber-700">Consent Given, Analytics Loading...</p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Analytics consent is enabled but gtag has not loaded yet. This may take a few seconds after consent is granted.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <XCircle className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-gray-700">Analytics Inactive</p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      User has not consented to analytics tracking. Enable analytics consent to start tracking.
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+          
+          <div className="mt-4 flex gap-3">
+            <button
+              onClick={() => {
+                const win = window as any
+                if (win.dataLayer) {
+                  console.log('dataLayer:', win.dataLayer)
+                  alert(`dataLayer contains ${win.dataLayer.length} events. Check browser console for details.`)
+                } else {
+                  alert('dataLayer is not available')
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition shadow-md text-sm"
+            >
+              <Database className="w-4 h-4" />
+              Inspect dataLayer
+            </button>
+            
+            <button
+              onClick={() => {
+                const win = window as any
+                if (win.gtag) {
+                  win.gtag('event', 'test_event', {
+                    event_category: 'consent_testing',
+                    event_label: 'manual_test',
+                    value: Date.now()
+                  })
+                  alert('Test event sent! Check dataLayer in console.')
+                } else {
+                  alert('gtag() is not available. Enable analytics consent first.')
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition shadow-md text-sm"
+            >
+              <Activity className="w-4 h-4" />
+              Send Test Event
+            </button>
+          </div>
+        </div>
+
         {/* Consent State Details */}
         {consentState && (
           <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-8">
@@ -484,7 +700,23 @@ export default function ConsentManagementPage() {
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">Category Permissions</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-gray-700">Category Permissions</h3>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setAllConsent(true)}
+                      className="text-xs px-3 py-1 bg-green-600 text-white rounded font-medium hover:bg-green-700 transition"
+                    >
+                      Enable All
+                    </button>
+                    <button
+                      onClick={() => setAllConsent(false)}
+                      className="text-xs px-3 py-1 bg-gray-600 text-white rounded font-medium hover:bg-gray-700 transition"
+                    >
+                      Disable All
+                    </button>
+                  </div>
+                </div>
                 <div className="space-y-3">
                   {Object.entries(consentState.categories).map(([category, enabled]) => (
                     <div 
@@ -499,19 +731,40 @@ export default function ConsentManagementPage() {
                         }`}>
                           {getCategoryIcon(category)}
                         </div>
-                        <span className="font-medium text-gray-900 capitalize">{category}</span>
+                        <div>
+                          <span className="font-medium text-gray-900 capitalize block">{category}</span>
+                          {category === 'essential' && (
+                            <span className="text-xs text-gray-500">Always required</span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {enabled ? (
-                          <>
-                            <CheckCircle className="w-5 h-5 text-green-600" />
-                            <span className="text-sm font-semibold text-green-700">Enabled</span>
-                          </>
-                        ) : (
-                          <>
-                            <XCircle className="w-5 h-5 text-gray-400" />
-                            <span className="text-sm font-semibold text-gray-500">Disabled</span>
-                          </>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          {enabled ? (
+                            <>
+                              <CheckCircle className="w-5 h-5 text-green-600" />
+                              <span className="text-sm font-semibold text-green-700">Enabled</span>
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-5 h-5 text-gray-400" />
+                              <span className="text-sm font-semibold text-gray-500">Disabled</span>
+                            </>
+                          )}
+                        </div>
+                        {category !== 'essential' && (
+                          <button
+                            onClick={() => updateConsent(category as keyof ConsentState['categories'], !enabled)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 ${
+                              enabled ? 'bg-green-600' : 'bg-gray-300'
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                enabled ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
                         )}
                       </div>
                     </div>
