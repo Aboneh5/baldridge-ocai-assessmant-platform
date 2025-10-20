@@ -10,7 +10,10 @@
       "Bash(netstat -tlnp)",
       "Bash(lsof -i :3000)",
       "Bash(git add \"src/app/api/baldrige/submit/route.ts\")",
-      "Bash(git commit -m \"Fix Prisma validation error: remove ''as any'' type assertion from responseText queries\n\n- Changed ''not: null as any'' to ''not: null'' in Prisma queries\n- Fixes 500 errors when saving Baldrige responses\n- Resolves Prisma argument validation error\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")"
+      "Bash(git commit -m \"Fix Prisma validation error: remove ''as any'' type assertion from responseText queries\n\n- Changed ''not: null as any'' to ''not: null'' in Prisma queries\n- Fixes 500 errors when saving Baldrige responses\n- Resolves Prisma argument validation error\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")",
+      "Bash(git add \"src/app/api/baldrige/response/route.ts\" \"src/app/api/baldrige/submit/route.ts\")",
+      "Bash(git commit -m \"Fix Baldrige API Prisma errors\n\n- Remove ''as any'' type assertion from submit route\n- Change null to empty string for responseText in response route  \n- Fixes null constraint violation (P2011) in database\n- Resolves 500 errors when users skip questions\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")",
+      "Bash(git push origin main)"
     ],
     "deny": [],
     "ask": []
