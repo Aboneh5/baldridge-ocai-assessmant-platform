@@ -120,7 +120,16 @@ export function OCAIDimensionInput({ dimension, phase, response, onChange }: OCA
                   <span className="font-semibold text-gray-900 text-lg">
                     Option {key}: {option.culture}
                   </span>
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => updateValue(key as 'A' | 'B' | 'C' | 'D', values[key as keyof typeof values] - 1)}
+                      disabled={values[key as keyof typeof values] <= 0}
+                      className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed rounded border border-gray-300 text-gray-700 font-bold transition-colors"
+                      aria-label="Decrease"
+                    >
+                      −
+                    </button>
                     <input
                       type="number"
                       min="0"
@@ -128,8 +137,17 @@ export function OCAIDimensionInput({ dimension, phase, response, onChange }: OCA
                       value={values[key as keyof typeof values]}
                       onChange={(e) => updateValue(key as 'A' | 'B' | 'C' | 'D', parseInt(e.target.value) || 0)}
                       onKeyDown={(e) => handleKeyDown(key as 'A' | 'B' | 'C' | 'D', e)}
-                      className="w-24 px-3 py-2 border border-gray-300 rounded text-center text-gray-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+                      className="w-20 px-3 py-2 border border-gray-300 rounded text-center text-gray-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                     />
+                    <button
+                      type="button"
+                      onClick={() => updateValue(key as 'A' | 'B' | 'C' | 'D', values[key as keyof typeof values] + 1)}
+                      disabled={values[key as keyof typeof values] >= 100}
+                      className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed rounded border border-gray-300 text-gray-700 font-bold transition-colors"
+                      aria-label="Increase"
+                    >
+                      +
+                    </button>
                     <span className="text-lg text-gray-500 font-medium">%</span>
                   </div>
                 </div>

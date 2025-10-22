@@ -186,3 +186,5 @@ Visit `/test-cookies` and click **"Clear Consent Cookie"** to reset the banner.
 
 Need help? Check the browser console for debug messages or visit the test page at `/test-cookies`.
 
+
+

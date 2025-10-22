@@ -416,6 +416,7 @@ export default function BaldrigeAssessmentPage() {
         percentage: Math.round(completionPercentage)
       });
       setShowLowPointsWarning(true);
+      setIsTransitioning(false); // Reset transition state when blocking submission
       return; // Block submission and return to assessment
     }
 
@@ -998,19 +999,19 @@ export default function BaldrigeAssessmentPage() {
             </div>
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between items-center pt-6 border-t">
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 pt-6 border-t">
               <button
                 onClick={handlePrevious}
                 disabled={currentCategoryIndex === 0 && currentSubcategoryIndex === 0 || isTransitioning}
-                className="group px-6 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center space-x-2"
+                className="group px-4 sm:px-6 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center justify-center space-x-2"
               >
-                <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                <span>{t('assessment.previous')}</span>
+                <span className="whitespace-nowrap">{t('assessment.previous')}</span>
               </button>
 
-              <div className="text-center">
+              <div className="text-center order-first sm:order-none">
                 <p className="text-sm text-gray-600 font-medium">
                   {t('assessment.subcategory')} {currentSubcategoryIndex + 1} {t('assessment.of')} {currentCategory.subcategories.length}
                 </p>
@@ -1023,15 +1024,15 @@ export default function BaldrigeAssessmentPage() {
                   saving ||
                   isTransitioning
                 }
-                className="group px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-medium hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center space-x-2"
+                className="group px-4 sm:px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-medium hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
               >
-                <span>{saving ? t('assessment.saving') :
+                <span className="whitespace-nowrap text-sm sm:text-base">{saving ? t('assessment.saving') :
                   currentSubcategoryIndex < currentCategory.subcategories.length - 1
                     ? t('assessment.nextSubcategory')
                     : currentCategoryIndex < mainCategories.length - 1
                     ? t('assessment.nextCategory')
                     : t('assessment.completeAssessment')}</span>
-                <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 transition-transform group-hover:translate-x-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
@@ -1116,6 +1117,7 @@ export default function BaldrigeAssessmentPage() {
                 <button
                   onClick={() => {
                     setShowLowPointsWarning(false);
+                    setIsTransitioning(false);
                     // Force re-render by re-fetching categories to ensure questions display
                     fetchCategories();
                   }}
